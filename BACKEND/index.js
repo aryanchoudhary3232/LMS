@@ -102,7 +102,7 @@ app.use('/api/flashcards', flashcardRoutes);
 app.use("/stats", statsRoutes);
 
 app.get("/", (req, res) => {
-  res.send("Welcome to server");
+  res.send("Welcome to server v2");
 });
 
 app.get("/health", (req, res) => {
