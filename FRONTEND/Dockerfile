@@ -7,9 +7,6 @@ RUN npm ci
 
 COPY . .
 
-ARG VITE_BACKEND_URL=http://localhost:3000
-ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
-
 RUN npm run build
 
 FROM nginx:1.29-alpine AS production
