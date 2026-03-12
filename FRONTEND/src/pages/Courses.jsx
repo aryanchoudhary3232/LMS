@@ -102,8 +102,9 @@ const Courses = () => {
       } else {
         setCourses([]);
       }
-    } catch (error) {
+    } catch (searchError) {
       setCourses([]);
+      console.error("Manual search error:", searchError);
     } finally {
       setLoading(false);
     }
@@ -152,7 +153,8 @@ const Courses = () => {
         // Dispatch event to update navbar
         window.dispatchEvent(new Event("cartUpdated"));
       } else alert(data.message || "Failed to add to cart");
-    } catch (err) {
+    } catch (cartError) {
+      console.error("Error adding to cart:", cartError);
       alert("Error adding to cart");
     }
   };
