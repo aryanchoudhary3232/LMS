@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../../css/admin/Admin.css";
 
@@ -18,11 +18,7 @@ const AdminTeacherDetail = () => {
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-  useEffect(() => {
-    fetchTeacherDetails();
-  }, [teacherId]);
-
-  const fetchTeacherDetails = async () => {
+  const fetchTeacherDetails = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
@@ -48,7 +44,11 @@ const AdminTeacherDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [BACKEND_URL, navigate, teacherId]);
+
+  useEffect(() => {
+    fetchTeacherDetails();
+  }, [fetchTeacherDetails]);
 
   const handleDeleteTeacher = async () => {
     setDeleting(true);

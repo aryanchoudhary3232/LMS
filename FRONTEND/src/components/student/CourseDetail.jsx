@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import "../../css/teacher/CourseDetail.css";
 import { Link, useParams } from "react-router-dom";
 import useLearningTimer from "../../helper/customHooks/useLearningTimer";
@@ -228,7 +228,7 @@ const CourseDetail = () => {
     }
 
     getCourseById();
-  }, []);
+  }, [courseId]);
   console.log("course", course);
 
   useEffect(() => {
@@ -239,13 +239,7 @@ const CourseDetail = () => {
   }, [course]);
 
   // Fetch assignments for this course
-  useEffect(() => {
-    if (activeTab === "assignments" && courseId) {
-      fetchCourseAssignments();
-    }
-  }, [activeTab, courseId]);
-
-  const fetchCourseAssignments = async () => {
+  const fetchCourseAssignments = useCallback(async () => {
     try {
       setLoadingAssignments(true);
       const token = localStorage.getItem("token");
@@ -271,7 +265,13 @@ const CourseDetail = () => {
     } finally {
       setLoadingAssignments(false);
     }
-  };
+  }, [courseId]);
+
+  useEffect(() => {
+    if (activeTab === "assignments" && courseId) {
+      fetchCourseAssignments();
+    }
+  }, [activeTab, courseId, fetchCourseAssignments]);
 
   const getStatusBadge = (assignment) => {
     if (assignment.submissionStatus.submitted) {

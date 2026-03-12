@@ -16,8 +16,6 @@ const Courses = () => {
   category: '',
   level: ''
 });
-const [loading, setLoading] = useState(false);
-
 const handleSearch = async (e) => {
   const { name, value } = e.target;
   setSearchParams(prev => ({
@@ -26,7 +24,6 @@ const handleSearch = async (e) => {
   }));
 
   try {
-    setLoading(true);
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
     const queryString = new URLSearchParams({
       ...searchParams,
@@ -43,8 +40,6 @@ const handleSearch = async (e) => {
     }
   } catch (error) {
     console.error("Search error:", error);
-  } finally {
-    setLoading(false);
   }
 };
 
@@ -84,7 +79,8 @@ const handleSearch = async (e) => {
       } else {
         alert(data.message || "Failed to add to cart");
       }
-    } catch (err) {
+    } catch (error) {
+      console.error("Error adding to cart:", error);
       alert("Error adding to cart");
     }
   };

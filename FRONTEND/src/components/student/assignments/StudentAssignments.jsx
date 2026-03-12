@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../../css/student/Assignments.css";
-import useLearningTimer from "../../../helper/customHooks/useLearningTimer";
 
 const StudentAssignments = () => {
   const [assignments, setAssignments] = useState([]);
@@ -9,17 +8,10 @@ const StudentAssignments = () => {
   const [filter, setFilter] = useState("all");
   const navigate = useNavigate();
   
-  // Track learning time automatically
-  const { isActive, formattedTime } = useLearningTimer();
-
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-  useEffect(() => {
-    fetchAssignments();
-  }, [filter]);
-
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
@@ -41,7 +33,11 @@ const StudentAssignments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [BACKEND_URL, filter]);
+
+  useEffect(() => {
+    fetchAssignments();
+  }, [fetchAssignments]);
 
   const getStatusBadge = (assignment) => {
     if (assignment.submissionStatus.submitted) {

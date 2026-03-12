@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../../css/admin/Admin.css";
 
@@ -10,11 +10,7 @@ const AdminCourseDetail = () => {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchCourseDetails();
-  }, [courseId]);
-
-  const fetchCourseDetails = async () => {
+  const fetchCourseDetails = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const backendUrl =
@@ -44,7 +40,11 @@ const AdminCourseDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId]);
+
+  useEffect(() => {
+    fetchCourseDetails();
+  }, [fetchCourseDetails]);
 
   const handleTopicClick = (topicVideo) => {
     if (topicVideo) {

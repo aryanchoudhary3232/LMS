@@ -52,7 +52,6 @@ import SuperAdminDashboard from "./components/superadmin/SuperAdminDashboard";
 //common components (shared across all roles)
 import Profile from "./components/common/Profile";
 import Settings from "./components/common/Settings";
-import useLearningTimer from "./helper/customHooks/useLearningTimer";
 import TeacherCourses from "./components/teacher/TeacherCourses";
 import TeacherDashboard from "./components/teacher/TeacherDashboard";
 import StudentsEnrolled from "./components/teacher/StudentsEnrolled";

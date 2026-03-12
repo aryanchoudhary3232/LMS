@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../../../css/student/Assignments.css";
-import useLearningTimer from "../../../helper/customHooks/useLearningTimer";
 
 const ViewSubmission = () => {
   const { assignmentId } = useParams();
@@ -9,17 +8,10 @@ const ViewSubmission = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
-  // Track learning time automatically
-  const { isActive, formattedTime } = useLearningTimer();
-
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-  useEffect(() => {
-    fetchSubmission();
-  }, [assignmentId]);
-
-  const fetchSubmission = async () => {
+  const fetchSubmission = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
@@ -39,7 +31,11 @@ const ViewSubmission = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [BACKEND_URL, assignmentId]);
+
+  useEffect(() => {
+    fetchSubmission();
+  }, [fetchSubmission]);
 
   if (loading) {
     return <div className="view-loading">Loading submission...</div>;

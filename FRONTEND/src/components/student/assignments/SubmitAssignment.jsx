@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import useLearningTimer from "../../../helper/customHooks/useLearningTimer";
 import "../../../css/student/Assignments.css";
 
 const SubmitAssignment = () => {
@@ -13,17 +12,10 @@ const SubmitAssignment = () => {
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Track learning time automatically
-  const { isActive, formattedTime } = useLearningTimer();
-
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-  useEffect(() => {
-    fetchAssignmentDetails();
-  }, [assignmentId]);
-
-  const fetchAssignmentDetails = async () => {
+  const fetchAssignmentDetails = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
@@ -58,7 +50,11 @@ const SubmitAssignment = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [BACKEND_URL, assignmentId, navigate]);
+
+  useEffect(() => {
+    fetchAssignmentDetails();
+  }, [fetchAssignmentDetails]);
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);

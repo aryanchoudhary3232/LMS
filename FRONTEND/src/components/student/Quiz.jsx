@@ -16,13 +16,13 @@ const Quiz = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  const { startTimer, stopTimer, seconds, isActive, formattedTime } = useLearningTimer();
+  const { startTimer, stopTimer, isActive, formattedTime } = useLearningTimer();
 
   useEffect(() => {
     startTimer();
 
     return () => stopTimer();
-  }, []);
+  }, [startTimer, stopTimer]);
 
   useEffect(() => {
     async function getCourseById() {

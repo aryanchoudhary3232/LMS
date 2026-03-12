@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSuperAdmin } from '../../contexts/SuperAdminContext';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -23,11 +23,7 @@ const AnalyticsTab = () => {
     enrollmentTrends: null
   });
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [period]);
-
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       const [revenue, userGrowth, teachers, courses, enrollment] = await Promise.all([
@@ -50,7 +46,18 @@ const AnalyticsTab = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    fetchCoursePerformance,
+    fetchEnrollmentTrends,
+    fetchRevenueAnalytics,
+    fetchTeacherPerformance,
+    fetchUserGrowth,
+    period,
+  ]);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [loadAnalytics]);
 
   if (loading) {
     return (

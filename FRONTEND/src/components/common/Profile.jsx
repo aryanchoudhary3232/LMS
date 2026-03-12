@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import "../../css/common/Profile.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProfile } from "../../features/studentProfile/studentProfileSlice";
@@ -31,7 +31,7 @@ const Profile = () => {
     setAuthToken(token);
     if (token) dispatch(fetchProfile());
   }, [token, dispatch]);
-  const { name, email, role, loading, error } = useSelector(
+  const { name, email, role, loading } = useSelector(
     (state) => state.studentProfile
   );
   // Form state for editing

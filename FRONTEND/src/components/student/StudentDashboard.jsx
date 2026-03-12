@@ -13,7 +13,6 @@ import {
 import "../common/StudentDashboard.css";
 
 const StudentDashboard = () => {
-  const [student, setStudent] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -59,7 +58,6 @@ const StudentDashboard = () => {
 
       if (data.success) {
         setDashboardData(data.data);
-        setStudent(data.data);
       } else {
         console.error("Failed to fetch dashboard data:", data.message);
       }

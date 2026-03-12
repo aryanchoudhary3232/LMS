@@ -12,9 +12,6 @@ const Cart = () => {
   // const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
-  const backendUrl =
-    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-
   const dispatch = useDispatch();
   const { token } = useAuth();
   useEffect(() => {
@@ -22,13 +19,14 @@ const Cart = () => {
     if (token) dispatch(fetchCart(calculateTotal));
   }, [dispatch, token]);
 
-  const cartItems = useSelector((state) => state.cart.items) || [];  // Fallback to empty array
+  const cartItems = useSelector((state) => state.cart.items);
   const loading = useSelector((state) => state.cart.loading);
+  const safeCartItems = cartItems ?? [];
 
   // Recalculate total whenever cart items change
   useEffect(() => {
-    calculateTotal(cartItems);
-  }, [cartItems]);
+    calculateTotal(safeCartItems);
+  }, [safeCartItems]);
 
   const calculateTotal = (items) => {
     const sum = items.reduce((acc, item) => acc + (item.price || 0), 0);
@@ -40,14 +38,14 @@ const Cart = () => {
       await dispatch(removeFromCart(courseId)).unwrap();
       // Dispatch event to update navbar
       window.dispatchEvent(new Event("cartUpdated"));
-    } catch (err) {
-      console.error("Error removing course:", err);
+    } catch (error) {
+      console.error("Error removing course:", error);
     }
   };
 
   const handleCheckout = async () => {
     // Navigate to the checkout page and pass cart data via location state
-    navigate("/checkout", { state: { cartItems, total } });
+    navigate("/checkout", { state: { cartItems: safeCartItems, total } });
   };
 
   if (loading) return <div className="cart-container">Loading...</div>;
@@ -55,7 +53,7 @@ const Cart = () => {
   return (
     <div className="cart-container">
       <h2>Your Cart</h2>
-      {cartItems.length === 0 ? (
+      {safeCartItems.length === 0 ? (
         <div className="empty-cart">
           <p>Your cart is empty</p>
           <button
@@ -68,7 +66,7 @@ const Cart = () => {
       ) : (
         <>
           <div className="cart-items">
-            {cartItems.map((item) => (
+            {safeCartItems.map((item) => (
               <div key={item.id} className="cart-item">
                 <img
                   src={item.thumbnail}
@@ -94,7 +92,7 @@ const Cart = () => {
             <h3>Order Summary</h3>
             <div className="summary-row">
               <span>Total Items:</span>
-              <span>{cartItems.length}</span>
+              <span>{safeCartItems.length}</span>
             </div>
             <div className="summary-row">
               <span>Total Amount:</span>

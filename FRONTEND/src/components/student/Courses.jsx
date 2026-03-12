@@ -47,7 +47,8 @@ const Courses = () => {
       } else {
         alert(data.message || "Failed to add to cart");
       }
-    } catch (err) {
+    } catch (error) {
+      console.error("Error adding to cart:", error);
       alert("Error adding to cart");
     }
   };
