@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend Checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: FRONTEND
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: FRONTEND/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Create frontend env for CI
+        run: echo "VITE_BACKEND_URL=http://127.0.0.1:3000" > .env
+
+      - name: Lint frontend
+        run: npm run lint
+
+      - name: Build frontend
+        run: npm run build
+
+  backend:
+    name: Backend Checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: BACKEND
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: BACKEND/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Validate backend entrypoint syntax
+        run: node --check index.js
+
+  docker:
+    name: Docker Build Checks
+    runs-on: ubuntu-latest
+    needs:
+      - frontend
+      - backend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare frontend env for Docker build
+        run: echo "VITE_BACKEND_URL=http://127.0.0.1:3000" > FRONTEND/.env
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./BACKEND
+          file: ./BACKEND/Dockerfile
+          push: false
+          tags: lms-backend:ci
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./FRONTEND
+          file: ./FRONTEND/Dockerfile
+          push: false
+          tags: lms-frontend:ci

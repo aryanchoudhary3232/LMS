@@ -17,3 +17,8 @@ docker compose up --build -d
 
 - Frontend: Vite app built into an Nginx container
 - Backend: Express API running in a production Node container
+
+## GitHub Actions
+
+- CI workflow is available at `.github/workflows/ci.yml`
+- It runs frontend lint/build, backend syntax validation, and Docker image build checks on every push and pull request
