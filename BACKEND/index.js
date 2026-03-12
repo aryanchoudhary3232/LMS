@@ -22,15 +22,6 @@ const statsRoutes = require("./routes/statsRoutes");
 
 const PORT = Number(process.env.PORT) || 3000;
 const MONGO_URL =  process.env.MONGO_URL_ATLAS;
-const defaultCorsOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "http://localhost:8080",
-];
-const allowedOrigins = (process.env.CORS_ORIGIN || "")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
 
 // Logging middleware
 const logsDir = path.join(__dirname, "logs");
@@ -54,7 +45,7 @@ app.use(performanceMonitor);
 
 // CORS configuration
 app.use(cors({
-  origin: allowedOrigins.length ? allowedOrigins : defaultCorsOrigins,
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
