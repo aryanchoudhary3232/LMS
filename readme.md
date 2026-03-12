@@ -22,3 +22,7 @@ docker compose up --build -d
 
 - CI workflow is available at `.github/workflows/ci.yml`
 - It runs frontend lint/build, backend syntax validation, and Docker image build checks on every push and pull request
+- CD workflow is available at `.github/workflows/cd.yml`
+- CD deploys to your EC2 server after a successful `main` branch CI run, or manually through `workflow_dispatch`
+- Required GitHub secrets: `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`, `EC2_PORT`, `DEPLOY_PATH`
+- The EC2 machine must already have this repo cloned at `DEPLOY_PATH`, Docker installed, and working `BACKEND/.env` plus `FRONTEND/.env` files
