@@ -61,7 +61,8 @@ const Contact = () => {
       } else {
         setStatus({ ok: false, message: data.message || "Submission failed" });
       }
-    } catch (err) {
+    } catch (error) {
+      console.error("Contact form submission failed:", error);
       setStatus({ ok: false, message: "Network error" });
     }
   };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../../css/teacher/Assignments.css";
 
@@ -12,12 +12,7 @@ const TeacherAssignments = () => {
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-  useEffect(() => {
-    fetchCourses();
-    fetchAssignments();
-  }, []);
-
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`${BACKEND_URL}/teacher/courses`, {
@@ -33,9 +28,9 @@ const TeacherAssignments = () => {
     } catch (error) {
       console.error("Error fetching courses:", error);
     }
-  };
+  }, [BACKEND_URL]);
 
-  const fetchAssignments = async (courseId = "") => {
+  const fetchAssignments = useCallback(async (courseId = "") => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
@@ -59,7 +54,12 @@ const TeacherAssignments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [BACKEND_URL]);
+
+  useEffect(() => {
+    fetchCourses();
+    fetchAssignments();
+  }, [fetchAssignments, fetchCourses]);
 
   const handleFilterChange = (courseId) => {
     setFilterCourse(courseId);

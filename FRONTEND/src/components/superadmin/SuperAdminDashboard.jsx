@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSuperAdmin } from '../../contexts/SuperAdminContext';
+import { useSuperAdmin } from '../../contexts/useSuperAdmin';
 import '../../css/superadmin/SuperAdmin.css';
 import OverviewTab from './OverviewTab';
 import AnalyticsTab from './AnalyticsTab';
@@ -13,7 +13,7 @@ const SuperAdminDashboard = () => {
 
   useEffect(() => {
     fetchOverview();
-  }, []);
+  }, [fetchOverview]);
 
   const renderContent = () => {
     if (loading && !overview) {

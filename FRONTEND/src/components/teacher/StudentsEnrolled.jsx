@@ -4,7 +4,7 @@ const StudentsEnrolled = () => {
   const [students, setStudents] = useState(null);
 
   useEffect(() => {
-    async function fetchStudents(params) {
+    async function fetchStudents() {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/teacher/students`, {
         method: "GET",
         headers: {

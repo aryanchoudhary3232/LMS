@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../css/teacher/TeacherQualification.css";
 
@@ -10,11 +10,7 @@ const TeacherVerificationStatus = () => {
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-  useEffect(() => {
-    fetchVerificationStatus();
-  }, []);
-
-  const fetchVerificationStatus = async () => {
+  const fetchVerificationStatus = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
@@ -35,7 +31,11 @@ const TeacherVerificationStatus = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [BACKEND_URL]);
+
+  useEffect(() => {
+    fetchVerificationStatus();
+  }, [fetchVerificationStatus]);
 
   const getStatusColor = (status) => {
     switch (status) {

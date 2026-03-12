@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { FaStar, FaUserFriends, FaShoppingCart, FaPlay, FaBookmark } from "react-icons/fa";
 
-const CourseCard = ({ course, onAddToCart, isOwned = false, isAuthenticated = false, onFlashcardClick }) => {
+const CourseCard = ({ course, onAddToCart, isOwned = false, isAuthenticated = false }) => {
   const ratingAverage = course && typeof course.rating === "object" ? course.rating.average : course.rating || 4.5;
   const ratingCount = course && typeof course.rating === "object" ? course.rating.count : (course.ratingCount || 0);
   const studentCount = course.studentCount || "435,671";

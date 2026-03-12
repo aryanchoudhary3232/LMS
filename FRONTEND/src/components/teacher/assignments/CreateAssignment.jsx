@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../../css/teacher/Assignments.css";
 
@@ -23,11 +23,7 @@ const CreateAssignment = () => {
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-  useEffect(() => {
-    fetchCourses();
-  }, []);
-
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`${BACKEND_URL}/teacher/courses`, {
@@ -40,7 +36,11 @@ const CreateAssignment = () => {
     } catch (error) {
       console.error("Error fetching courses:", error);
     }
-  };
+  }, [BACKEND_URL]);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

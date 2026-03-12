@@ -117,7 +117,7 @@ const CourseDetail = () => {
 
     try {
       // Use Redux action to add to cart
-      const result = await dispatch(addToCart(course._id)).unwrap();
+      await dispatch(addToCart(course._id)).unwrap();
       
       alert("Course added to cart successfully!");
       // Dispatch event to update navbar
@@ -137,13 +137,6 @@ const CourseDetail = () => {
       </div>
     );
   }
-
-  // Helper to format duration if needed
-  const formatDuration = (min) => {
-    const h = Math.floor(min / 60);
-    const m = min % 60;
-    return h > 0 ? `${h}h ${m}m` : `${m}m`;
-  };
 
   return (
     <div className="course-detail-container">

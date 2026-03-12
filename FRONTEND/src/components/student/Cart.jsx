@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "../../css/student/Cart.css";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCart, removeFromCart } from "../../features/cart/cartSlice";
 import { setAuthToken } from "../../api/axios";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 
 const Cart = () => {
   // const [cartItems, setCartItems] = useState([]);
@@ -21,7 +21,7 @@ const Cart = () => {
 
   const cartItems = useSelector((state) => state.cart.items);
   const loading = useSelector((state) => state.cart.loading);
-  const safeCartItems = cartItems ?? [];
+  const safeCartItems = useMemo(() => cartItems ?? [], [cartItems]);
 
   // Recalculate total whenever cart items change
   useEffect(() => {

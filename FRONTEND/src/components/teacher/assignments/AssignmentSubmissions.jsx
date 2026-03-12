@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../../../css/teacher/Assignments.css";
 
@@ -14,11 +14,7 @@ const AssignmentSubmissions = () => {
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-  useEffect(() => {
-    fetchSubmissions();
-  }, [assignmentId]);
-
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
@@ -39,7 +35,11 @@ const AssignmentSubmissions = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [BACKEND_URL, assignmentId]);
+
+  useEffect(() => {
+    fetchSubmissions();
+  }, [fetchSubmissions]);
 
   const handleGradeSubmit = async (e) => {
     e.preventDefault();

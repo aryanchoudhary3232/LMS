@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useSuperAdmin } from '../../contexts/SuperAdminContext';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSuperAdmin } from '../../contexts/useSuperAdmin';
 
 const CoursesTab = () => {
   const { fetchCoursesByCategory } = useSuperAdmin();
@@ -8,11 +8,7 @@ const CoursesTab = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    loadCourses();
-  }, []);
-
-  const loadCourses = async () => {
+  const loadCourses = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetchCoursesByCategory(false);
@@ -22,7 +18,11 @@ const CoursesTab = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchCoursesByCategory]);
+
+  useEffect(() => {
+    loadCourses();
+  }, [loadCourses]);
 
   if (loading) {
     return (

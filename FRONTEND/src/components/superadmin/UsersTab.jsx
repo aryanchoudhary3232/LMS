@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useSuperAdmin } from '../../contexts/SuperAdminContext';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSuperAdmin } from '../../contexts/useSuperAdmin';
 
 const UsersTab = () => {
   const { fetchAllUsers } = useSuperAdmin();
@@ -8,11 +8,7 @@ const UsersTab = () => {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetchAllUsers(false);
@@ -22,7 +18,11 @@ const UsersTab = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchAllUsers]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   if (loading) {
     return (

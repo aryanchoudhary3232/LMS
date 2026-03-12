@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "../css/Login.css";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import Navbar from "../components/common/Navbar";
 
 const Login = () => {

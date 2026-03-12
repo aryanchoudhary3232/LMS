@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const TeacherCourses = () => {
   const [courses, setCourses] = useState([]);
+  const navigate = useNavigate();
   useEffect(() => {
     async function fetchTeacherCourses() {
       const response = await fetch(
@@ -58,7 +59,7 @@ const TeacherCourses = () => {
                 )}
                 <div className="admin-course-overlay">
                   <button
-                    onClick={() => viewCourseDetails(course._id)}
+                    onClick={() => navigate(`/teacher/courses/${course._id}`)}
                     className="admin-view-btn"
                     title="View Course Details"
                   >

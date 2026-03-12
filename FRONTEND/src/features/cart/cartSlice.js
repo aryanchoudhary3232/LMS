@@ -96,7 +96,7 @@ const cartSlice = createSlice({
       .addCase(addToCart.pending, (state) => {
         state.loading = true;
       })
-      .addCase(addToCart.fulfilled, (state, action) => {
+      .addCase(addToCart.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
         // Optimization: We could update items here if the payload was mapped,

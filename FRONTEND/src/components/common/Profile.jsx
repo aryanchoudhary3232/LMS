@@ -3,7 +3,7 @@ import "../../css/common/Profile.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProfile } from "../../features/studentProfile/studentProfileSlice";
 import { setAuthToken } from "../../api/axios";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 
 /**
  * Profile Component - Personal Information Management

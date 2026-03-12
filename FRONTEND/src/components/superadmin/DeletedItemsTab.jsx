@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useSuperAdmin } from '../../contexts/SuperAdminContext';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSuperAdmin } from '../../contexts/useSuperAdmin';
 
 const DeletedItemsTab = () => {
   const { fetchDeletedUsers, fetchDeletedCourses, restoreUser, restoreCourse } = useSuperAdmin();
@@ -9,11 +9,7 @@ const DeletedItemsTab = () => {
   const [activeView, setActiveView] = useState('users');
   const [restoring, setRestoring] = useState(false);
 
-  useEffect(() => {
-    loadDeletedItems();
-  }, []);
-
-  const loadDeletedItems = async () => {
+  const loadDeletedItems = useCallback(async () => {
     try {
       setLoading(true);
       const [users, courses] = await Promise.all([
@@ -27,7 +23,11 @@ const DeletedItemsTab = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchDeletedCourses, fetchDeletedUsers]);
+
+  useEffect(() => {
+    loadDeletedItems();
+  }, [loadDeletedItems]);
 
   const handleRestoreUser = async (userId, userType) => {
     if (!window.confirm(`Are you sure you want to restore this ${userType}?`)) {

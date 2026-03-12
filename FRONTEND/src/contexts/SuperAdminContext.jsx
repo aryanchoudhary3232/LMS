@@ -1,22 +1,13 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from '../api/axios';
-
-const SuperAdminContext = createContext();
-
-export const useSuperAdmin = () => {
-  const context = useContext(SuperAdminContext);
-  if (!context) {
-    throw new Error('useSuperAdmin must be used within SuperAdminProvider');
-  }
-  return context;
-};
+import SuperAdminContext from './super-admin-context';
 
 export const SuperAdminProvider = ({ children }) => {
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchOverview = async () => {
+  const fetchOverview = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get('/superadmin/overview');
@@ -29,9 +20,9 @@ export const SuperAdminProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchRevenueAnalytics = async () => {
+  const fetchRevenueAnalytics = useCallback(async () => {
     try {
       const response = await axios.get('/superadmin/revenue');
       return response.data;
@@ -39,9 +30,9 @@ export const SuperAdminProvider = ({ children }) => {
       console.error('Revenue analytics error:', err);
       throw err;
     }
-  };
+  }, []);
 
-  const fetchUserGrowth = async (period = 30) => {
+  const fetchUserGrowth = useCallback(async (period = 30) => {
     try {
       const response = await axios.get(`/superadmin/analytics/user-growth?period=${period}`);
       return response.data;
@@ -49,9 +40,9 @@ export const SuperAdminProvider = ({ children }) => {
       console.error('User growth error:', err);
       throw err;
     }
-  };
+  }, []);
 
-  const fetchTeacherPerformance = async () => {
+  const fetchTeacherPerformance = useCallback(async () => {
     try {
       const response = await axios.get('/superadmin/analytics/teacher-performance');
       return response.data;
@@ -59,9 +50,9 @@ export const SuperAdminProvider = ({ children }) => {
       console.error('Teacher performance error:', err);
       throw err;
     }
-  };
+  }, []);
 
-  const fetchCoursePerformance = async () => {
+  const fetchCoursePerformance = useCallback(async () => {
     try {
       const response = await axios.get('/superadmin/analytics/course-performance');
       return response.data;
@@ -69,9 +60,9 @@ export const SuperAdminProvider = ({ children }) => {
       console.error('Course performance error:', err);
       throw err;
     }
-  };
+  }, []);
 
-  const fetchEnrollmentTrends = async (period = 30) => {
+  const fetchEnrollmentTrends = useCallback(async (period = 30) => {
     try {
       const response = await axios.get(`/superadmin/analytics/enrollment-trends?period=${period}`);
       return response.data;
@@ -79,9 +70,9 @@ export const SuperAdminProvider = ({ children }) => {
       console.error('Enrollment trends error:', err);
       throw err;
     }
-  };
+  }, []);
 
-  const fetchAllUsers = async (includeDeleted = false) => {
+  const fetchAllUsers = useCallback(async (includeDeleted = false) => {
     try {
       const response = await axios.get(`/superadmin/users?includeDeleted=${includeDeleted}`);
       return response.data;
@@ -89,9 +80,9 @@ export const SuperAdminProvider = ({ children }) => {
       console.error('Fetch users error:', err);
       throw err;
     }
-  };
+  }, []);
 
-  const fetchDeletedUsers = async () => {
+  const fetchDeletedUsers = useCallback(async () => {
     try {
       const response = await axios.get('/superadmin/users/deleted');
       return response.data;
@@ -99,9 +90,9 @@ export const SuperAdminProvider = ({ children }) => {
       console.error('Fetch deleted users error:', err);
       throw err;
     }
-  };
+  }, []);
 
-  const restoreUser = async (userId, userType) => {
+  const restoreUser = useCallback(async (userId, userType) => {
     try {
       const response = await axios.put(`/superadmin/users/${userId}/restore`, { userType });
       return response.data;
@@ -109,9 +100,9 @@ export const SuperAdminProvider = ({ children }) => {
       console.error('Restore user error:', err);
       throw err;
     }
-  };
+  }, []);
 
-  const fetchCoursesByCategory = async (includeDeleted = false) => {
+  const fetchCoursesByCategory = useCallback(async (includeDeleted = false) => {
     try {
       const response = await axios.get(`/superadmin/courses/by-category?includeDeleted=${includeDeleted}`);
       return response.data;
@@ -119,9 +110,9 @@ export const SuperAdminProvider = ({ children }) => {
       console.error('Fetch courses by category error:', err);
       throw err;
     }
-  };
+  }, []);
 
-  const fetchDeletedCourses = async () => {
+  const fetchDeletedCourses = useCallback(async () => {
     try {
       const response = await axios.get('/superadmin/courses/deleted');
       return response.data;
@@ -129,9 +120,9 @@ export const SuperAdminProvider = ({ children }) => {
       console.error('Fetch deleted courses error:', err);
       throw err;
     }
-  };
+  }, []);
 
-  const restoreCourse = async (courseId) => {
+  const restoreCourse = useCallback(async (courseId) => {
     try {
       const response = await axios.put(`/superadmin/courses/${courseId}/restore`);
       return response.data;
@@ -139,7 +130,7 @@ export const SuperAdminProvider = ({ children }) => {
       console.error('Restore course error:', err);
       throw err;
     }
-  };
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -148,9 +139,9 @@ export const SuperAdminProvider = ({ children }) => {
     if (token && userRole === 'SuperAdmin') {
       fetchOverview();
     }
-  }, []);
+  }, [fetchOverview]);
 
-  const value = {
+  const value = useMemo(() => ({
     overview,
     loading,
     error,
@@ -166,7 +157,23 @@ export const SuperAdminProvider = ({ children }) => {
     fetchCoursesByCategory,
     fetchDeletedCourses,
     restoreCourse
-  };
+  }), [
+    error,
+    fetchAllUsers,
+    fetchCoursePerformance,
+    fetchCoursesByCategory,
+    fetchDeletedCourses,
+    fetchDeletedUsers,
+    fetchEnrollmentTrends,
+    fetchOverview,
+    fetchRevenueAnalytics,
+    fetchTeacherPerformance,
+    fetchUserGrowth,
+    loading,
+    overview,
+    restoreCourse,
+    restoreUser,
+  ]);
 
   return (
     <SuperAdminContext.Provider value={value}>
@@ -174,5 +181,3 @@ export const SuperAdminProvider = ({ children }) => {
     </SuperAdminContext.Provider>
   );
 };
-
-export default SuperAdminContext;
