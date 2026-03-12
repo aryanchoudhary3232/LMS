@@ -20,6 +20,18 @@ const cartRoutes = require("./routes/cartRoutes");
 const flashcardRoutes = require('./routes/flashcardRoutes');
 const statsRoutes = require("./routes/statsRoutes");
 
+const PORT = Number(process.env.PORT) || 3000;
+const MONGO_URL =  process.env.MONGO_URL_ATLAS;
+const defaultCorsOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:8080",
+];
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 // Logging middleware
 const logsDir = path.join(__dirname, "logs");
 if (!fs.existsSync(logsDir)) {
@@ -42,7 +54,7 @@ app.use(performanceMonitor);
 
 // CORS configuration
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: allowedOrigins.length ? allowedOrigins : defaultCorsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -53,8 +65,10 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-const MONGO_URL =
-  process.env.MONGO_URL_ATLAS
+if (!MONGO_URL) {
+  console.error("Missing Mongo connection string. Set MONGO_URL or MONGO_URL_ATLAS.");
+  process.exit(1);
+}
 
 mongoose
   .connect(MONGO_URL)
@@ -100,10 +114,14 @@ app.get("/", (req, res) => {
   res.send("Welcome to server");
 });
 
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 // Error handling middlewares (must be last)
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(3000, () => {
-  console.log("backend server is running on port 3000....");
+app.listen(PORT, () => {
+  console.log(`backend server is running on port ${PORT}....`);
 });
