@@ -1,0 +1,1951 @@
+/* --- Admin Layout Structure --- */
+/* .admin-layout-container {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  background-color: #f9f9f9;
+}*/
+
+.admin-layout-container {
+  display: flex;
+  width: 100%;
+  min-height: calc(100vh - 65px);
+  position: relative;
+  background-color: #f9f9f9;
+}
+
+
+
+/* Sidebar Styles */
+/* .admin-sidebar {
+  width: 250px; 
+  background: linear-gradient(135deg, #2337AD 0%, #1a2a88 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 1000;
+  transition: transform 0.3s ease-in-out;
+  flex-shrink: 0; 
+} */
+
+/* Sidebar Styles */
+.admin-sidebar {
+  width: 250px;
+  background: linear-gradient(135deg, #2337AD 0%, #1a2a88 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: var(--site-navbar-height, 65px);
+  left: 0;
+  bottom: 0;
+  height: calc(100vh - var(--site-navbar-height, 65px));
+  z-index: 900;
+  transition: transform 0.3s ease-in-out;
+  flex-shrink: 0;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+
+/* --- Mobile Specific Adjustments --- */
+@media (max-width: 992px) {
+  .admin-sidebar {
+    position: fixed;
+    top: 0; /* On mobile, we want it to cover the full screen top-to-bottom */
+    height: 100vh;
+    z-index: 2000; /* Must be on top of everything including Navbar */
+  }
+
+  /* Push the hamburger button down slightly so it doesn't overlap 
+     if the Navbar is sticky, or just to give it breathing room.
+  */
+  .mobile-menu-btn {
+    top: 15px; 
+    left: 15px;
+  }
+}
+
+/* Main Content Styles */
+.admin-main-content {
+  flex: 1;
+  padding: 20px;
+  overflow-x: hidden;
+  width: 100%;
+  margin-left: 250px;
+  min-height: calc(100vh - 65px);
+}
+
+/* Header inside Sidebar */
+.admin-sidebar-header {
+  padding: 25px 20px;
+  border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.admin-sidebar-header h3 {
+  color: #ffd700;
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Navigation Links */
+.admin-nav {
+  padding: 20px 0;
+  flex-grow: 1; /* Pushes logout to bottom */
+  overflow-y: auto;
+}
+
+.admin-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-nav-item {
+  margin-bottom: 5px;
+}
+
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  padding: 15px 25px;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
+  font-weight: 500;
+}
+
+.admin-nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffd700;
+}
+
+.admin-nav-link.active {
+  background: rgba(255, 215, 0, 0.1);
+  color: #ffd700;
+  border-left-color: #ffd700;
+  font-weight: 600;
+}
+
+.admin-nav-icon {
+  margin-right: 12px;
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+}
+
+/* Logout Button */
+.admin-logout-container {
+  padding: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-logout-btn {
+  width: 100%;
+  padding: 12px;
+  background: rgba(231, 76, 60, 0.9);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.admin-logout-btn:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+}
+
+/* --- Mobile Specific Styles --- */
+
+/* Hamburger Button (Hidden on Desktop) */
+.mobile-menu-btn {
+  display: none;
+  position: absolute; /* Sticks to top left of main content */
+  top: 15px;
+  left: 15px;
+  z-index: 1100; /* Above sidebar */
+  background: #2337AD;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Overlay (Hidden by default) */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 900;
+  backdrop-filter: blur(2px);
+}
+
+/* --- RESPONSIVE MEDIA QUERY --- */
+@media (max-width: 992px) {
+  /* Show hamburger */
+  .mobile-menu-btn {
+    display: block;
+  }
+
+  /* Adjust Layout */
+  .admin-layout-container {
+    flex-direction: column;
+  }
+  
+  /* Make sidebar off-canvas */
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px; /* Wider for mobile touch targets */
+    transform: translateX(-100%); /* Hide by sliding left */
+    box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+  }
+
+  /* Slide in when class 'open' is added */
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Show overlay when sidebar is open */
+  .sidebar-overlay {
+    display: block; /* Only visible when needed via React state, but CSS handles display here */
+  }
+
+  /* Content takes full width */
+  .admin-main-content {
+    width: 100%;
+    padding: 60px 20px 20px; /* Top padding for hamburger button space */
+    margin-left: 0;
+  }
+
+  /* Adjust cards inside outlet for mobile */
+  .admin-stats-cards, 
+  .admin-grid, 
+  .admin-courses-grid {
+    grid-template-columns: 1fr; /* Single column */
+  }
+
+  .admin-course-detail-layout {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .admin-course-sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 500px;
+  }
+}
+
+/* --- Admin Courses Styles --- */
+.admin-courses {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.admin-courses h2 {
+  color: #2337AD;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 25px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid #ffd700;
+  display: inline-block;
+}
+
+.admin-courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+  margin-top: 20px;
+}
+
+.admin-course-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid #e1e5e9;
+  position: relative;
+}
+
+.admin-course-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(35, 55, 173, 0.15);
+}
+
+.admin-course-image-container {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.admin-course-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.admin-course-card:hover .admin-course-image {
+  transform: scale(1.05);
+}
+
+.admin-course-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #6c757d;
+}
+
+.placeholder-icon {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+.placeholder-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.admin-course-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(35, 55, 173, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.admin-course-card:hover .admin-course-overlay {
+  opacity: 1;
+}
+
+.admin-view-btn {
+  background: #fff;
+  color: #2337AD;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.admin-view-btn:hover {
+  background: #ffd700;
+  transform: scale(1.1);
+}
+
+.admin-course-info {
+  padding: 20px;
+  position: relative;
+  height: calc(100% - 200px);
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-course-title {
+  color: #2337AD;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  line-height: 1.3;
+}
+
+.admin-course-description {
+  color: #6c757d;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 15px 0;
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-course-details {
+  margin-bottom: 15px;
+}
+
+.admin-course-detail-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #495057;
+}
+
+.detail-value {
+  color: #6c757d;
+  text-align: right;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-course-actions {
+  margin-top: auto;
+  padding: 15px 0 0 0;
+  border-top: 1px solid #e9ecef;
+}
+
+.admin-view-details-btn {
+  display: block;
+  width: 100%;
+  background: linear-gradient(135deg, #2337AD 0%, #1a2a88 100%);
+  color: white;
+  text-align: center;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.admin-view-details-btn:hover {
+  background: linear-gradient(135deg, #1a2a88 0%, #2337AD 100%);
+  transform: translateY(-2px);
+  color: white;
+}
+
+.admin-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  font-size: 1.2rem;
+  color: #2337AD;
+  font-weight: 600;
+}
+
+.admin-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+}
+
+/* =============================
+   ADMIN COURSE DETAIL SCREEN
+   ============================= */
+.admin-course-detail-container {
+  padding: 30px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf2 100%);
+  min-height: 100vh;
+}
+
+.admin-course-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.admin-back-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.admin-back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.admin-course-title-section h1 {
+  margin: 0;
+  font-size: 2.1rem;
+  color: #2337AD;
+}
+
+.admin-course-subtitle {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.admin-course-detail-layout {
+  display: flex;
+  gap: 25px;
+}
+
+.admin-course-main-content,
+.admin-course-sidebar {
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  padding: 24px;
+}
+
+.admin-course-main-content {
+  flex: 2;
+}
+
+.admin-course-sidebar {
+  flex: 1;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+}
+
+.admin-video-section h2 {
+  font-size: 1.4rem;
+  color: #2337AD;
+  margin-bottom: 16px;
+}
+
+.admin-video-player {
+  border-radius: 16px;
+  border: 4px solid rgba(35, 55, 173, 0.08);
+  background: #000;
+}
+
+.admin-no-video {
+  border: 2px dashed #cbd5f5;
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  background: rgba(35, 55, 173, 0.04);
+  color: #6b7280;
+}
+
+.admin-course-description-section,
+.admin-course-notes {
+  margin-top: 30px;
+  padding: 20px;
+  border-radius: 14px;
+  background: #f9fafb;
+}
+
+.admin-course-notes {
+  background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+  border: 1px solid #bae6fd;
+}
+
+.admin-notes-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.admin-notes-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.35);
+}
+
+.admin-course-info-panel h3,
+.admin-chapters-list h3 {
+  margin-top: 0;
+  color: #2337AD;
+  font-size: 1.3rem;
+}
+
+.admin-info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.95rem;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #475569;
+}
+
+.info-value {
+  color: #0f172a;
+}
+
+.admin-intro-video-btn {
+  width: 100%;
+  margin-top: 18px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #2337AD 0%, #1a2a88 100%);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.admin-intro-video-btn.active,
+.admin-intro-video-btn:hover {
+  box-shadow: 0 8px 20px rgba(35, 55, 173, 0.35);
+  transform: translateY(-2px);
+}
+
+.admin-chapter-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+  background: #fff;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.05);
+}
+
+.admin-chapter-title {
+  margin: 0 0 10px;
+  color: #111827;
+}
+
+.admin-topic-item {
+  list-style: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s ease;
+}
+
+.admin-topic-item:hover,
+.admin-topic-item.active {
+  background: rgba(35, 55, 173, 0.08);
+  color: #2337AD;
+  font-weight: 600;
+}
+
+.admin-no-chapters,
+.admin-no-topics {
+  color: #94a3b8;
+  font-style: italic;
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* Enrolled Students Section */
+.admin-enrolled-students-section {
+  margin-top: 30px;
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  padding: 30px;
+}
+
+.admin-enrolled-students-section h2 {
+  color: #2337AD;
+  font-size: 1.8rem;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.admin-students-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.admin-student-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.admin-student-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(35, 55, 173, 0.15);
+  border-color: #2337AD;
+}
+
+.student-card-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.student-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2337AD 0%, #1a2a88 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.student-info h4 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.student-email {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.student-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.detail-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.detail-item > div {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  color: #2337AD;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 992px) {
+  .admin-course-detail-container {
+    padding: 20px;
+  }
+
+  .admin-course-detail-layout {
+    flex-direction: column;
+  }
+
+  .admin-course-sidebar {
+    max-height: none;
+  }
+
+  .admin-students-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-enrolled-students-section {
+    padding: 20px;
+  }
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.admin-empty h3 {
+  color: #2337AD;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.admin-empty p {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Admin Dashboard Styles */
+.admin-dashboard {
+  width: 100%;
+  padding: 40px;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  min-height: 100vh;
+}
+
+.admin-dashboard h2 {
+  color: #2337AD;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 35px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #ffd700;
+  display: inline-block;
+  text-shadow: 0 2px 4px rgba(35, 55, 173, 0.1);
+}
+
+/* Stats Cards Grid */
+.admin-stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+  margin-top: 30px;
+}
+
+/* Individual Stat Card */
+.admin-stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+}
+
+.admin-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #2337AD 0%, #ffd700 100%);
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 30px rgba(35, 55, 173, 0.15);
+  border-color: #2337AD;
+}
+
+/* Student Card - Blue Theme */
+.admin-stat-card.students {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
+}
+
+.admin-stat-card.students::before {
+  background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.admin-stat-card.students h3 {
+  color: #1d4ed8;
+}
+
+.admin-stat-card.students .admin-stat-number {
+  color: #3b82f6;
+}
+
+/* Teacher Card - Purple Theme */
+.admin-stat-card.teachers {
+  background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
+}
+
+.admin-stat-card.teachers::before {
+  background: linear-gradient(90deg, #8b5cf6 0%, #6d28d9 100%);
+}
+
+.admin-stat-card.teachers h3 {
+  color: #6d28d9;
+}
+
+.admin-stat-card.teachers .admin-stat-number {
+  color: #8b5cf6;
+}
+
+/* Course Card - Gold/Orange Theme */
+.admin-stat-card.courses {
+  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+}
+
+.admin-stat-card.courses::before {
+  background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.admin-stat-card.courses h3 {
+  color: #d97706;
+}
+
+.admin-stat-card.courses .admin-stat-number {
+  color: #f59e0b;
+}
+
+/* Card Content */
+.admin-stat-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.admin-stat-number {
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1;
+  margin: 0;
+  background: linear-gradient(135deg, currentColor 0%, currentColor 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading State */
+.admin-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: 1.2rem;
+  color: #6b7280;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+/* Add icon/emoji support */
+.admin-stat-card::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  width: 100px;
+  height: 100px;
+  background: currentColor;
+  opacity: 0.05;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.admin-stat-card:hover::after {
+  transform: scale(1.2);
+  opacity: 0.08;
+}
+
+/* Responsive Dashboard */
+@media (max-width: 768px) {
+  .admin-dashboard {
+    padding: 20px;
+  }
+
+  .admin-dashboard h2 {
+    font-size: 1.8rem;
+  }
+
+  .admin-stats-cards {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .admin-stat-number {
+    font-size: 2.8rem;
+  }
+}
+
+/* ===================================
+   ADMIN USERS PAGE STYLES
+   =================================== */
+
+.admin-users {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf2 100%);
+  min-height: 100vh;
+}
+
+.admin-users > h2 {
+  color: #2337AD;
+  font-size: 2.2rem;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #FFD700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Section Containers */
+.admin-section {
+  margin-bottom: 50px;
+}
+
+.admin-section-title {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  border-radius: 12px;
+  display: inline-block;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-section-title::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+  z-index: 0;
+}
+
+.admin-section-title.students {
+  background: linear-gradient(135deg, #2337AD 0%, #1a2a88 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(35, 55, 173, 0.3);
+}
+
+.admin-section-title.teachers {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+/* Grid Layout for User Cards */
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+  margin-top: 20px;
+}
+
+/* User Cards */
+.admin-card.user {
+  background: white;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border-left: 5px solid #2337AD;
+}
+
+.admin-card.user::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #2337AD 0%, #1a2a88 100%);
+  border-radius: 0 0 0 100%;
+  opacity: 0.1;
+  transition: opacity 0.3s ease;
+}
+
+.admin-card.user:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(35, 55, 173, 0.15);
+}
+
+.admin-card.user:hover::before {
+  opacity: 0.2;
+}
+
+.admin-card.user.teacher-card {
+  border-left-color: #8b5cf6;
+}
+
+.admin-card.user.teacher-card::before {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+}
+
+.admin-card.user h4 {
+  color: #2337AD;
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.admin-card.user.teacher-card h4 {
+  color: #8b5cf6;
+}
+
+.admin-card.user p {
+  color: #555;
+  margin: 10px 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.admin-card.user p strong {
+  color: #333;
+  font-weight: 600;
+  margin-right: 5px;
+}
+
+/* Verification Badge */
+.verification-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.verification-badge.verified {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.verification-badge.pending {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.verification-badge.rejected {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.verification-badge.not {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+}
+
+/* Review Button */
+.btn-review-teacher {
+  margin-top: 15px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #2337AD 0%, #1a2a88 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(35, 55, 173, 0.2);
+}
+
+.btn-review-teacher:hover {
+  background: linear-gradient(135deg, #1a2a88 0%, #2337AD 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(35, 55, 173, 0.3);
+}
+
+.btn-review-teacher:active {
+  transform: translateY(0);
+}
+
+/* Delete Student Button */
+.btn-delete-student {
+  margin-top: 15px;
+  padding: 10px 18px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
+}
+
+.btn-delete-student:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.btn-delete-student:active {
+  transform: translateY(0);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Content */
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-content h3 {
+  margin: 0 0 15px 0;
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.modal-content p {
+  color: #4b5563;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 10px 0;
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 25px;
+  justify-content: flex-end;
+}
+
+.btn-cancel,
+.btn-delete {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.btn-cancel {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.btn-cancel:hover {
+  background: #d1d5db;
+  transform: translateY(-1px);
+}
+
+.btn-delete {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn-delete:hover {
+  background: #c0392b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.btn-cancel:active,
+.btn-delete:active {
+  transform: translateY(0);
+}
+
+/* Empty State */
+.admin-empty {
+  background: white;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 1.1rem;
+  margin-top: 20px;
+}
+
+/* Loading State for Users Page */
+.admin-users .admin-loading {
+  background: transparent;
+  color: #2337AD;
+  font-weight: 600;
+}
+
+/* Responsive Design for Users Page */
+@media (max-width: 992px) {
+  .admin-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-users {
+    padding: 20px !important;
+  }
+
+  .admin-users > h2 {
+    font-size: 1.8rem;
+  }
+
+  .admin-section-title {
+    font-size: 1.4rem;
+    padding: 12px 16px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .admin-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .admin-card.user {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-users > h2 {
+    font-size: 1.5rem;
+  }
+
+  .admin-section-title {
+    font-size: 1.2rem;
+  }
+
+  .admin-card.user h4 {
+    font-size: 1.1rem;
+  }
+
+  .btn-review-teacher {
+    font-size: 0.9rem;
+    padding: 8px 14px;
+  }
+}
+
+/* ===================================
+   ADMIN TEACHER DETAIL PAGE STYLES
+   =================================== */
+
+.admin-teacher-detail {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf2 100%);
+  min-height: 100vh;
+  padding: 30px;
+}
+
+/* Header Section */
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.detail-header h2 {
+  color: #2337AD;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0;
+  flex: 1;
+  border-bottom: 3px solid #FFD700;
+  padding-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-back {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-back:hover {
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Content Layout */
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* Info Cards */
+.info-card {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.info-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #2337AD 0%, #8b5cf6 50%, #FFD700 100%);
+}
+
+.info-card:hover {
+  box-shadow: 0 8px 20px rgba(35, 55, 173, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Card Header */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.card-header h3 {
+  color: #2337AD;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Info Grid */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-item label {
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item span {
+  color: #1f2937;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.badge-teacher {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  color: white;
+}
+
+.badge-count {
+  background: linear-gradient(135deg, #2337AD 0%, #1a2a88 100%);
+  color: white;
+}
+
+/* Verification Section */
+.verification-info {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.status-display {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border-radius: 12px;
+  border-left: 5px solid #2337AD;
+}
+
+.status-icon {
+  font-size: 2.5rem;
+}
+
+.status-badge-large {
+  padding: 10px 25px;
+  border-radius: 25px;
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Verification Actions */
+.verification-actions {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+/* Notes Section */
+.notes-section {
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border-left: 4px solid #FFD700;
+}
+
+.notes-section label {
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.notes-text {
+  color: #374151;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Document Section */
+.document-section {
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 12px;
+  border: 2px solid #bae6fd;
+}
+
+.document-section label {
+  color: #0369a1;
+  font-weight: 600;
+  font-size: 1rem;
+  display: block;
+  margin-bottom: 15px;
+}
+
+.doc-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.doc-details {
+  flex: 1;
+}
+
+.doc-details p {
+  color: #0c4a6e;
+  margin: 5px 0;
+  font-weight: 500;
+}
+
+.doc-size {
+  color: #0891b2;
+  font-size: 0.9rem;
+}
+
+.doc-date {
+  color: #06b6d4;
+  font-size: 0.85rem;
+}
+
+.btn-view-doc {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+}
+
+.btn-view-doc:hover {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+}
+
+.no-document {
+  padding: 20px;
+  background: #fef2f2;
+  border-radius: 12px;
+  border: 2px dashed #fca5a5;
+  text-align: center;
+}
+
+.no-document p {
+  color: #dc2626;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Delete Teacher Button */
+.btn-delete-teacher {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-delete-teacher:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Courses List */
+.courses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.course-item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.course-item:hover {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateX(5px);
+}
+
+.course-thumbnail-small {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.course-info {
+  flex: 1;
+}
+
+.course-info h4 {
+  color: #2337AD;
+  font-size: 1.1rem;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+}
+
+.course-info p {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.btn-view-course {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #2337AD 0%, #1a2a88 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(35, 55, 173, 0.2);
+}
+
+.btn-view-course:hover {
+  background: linear-gradient(135deg, #1a2a88 0%, #131f5e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(35, 55, 173, 0.3);
+}
+
+.no-courses {
+  padding: 40px;
+  text-align: center;
+  color: #6b7280;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 2px dashed #d1d5db;
+}
+
+.no-courses p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Assessment Card */
+.assessment-card {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid #fbbf24;
+}
+
+.assessment-card::before {
+  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+.assessment-content {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.assessment-criteria h4 {
+  color: #92400e;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+}
+
+.assessment-criteria ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.assessment-criteria li {
+  color: #78350f;
+  padding: 10px;
+  background: white;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  font-weight: 500;
+  border-left: 3px solid #fbbf24;
+}
+
+.assessment-actions {
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #fca5a5;
+}
+
+.warning-text {
+  color: #dc2626;
+  font-size: 1rem;
+  margin-bottom: 15px;
+}
+
+.deletion-impact {
+  list-style: disc;
+  padding-left: 25px;
+  color: #991b1b;
+  margin: 10px 0;
+}
+
+.deletion-impact li {
+  margin: 8px 0;
+  font-weight: 500;
+}
+
+.recommendation {
+  color: #0369a1;
+  font-style: italic;
+  margin-top: 15px;
+  padding: 12px;
+  background: #e0f2fe;
+  border-radius: 8px;
+  border-left: 4px solid #0ea5e9;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .doc-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-view-doc {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-teacher-detail {
+    padding: 20px;
+  }
+
+  .detail-header h2 {
+    font-size: 1.8rem;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .btn-delete-teacher {
+    width: 100%;
+  }
+
+  .course-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .course-thumbnail-small {
+    width: 100%;
+    height: 150px;
+  }
+
+  .btn-view-course {
+    width: 100%;
+  }
+
+  .verification-actions {
+    flex-direction: column;
+  }
+
+  .verification-actions button {
+    width: 100%;
+  }
+}
+
+/* Deleted Members Styles */
+.admin-card.user.deleted-member {
+  border-left-color: #e74c3c;
+  background: linear-gradient(to right, #fff5f5 0%, white 100%);
+}
+
+.admin-card.user.deleted-member::before {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  opacity: 0.08;
+}
+
+.admin-card.user.deleted-member:hover::before {
+  opacity: 0.12;
+}
+
+@media (max-width: 480px) {
+  .detail-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .card-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .status-icon {
+    font-size: 2rem;
+  }
+
+  .status-badge-large {
+    font-size: 1rem;
+    padding: 8px 18px;
+  }
+}

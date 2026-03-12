@@ -1,0 +1,451 @@
+/* ========== GLOBAL RESPONSIVE UTILITIES ========== */
+
+/* This file contains global responsive utilities that can be used across all components */
+
+:root {
+  /* Breakpoints */
+  --mobile-breakpoint: 480px;
+  --tablet-breakpoint: 768px;
+  --desktop-breakpoint: 1024px;
+  --large-breakpoint: 1440px;
+
+  /* Common spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+}
+
+/* ========== GLOBAL BOX SIZING ========== */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+/* ========== RESPONSIVE TEXT UTILITIES ========== */
+
+/* Hide on mobile only */
+@media (max-width: 480px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Show only on mobile */
+@media (min-width: 481px) {
+  .show-only-mobile {
+    display: none !important;
+  }
+}
+
+/* Hide on tablet and below */
+@media (max-width: 768px) {
+  .hide-tablet {
+    display: none !important;
+  }
+}
+
+/* Show only on tablet and below */
+@media (min-width: 769px) {
+  .show-only-tablet {
+    display: none !important;
+  }
+}
+
+/* Hide on desktop and below */
+@media (max-width: 1024px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+/* Show only on desktop */
+@media (min-width: 1025px) {
+  .show-only-desktop {
+    display: none !important;
+  }
+}
+
+/* ========== RESPONSIVE CONTAINER ========== */
+
+.responsive-container {
+  width: 100%;
+  padding: 0 var(--spacing-lg);
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .responsive-container {
+    padding: 0 var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-container {
+    padding: 0 var(--spacing-sm);
+  }
+}
+
+/* ========== RESPONSIVE GRID ========== */
+
+.responsive-grid {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+/* Default: 4 columns on desktop */
+.responsive-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+@media (max-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+}
+
+/* ========== RESPONSIVE FLEX ========== */
+
+.responsive-flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-lg);
+}
+
+@media (max-width: 768px) {
+  .responsive-flex {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-flex {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+}
+
+/* ========== RESPONSIVE SPACING ========== */
+
+.pad-responsive {
+  padding: var(--spacing-lg);
+}
+
+@media (max-width: 768px) {
+  .pad-responsive {
+    padding: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .pad-responsive {
+    padding: var(--spacing-sm);
+  }
+}
+
+.margin-responsive {
+  margin: var(--spacing-lg);
+}
+
+@media (max-width: 768px) {
+  .margin-responsive {
+    margin: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .margin-responsive {
+    margin: var(--spacing-sm);
+  }
+}
+
+.gap-responsive {
+  gap: var(--spacing-lg);
+}
+
+@media (max-width: 768px) {
+  .gap-responsive {
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .gap-responsive {
+    gap: var(--spacing-sm);
+  }
+}
+
+/* ========== RESPONSIVE TEXT SIZING ========== */
+
+.text-responsive {
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .text-responsive {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-responsive {
+    font-size: 0.9rem;
+  }
+}
+
+.heading-responsive {
+  font-size: 2rem;
+}
+
+@media (max-width: 768px) {
+  .heading-responsive {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .heading-responsive {
+    font-size: 1.2rem;
+  }
+}
+
+/* ========== RESPONSIVE BUTTONS ========== */
+
+.btn-responsive {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  font-size: 1rem;
+  width: auto;
+}
+
+@media (max-width: 768px) {
+  .btn-responsive {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 0.95rem;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-responsive {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.85rem;
+    width: 100%;
+  }
+}
+
+/* ========== RESPONSIVE TABLE ========== */
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .table-responsive table {
+    font-size: 0.9rem;
+  }
+
+  .table-responsive th,
+  .table-responsive td {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .table-responsive table {
+    font-size: 0.8rem;
+  }
+
+  .table-responsive th,
+  .table-responsive td {
+    padding: 8px;
+  }
+}
+
+/* ========== RESPONSIVE IMAGES ========== */
+
+.img-responsive {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.img-contain {
+  object-fit: contain;
+}
+
+.img-cover {
+  object-fit: cover;
+}
+
+/* ========== RESPONSIVE MODAL ========== */
+
+.modal-responsive {
+  width: 90%;
+  max-width: 600px;
+}
+
+@media (max-width: 768px) {
+  .modal-responsive {
+    width: 95%;
+    max-width: 500px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-responsive {
+    width: 98%;
+    max-width: 100%;
+    border-radius: 8px;
+  }
+}
+
+/* ========== RESPONSIVE SIDEBAR ========== */
+
+.sidebar-responsive {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+@media (max-width: 768px) {
+  .sidebar-responsive {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .sidebar-responsive .sidebar {
+    order: 2;
+  }
+
+  .sidebar-responsive .content {
+    order: 1;
+    width: 100%;
+  }
+}
+
+/* ========== RESPONSIVE COLUMNS ========== */
+
+.two-column-responsive {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+@media (max-width: 768px) {
+  .two-column-responsive {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+}
+
+.three-column-responsive {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-lg);
+}
+
+@media (max-width: 1024px) {
+  .three-column-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .three-column-responsive {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+}
+
+/* ========== RESPONSIVE TOUCH TARGETS ========== */
+
+@media (max-width: 768px) {
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"],
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ========== RESPONSIVE OVERFLOW ========== */
+
+.overflow-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 480px) {
+  .overflow-responsive {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* ========== RESPONSIVE ALIGNMENT ========== */
+
+@media (max-width: 768px) {
+  .text-center-responsive {
+    text-align: center;
+  }
+
+  .justify-center-responsive {
+    justify-content: center;
+  }
+
+  .align-center-responsive {
+    align-items: center;
+  }
+}
+
+/* ========== RESPONSIVE FORM ========== */
+
+.form-responsive {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.form-responsive input,
+.form-responsive textarea,
+.form-responsive select {
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .form-responsive {
+    gap: var(--spacing-sm);
+  }
+
+  .form-responsive input,
+  .form-responsive textarea,
+  .form-responsive select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}

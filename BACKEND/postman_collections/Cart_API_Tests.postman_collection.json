@@ -1,0 +1,138 @@
+{
+	"info": {
+		"_postman_id": "cart-api-collection",
+		"name": "LMS Cart API Tests",
+		"description": "Collection for testing the Cart API endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Student Login (Get Token)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"student@test.com\",\n    \"password\": \"student123\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:3000/auth/login",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "3000",
+					"path": ["auth", "login"]
+				},
+				"description": "Login to get JWT token for cart operations"
+			}
+		},
+		{
+			"name": "2. Get Cart Contents",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:3000/cart",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "3000",
+					"path": ["cart"]
+				},
+				"description": "Get current user's cart contents"
+			}
+		},
+		{
+			"name": "3. Add Course to Cart",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:3000/cart/add/{{courseId}}",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "3000",
+					"path": ["cart", "add", "{{courseId}}"]
+				},
+				"description": "Add a course to the cart. Replace {{courseId}} with an actual course ID"
+			}
+		},
+		{
+			"name": "4. Remove Course from Cart",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:3000/cart/remove/{{courseId}}",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "3000",
+					"path": ["cart", "remove", "{{courseId}}"]
+				},
+				"description": "Remove a course from the cart. Replace {{courseId}} with an actual course ID"
+			}
+		},
+		{
+			"name": "5. Clear Cart",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:3000/cart/clear",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "3000",
+					"path": ["cart", "clear"]
+				},
+				"description": "Clear all items from the cart"
+			}
+		},
+		{
+			"name": "6. Get Available Courses",
+			"request": {
+				"method": "GET",
+				"url": {
+					"raw": "http://localhost:3000/courses",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "3000",
+					"path": ["courses"]
+				},
+				"description": "Get list of available courses to add to cart"
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "token",
+			"value": ""
+		},
+		{
+			"key": "courseId",
+			"value": ""
+		}
+	]
+}

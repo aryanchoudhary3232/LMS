@@ -1,0 +1,412 @@
+/* =========================================
+   1. GLOBAL LAYOUT & RESET
+   ========================================= */
+.course-detail-container {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  gap: 2.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #2d2f31; /* Dark grey for better readability */
+  box-sizing: border-box;
+}
+
+/* Ensure all elements inside inherit box-sizing */
+.course-detail-container * {
+  box-sizing: border-box;
+}
+
+.main-content {
+  flex: 1; /* Takes remaining space */
+  min-width: 0; /* Prevents flex items from overflowing */
+}
+
+/* =========================================
+   2. BREADCRUMBS
+   ========================================= */
+.breadcrumbs {
+  font-size: 0.9rem;
+  color: #6a6f73;
+  margin-bottom: 1rem;
+}
+
+.breadcrumbs a {
+  text-decoration: none;
+  color: #5022c3; /* Purple/Blue link color */
+  font-weight: 600;
+}
+
+.breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumbs span {
+  color: #2d2f31;
+}
+
+/* =========================================
+   3. HEADER SECTION
+   ========================================= */
+.course-header {
+  background-size: cover;
+  background-position: center;
+  /* Sharp corners look more professional for headers, but 4px is fine */
+  border-radius: 4px; 
+  padding: 3rem 2.5rem;
+  color: white;
+  margin-bottom: 2rem;
+  position: relative;
+  /* This creates a dark overlay so text is readable over any image */
+  box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, 0.7); 
+}
+
+.course-header h1 {
+  font-size: 2.4rem;
+  font-weight: 800;
+  margin: 0 0 1rem 0;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.course-header p {
+  font-size: 1.2rem;
+  max-width: 800px;
+  margin: 0 0 1.5rem 0;
+  opacity: 0.95;
+  line-height: 1.5;
+}
+
+/* Star Rating inside Header */
+.star-rating {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  color: #f4c150; /* Star yellow color */
+}
+
+.star-rating .rating-text {
+  margin-left: 0.5rem;
+  font-weight: 800;
+  color: #f4c150;
+}
+
+/* =========================================
+   4. TABS & CONTENT
+   ========================================= */
+.course-tabs {
+  display: flex;
+  border-bottom: 1px solid #d1d7dc;
+  margin-bottom: 2rem;
+  gap: 2rem;
+  overflow-x: auto; /* Allow scroll on very small screens */
+  white-space: nowrap;
+}
+
+.tab {
+  padding: 0.8rem 0;
+  cursor: pointer;
+  color: #6a6f73;
+  font-weight: 700;
+  font-size: 1rem;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-bottom 0.2s;
+}
+
+.tab:hover {
+  color: #2d2f31;
+}
+
+.tab.active {
+  color: #2d2f31;
+  border-bottom-color: #2d2f31;
+}
+
+/* Typography for generic content */
+.tab-content h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d2f31;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.tab-content p {
+  line-height: 1.8;
+  color: #374151;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* =========================================
+   5. "WHAT YOU'LL LEARN" BOX
+   ========================================= */
+.learning-box {
+  border: 1px solid #d1d7dc;
+  background-color: #f9fafb;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  border-radius: 4px;
+}
+
+.learning-box h3 {
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  font-size: 1.3rem;
+}
+
+.learning-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two columns by default */
+  gap: 1rem 2rem;
+}
+
+.learning-list li {
+  display: flex;
+  align-items: flex-start;
+  font-size: 0.95rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+/* The checkmark */
+.learning-list li::before {
+  content: "✓";
+  display: inline-block;
+  min-width: 20px;
+  color: #007bff;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+/* =========================================
+   6. TEACHER PROFILE
+   ========================================= */
+.teacher-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  width: 100%;
+  max-width: 500px;
+}
+
+.teacher-avatar {
+  width: 64px;
+  height: 64px;
+  background-color: #2d2f31;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #fff;
+  overflow: hidden;
+  flex-shrink: 0; /* Prevents squishing */
+}
+
+.teacher-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.teacher-details p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.teacher-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #5022c3;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.teacher-contact {
+  font-size: 0.9rem;
+  color: #6a6f73;
+}
+
+/* =========================================
+   7. SIDEBAR (Floating Card)
+   ========================================= */
+.sidebar {
+  flex: 0 0 340px; /* Fixed width on desktop, don't grow or shrink */
+  height: fit-content;
+  background-color: white;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  border: 1px solid #d1d7dc;
+  border-radius: 4px; /* Slight rounding or 0 for sharp */
+  overflow: hidden;
+  position: sticky;
+  top: 20px; /* Sticks to top when scrolling */
+}
+
+.video-preview {
+  position: relative;
+  cursor: pointer;
+  background: black;
+  aspect-ratio: 16 / 9; /* Enforce video ratio */
+}
+
+.video-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+}
+
+.video-preview:hover img {
+  opacity: 0.6;
+}
+
+.video-preview .overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none; /* Let clicks pass through */
+}
+
+.video-preview .overlay span {
+  font-size: 3.5rem;
+  background: white;
+  color: black;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 5px; /* Visual center adjustment for play triangle */
+  margin-bottom: 10px;
+}
+
+.course-meta {
+  padding: 1.5rem;
+}
+
+.price {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #2d2f31;
+  margin: 0 0 1rem 0;
+}
+
+.course-format h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.course-format ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+.course-format li {
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+}
+
+.start-course-btn,
+.enroll-now-btn {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 4px; /* Standard button radius */
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-decoration: none;
+}
+
+.start-course-btn {
+  background-color: #1c1d1f;
+  color: white;
+}
+.start-course-btn:hover {
+  background-color: #000;
+}
+
+.enroll-now-btn {
+  background-color: #a435f0; /* Udemy Purple style */
+  color: white;
+}
+.enroll-now-btn:hover {
+  background-color: #8710d8;
+}
+
+/* =========================================
+   8. RESPONSIVE MEDIA QUERIES
+   ========================================= */
+
+/* Tablet & Mobile (Below 950px) */
+@media screen and (max-width: 950px) {
+  .course-detail-container {
+    flex-direction: column; /* Stack sidebar below content */
+    padding: 1rem;
+  }
+
+  .sidebar {
+    flex: none;
+    width: 100%; /* Full width */
+    max-width: 100%;
+    position: static; /* Remove sticky behavior on mobile */
+    margin-top: 1rem;
+    /* Optional: If you want Sidebar (Enroll button) at the TOP on mobile: */
+    /* order: -1; */ 
+  }
+
+  .course-header {
+    padding: 2rem 1.5rem;
+  }
+
+  .course-header h1 {
+    font-size: 1.8rem;
+  }
+}
+
+/* Mobile Only (Below 600px) */
+@media screen and (max-width: 600px) {
+  .learning-list {
+    grid-template-columns: 1fr; /* Stack learning items in 1 column */
+  }
+
+  .course-tabs {
+    gap: 1.5rem;
+  }
+
+  .tab {
+    font-size: 0.9rem;
+  }
+  
+  .course-header h1 {
+    font-size: 1.6rem;
+  }
+  
+  .teacher-info {
+    flex-direction: row; /* Keep avatar next to text, but wrap if super small */
+    padding: 0;
+    border: none;
+  }
+}

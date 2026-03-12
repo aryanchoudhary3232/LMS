@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LMS Debug Helper</title>
+</head>
+<body>
+    <h2>LMS Debug Helper</h2>
+    <p>Use this to test the frontend functionality:</p>
+    
+    <h3>Steps to test:</h3>
+    <ol>
+        <li>Open browser console (F12)</li>
+        <li>Go to: <a href="http://localhost:5174/login" target="_blank">Login Page</a></li>
+        <li>Login with: student1@gmail.com / password: 1</li>
+        <li>Go to: <a href="http://localhost:5174/student/courses/690a2104f019400e61f86ebf" target="_blank">Course Page</a></li>
+        <li>Click on any video topic in the left sidebar</li>
+        <li>Check console for "🎯 Topic clicked!" message</li>
+        <li>Click "Mark as Complete" button</li>
+        <li>Check console for "🚨 MARK AS COMPLETE BUTTON CLICKED!" message</li>
+    </ol>
+    
+    <h3>Expected Console Messages:</h3>
+    <ul>
+        <li>🎯 Topic clicked! (when clicking on a topic)</li>
+        <li>🚨 MARK AS COMPLETE BUTTON CLICKED! (when clicking the button)</li>
+        <li>✅ All checks passed, making API call... (if everything is set up correctly)</li>
+    </ul>
+    
+    <h3>Troubleshooting:</h3>
+    <ul>
+        <li>If no console messages appear when clicking the topic, there's an event binding issue</li>
+        <li>If topic click works but mark complete doesn't, there's a button binding issue</li>
+        <li>If messages appear but API fails, check network tab for 401/500 errors</li>
+    </ul>
+    
+    <script>
+        console.log('🔧 Debug helper loaded - check the steps above to test LMS functionality');
+    </script>
+</body>
+</html>

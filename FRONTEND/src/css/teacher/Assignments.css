@@ -1,0 +1,694 @@
+/* Teacher Assignments Styles */
+
+.teacher-assignments-container,
+.create-assignment-container,
+.submissions-container {
+  max-width: 1400px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+/* Header Styles */
+.assignments-header,
+.form-header,
+.submissions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.assignments-header h2,
+.form-header h2,
+.submissions-header h2 {
+  color: #2337ad;
+  font-size: 2rem;
+  margin: 0;
+}
+
+/* Buttons */
+.btn-create-assignment,
+.btn-submit {
+  background: linear-gradient(135deg, #2337ad 0%, #1a2b8a 100%);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(35, 55, 173, 0.3);
+}
+
+.btn-create-assignment:hover,
+.btn-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(35, 55, 173, 0.4);
+}
+
+.btn-back {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+  background: #4b5563;
+  transform: translateX(-3px);
+}
+
+/* Filters */
+.assignments-filters {
+  margin-bottom: 30px;
+}
+
+.filter-select {
+  padding: 10px 15px;
+  border: 2px solid #2337ad;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #ffd700;
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+}
+
+/* Assignment Grid */
+.assignments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 25px;
+}
+
+.assignment-card {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border-left: 4px solid #2337ad;
+}
+
+.assignment-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.card-header h3 {
+  color: #2337ad;
+  font-size: 1.3rem;
+  margin: 0;
+  flex: 1;
+}
+
+/* Badges */
+.badge {
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-overdue {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-closed {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.badge-late {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-graded {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-pending {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* Card Body */
+.card-body {
+  margin-bottom: 20px;
+}
+
+.course-name {
+  color: #2337ad;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.chapter-name {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.description {
+  color: #4b5563;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.assignment-meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 15px;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.meta-item .label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.meta-item .value {
+  font-size: 1rem;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+/* Stats Section */
+.stats-section {
+  display: flex;
+  justify-content: space-around;
+  padding: 15px;
+  background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.stat-number {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2337ad;
+}
+
+.stat-number.pending {
+  color: #f59e0b;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+/* Card Actions */
+.card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn-view-submissions {
+  flex: 1;
+  background: #2337ad;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-view-submissions:hover {
+  background: #1a2b8a;
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-delete:hover {
+  background: #dc2626;
+}
+
+/* No Assignments */
+.no-assignments {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.no-assignments p {
+  font-size: 1.2rem;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.btn-create-first {
+  background: #2337ad;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-create-first:hover {
+  background: #1a2b8a;
+  transform: translateY(-2px);
+}
+
+/* Form Styles */
+.assignment-form {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.form-section {
+  margin-bottom: 35px;
+  padding-bottom: 25px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.form-section:last-of-type {
+  border-bottom: none;
+}
+
+.form-section h3 {
+  color: #2337ad;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  color: #4b5563;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #2337ad;
+  box-shadow: 0 0 0 3px rgba(35, 55, 173, 0.1);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: auto;
+  cursor: pointer;
+}
+
+.selected-files {
+  margin-top: 10px;
+  padding: 15px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.selected-files ul {
+  list-style: disc;
+  margin-left: 20px;
+  color: #4b5563;
+}
+
+.selected-files li {
+  margin: 5px 0;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.btn-cancel {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+  background: #4b5563;
+}
+
+.btn-submit:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Submissions Page */
+.assignment-info {
+  display: flex;
+  gap: 20px;
+  padding: 25px;
+  background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
+  border-radius: 12px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.info-item .label {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.info-item .value {
+  font-size: 1.1rem;
+  color: #2337ad;
+  font-weight: 700;
+}
+
+.submissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.submission-card {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #2337ad;
+}
+
+.submission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.student-info h3 {
+  color: #2337ad;
+  margin: 0 0 5px 0;
+}
+
+.student-email {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.submission-badges {
+  display: flex;
+  gap: 10px;
+}
+
+.submission-body {
+  margin-bottom: 20px;
+}
+
+.submission-meta {
+  margin-bottom: 15px;
+}
+
+.text-content,
+.attachments {
+  margin: 15px 0;
+  padding: 15px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.text-content h4,
+.attachments h4 {
+  color: #2337ad;
+  margin-bottom: 10px;
+}
+
+.text-content p {
+  color: #4b5563;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.attachments ul {
+  list-style: none;
+  padding: 0;
+}
+
+.attachments li {
+  margin: 8px 0;
+}
+
+.attachments a {
+  color: #2337ad;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.attachments a:hover {
+  color: #1a2b8a;
+  text-decoration: underline;
+}
+
+.grade-display {
+  padding: 20px;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-radius: 10px;
+  border-left: 4px solid #10b981;
+  margin-top: 15px;
+}
+
+.grade-display h4 {
+  color: #065f46;
+  margin-bottom: 10px;
+}
+
+.grade-display .marks {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #065f46;
+  margin: 10px 0;
+}
+
+.grade-display .feedback {
+  margin-top: 15px;
+}
+
+.grade-display .feedback strong {
+  color: #065f46;
+}
+
+.grade-display .feedback p {
+  color: #064e3b;
+  line-height: 1.6;
+  margin-top: 5px;
+}
+
+.graded-at {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 10px;
+}
+
+.submission-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-grade {
+  background: #2337ad;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-grade:hover {
+  background: #1a2b8a;
+  transform: translateY(-2px);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.modal-content {
+  background: white;
+  padding: 35px;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h3 {
+  color: #2337ad;
+  margin: 0 0 10px 0;
+}
+
+.student-name {
+  color: #6b7280;
+  margin-bottom: 25px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: flex-end;
+  margin-top: 25px;
+}
+
+/* Loading States */
+.assignments-loading,
+.submissions-loading,
+.submit-loading,
+.view-loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+  font-size: 1.2rem;
+}
+
+.no-submissions {
+  text-align: center;
+  padding: 60px 20px;
+  background: #f9fafb;
+  border-radius: 12px;
+  color: #6b7280;
+  font-size: 1.2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .assignments-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .assignments-header,
+  .form-header,
+  .submissions-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .assignment-info {
+    flex-direction: column;
+  }
+
+  .card-actions {
+    flex-direction: column;
+  }
+
+  .modal-content {
+    padding: 25px;
+  }
+}
