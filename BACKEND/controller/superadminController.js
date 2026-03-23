@@ -4,6 +4,36 @@ const Admin = require("../models/Admin");
 const Course = require("../models/Course");
 const Order = require("../models/Order");
 
+const buildRecentUserCountPipeline = (daysAgo) => ([
+  {
+    $addFields: {
+      registeredAt: {
+        $ifNull: ["$createdAt", { $toDate: "$_id" }]
+      }
+    }
+  },
+  { $match: { registeredAt: { $gte: daysAgo }, isDeleted: { $ne: true } } },
+  { $count: "count" }
+]);
+
+const buildUserGrowthPipeline = (daysAgo) => ([
+  {
+    $addFields: {
+      registeredAt: {
+        $ifNull: ["$createdAt", { $toDate: "$_id" }]
+      }
+    }
+  },
+  { $match: { registeredAt: { $gte: daysAgo }, isDeleted: { $ne: true } } },
+  {
+    $group: {
+      _id: { $dateToString: { format: "%Y-%m-%d", date: "$registeredAt" } },
+      count: { $sum: 1 }
+    }
+  },
+  { $sort: { _id: 1 } }
+]);
+
 // ============================================
 // 💰 REVENUE ANALYTICS
 // ============================================
@@ -444,10 +474,10 @@ const getPlatformOverview = async (req, res) => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const recentStudents = await Student.countDocuments({ 
-      createdAt: { $gte: sevenDaysAgo },
-      isDeleted: { $ne: true }
-    });
+    const recentStudentAggregation = await Student.aggregate(
+      buildRecentUserCountPipeline(sevenDaysAgo)
+    );
+    const recentStudents = recentStudentAggregation[0]?.count || 0;
 
     const recentCourses = await Course.countDocuments({ 
       createdAt: { $gte: sevenDaysAgo },
@@ -513,29 +543,9 @@ const getUserGrowthAnalytics = async (req, res) => {
     const daysAgo = new Date();
     daysAgo.setDate(daysAgo.getDate() - parseInt(period));
 
-    // Student growth
-    const studentGrowth = await Student.aggregate([
-      { $match: { createdAt: { $gte: daysAgo }, isDeleted: { $ne: true } } },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { _id: 1 } }
-    ]);
+    const studentGrowth = await Student.aggregate(buildUserGrowthPipeline(daysAgo));
 
-    // Teacher growth
-    const teacherGrowth = await Teacher.aggregate([
-      { $match: { createdAt: { $gte: daysAgo }, isDeleted: { $ne: true } } },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { _id: 1 } }
-    ]);
+    const teacherGrowth = await Teacher.aggregate(buildUserGrowthPipeline(daysAgo));
 
     // Total users by type
     const totalStudents = await Student.countDocuments({ isDeleted: { $ne: true } });

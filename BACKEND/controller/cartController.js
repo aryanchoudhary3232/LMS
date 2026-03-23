@@ -1,6 +1,7 @@
 const Cart = require("../models/Cart");
 const Course = require("../models/Course");
 const Student = require("../models/Student");
+const Order = require("../models/Order");
 
 // Get cart contents
 async function getCart(req, res) {
@@ -48,7 +49,11 @@ async function addToCart(req, res) {
 
     // Prevent duplicate purchases
     const student = await Student.findById(studentId).select("enrolledCourses");
-    if (student?.enrolledCourses?.some((id) => id.toString() === courseId.toString())) {
+    if (
+      student?.enrolledCourses?.some(
+        (enrollment) => enrollment?.course?.toString() === courseId.toString()
+      )
+    ) {
       return res.status(400).json({
         success: false,
         message: "You already own this course",
@@ -192,24 +197,57 @@ async function updateEnrollCourses(req, res) {
       });
     }
 
-    const enrollementObjects = uniqueCourseIds.map(id => ({
-      course : id,
+    const student = await Student.findById(studentId).select("enrolledCourses");
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "Student not found",
+      });
+    }
+
+    const existingCourseIds = new Set(
+      (student.enrolledCourses || []).map((enrollment) => enrollment?.course?.toString()).filter(Boolean)
+    );
+
+    const newCourseIds = uniqueCourseIds.filter((id) => !existingCourseIds.has(id));
+
+    if (newCourseIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        error: false,
+        message: "All selected courses are already enrolled",
+        data: {
+          cart: { items: [] },
+          enrolledCourses: student.enrolledCourses || [],
+        },
+      });
+    }
+
+    const coursesToEnroll = await Course.find({ _id: { $in: newCourseIds } }).select("_id price");
+    const validCourseIdSet = new Set(coursesToEnroll.map((course) => course._id.toString()));
+    const validCourseIds = newCourseIds.filter((id) => validCourseIdSet.has(id));
+
+    if (validCourseIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "No valid courses supplied for enrollment",
+      });
+    }
+
+    const enrollementObjects = validCourseIds.map((id) => ({
+      course: id,
       enrolledAt: new Date(),
       avgQuizScore: 0,
       completedQuizzes: 0,
-      progress: 0
+      progress: 0,
     }));
 
 
     await Student.findByIdAndUpdate(
       studentId,
       {
-        // $addToSet: {
-        //   enrolledCourses: {
-        //     $each: uniqueCourseIds,
-        //   },
-        // },
-
         $push: {
           enrolledCourses: {
             $each: enrollementObjects,
@@ -220,16 +258,29 @@ async function updateEnrollCourses(req, res) {
     );
 
     await Course.updateMany(
-      { _id: { $in: uniqueCourseIds } },
+      { _id: { $in: validCourseIds } },
       {
         $addToSet: { students: studentId },
       }
     );
 
+    const orderDocuments = coursesToEnroll
+      .filter((course) => validCourseIdSet.has(course._id.toString()))
+      .map((course) => ({
+        userId: studentId,
+        courseId: course._id,
+        amount: Number(course.price) || 0,
+        status: "completed",
+      }));
+
+    if (orderDocuments.length > 0) {
+      await Order.insertMany(orderDocuments);
+    }
+
     const updatedStudent = await Student.findById(studentId)
       .select("name email enrolledCourses")
       .populate({
-        path: "enrolledCourses",
+        path: "enrolledCourses.course",
         select: "title price image category level teacher",
         populate: { path: "teacher", select: "name" },
       });
