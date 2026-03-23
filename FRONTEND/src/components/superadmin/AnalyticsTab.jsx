@@ -143,14 +143,15 @@ const AnalyticsTab = () => {
               <LineChart data={analytics.enrollmentTrends.dailyTrends}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="_id" />
-                <YAxis />
+                <YAxis yAxisId="left" orientation="left" allowDecimals={false} />
+                <YAxis yAxisId="right" orientation="right" />
                 <Tooltip formatter={(value, name) => {
                   if (name === "Revenue") return `₹${value.toLocaleString()}`;
                   return value;
                 }} />
                 <Legend />
-                <Line type="monotone" dataKey="enrollments" stroke="#667eea" name="Enrollments" />
-                <Line type="monotone" dataKey="revenue" stroke="#764ba2" name="Revenue" />
+                <Line type="monotone" yAxisId="left" dataKey="enrollments" stroke="#667eea" name="Enrollments" />
+                <Line type="monotone" yAxisId="right" dataKey="revenue" stroke="#764ba2" name="Revenue" />
               </LineChart>
             </ResponsiveContainer>
           </div>
