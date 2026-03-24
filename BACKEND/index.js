@@ -6,7 +6,13 @@ const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
 const morgan = require("morgan");
-const { errorHandler, notFound, performanceMonitor } = require("./middleware");
+const swaggerUi = require("swagger-ui-express");
+const {
+  errorHandler,
+  notFound,
+  performanceMonitor,
+} = require("./middleware");
+const openApiSpec = require("./docs/openapi");
 
 const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
@@ -107,6 +113,27 @@ app.get("/", (req, res) => {
 
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
+});
+
+app.get("/openapi.json", (req, res) => {
+  res.status(200).json(openApiSpec);
+});
+
+app.use("/api-docs", swaggerUi.serve);
+
+app.get("/api-docs", (req, res, next) => {
+  const swaggerHandler = swaggerUi.setup(null, {
+    swaggerOptions: {
+      url: "/openapi.json",
+    },
+    customSiteTitle: "LMS SuperAdmin API Docs",
+  });
+
+  return swaggerHandler(req, res, next);
+});
+
+app.get("/api-docs/", (req, res) => {
+  return res.redirect("/api-docs");
 });
 
 // Error handling middlewares (must be last)

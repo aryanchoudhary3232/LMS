@@ -63,13 +63,26 @@ async function verifyAdmin(req, res, next) {
 //  Middleware to verify SuperAdmin only
 async function verifySuperAdmin(req, res, next) {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ message: "Access denied, no token provided" });
-    }
+    let decoded = req.user || null;
 
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, "aryan123");
+    if (!decoded) {
+      let token;
+      const authHeader = req.headers.authorization;
+
+      if (authHeader) {
+        token = authHeader.split(" ")[1];
+      } else if (req.query.token) {
+        token = req.query.token;
+      } else if (req.body && req.body.token) {
+        token = req.body.token;
+      }
+
+      if (!token) {
+        return res.status(401).json({ message: "Access denied, no token provided" });
+      }
+
+      decoded = jwt.verify(token, "aryan123");
+    }
 
     // Check if user is SuperAdmin
     const admin = await Admin.findById(decoded._id);
