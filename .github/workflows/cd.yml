@@ -37,7 +37,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Prepare frontend env for Docker build
-        run: echo "VITE_BACKEND_URL=http://127.0.0.1:3000" > FRONTEND/.env
+        run: echo "VITE_BACKEND_URL=${{ secrets.VITE_BACKEND_URL_PRODUCTION }}" > FRONTEND/.env
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
