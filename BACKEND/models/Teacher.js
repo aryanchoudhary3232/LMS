@@ -54,6 +54,8 @@ const teacherSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+}, {
+  timestamps: true,
 });
 
 const Teacher = mongoose.model("Teacher", teacherSchema);
