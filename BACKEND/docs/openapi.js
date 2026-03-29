@@ -3,7 +3,8 @@ const openApiSpec = {
   info: {
     title: "LMS API Documentation",
     version: "1.0.0",
-    description: "OpenAPI documentation for LMS API endpoints including SuperAdmin and Cart functionality.",
+    description:
+      "OpenAPI documentation for LMS API endpoints including Student, SuperAdmin, and Cart functionality.",
   },
   servers: [
     {
@@ -12,9 +13,9 @@ const openApiSpec = {
     },
   ],
   tags: [
-    { name: "SuperAdmin" },
-    { name: "Cart" },
-    { name: "Auth" },
+    { name: "Student", description: "Student-related operations" },
+    { name: "SuperAdmin", description: "SuperAdmin operations" },
+    { name: "Cart", description: "Shopping cart operations" },
   ],
   components: {
     securitySchemes: {
@@ -41,7 +42,56 @@ const openApiSpec = {
             type: "string",
             enum: ["Student", "Teacher", "Admin"],
             example: "Student",
-          }
+          },
+        },
+      },
+
+      // ── Student Schemas (from main) ──────────────────────────────────────
+      Student: {
+        type: "object",
+        properties: {
+          _id: { type: "string", example: "60d0fe4f5311236168a109ca" },
+          name: { type: "string", example: "John Doe" },
+          email: { type: "string", format: "email", example: "john.doe@example.com" },
+          enrolledCourses: {
+            type: "array",
+            items: { $ref: "#/components/schemas/EnrolledCourse" },
+          },
+          streak: { type: "number", example: 5 },
+          studentProgress: {
+            type: "array",
+            items: { $ref: "#/components/schemas/StudentProgress" },
+          },
+        },
+      },
+      EnrolledCourse: {
+        type: "object",
+        properties: {
+          course: {
+            type: "object",
+            properties: {
+              _id: { type: "string" },
+              title: { type: "string" },
+              image: { type: "string" },
+              price: { type: "number" },
+              category: { type: "string" },
+              level: {
+                type: "string",
+                enum: ["Beginner", "Intermediate", "Advanced"],
+              },
+            },
+          },
+          enrolledAt: { type: "string", format: "date-time" },
+          avgQuizScore: { type: "number", example: 85 },
+          completedQuizzes: { type: "number", example: 3 },
+          highestScore: { type: "number", example: 95 },
+        },
+      },
+      StudentProgress: {
+        type: "object",
+        properties: {
+          date: { type: "string", format: "date" },
+          minutes: { type: "number", minimum: 1, maximum: 1440, example: 60 },
         },
       },
       Course: {
@@ -50,10 +100,94 @@ const openApiSpec = {
           _id: { type: "string" },
           title: { type: "string" },
           description: { type: "string" },
-          price: { type: "number" },
           image: { type: "string" },
+          category: { type: "string" },
+          level: {
+            type: "string",
+            enum: ["Beginner", "Intermediate", "Advanced"],
+          },
+          price: { type: "number" },
+          duration: { type: "string" },
+          chapters: { type: "array", items: { type: "object" } },
         },
       },
+      UpdateEnrollCoursesRequest: {
+        type: "object",
+        required: ["courseIds"],
+        properties: {
+          courseIds: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+            description: "Array of course IDs to enroll in",
+            example: [
+              "60d0fe4f5311236168a109ca",
+              "60d0fe4f5311236168a109cb",
+            ],
+          },
+        },
+      },
+      QuizSubmitRequest: {
+        type: "object",
+        required: ["courseId", "chapterId", "topicId", "answerQuiz"],
+        properties: {
+          courseId: { type: "string", example: "60d0fe4f5311236168a109ca" },
+          chapterId: { type: "string", example: "60d0fe4f5311236168a109cb" },
+          topicId: { type: "string", example: "60d0fe4f5311236168a109cc" },
+          answerQuiz: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                questionId: { type: "string" },
+                selectedOption: { type: "string" },
+              },
+            },
+            minItems: 1,
+          },
+        },
+      },
+      StudentProgressRequest: {
+        type: "object",
+        required: ["minutes"],
+        properties: {
+          minutes: {
+            type: "number",
+            minimum: 1,
+            maximum: 1440,
+            example: 60,
+            description: "Learning minutes for today (1-1440)",
+          },
+        },
+      },
+      MarkTopicCompleteRequest: {
+        type: "object",
+        required: ["courseId", "chapterId", "topicId"],
+        properties: {
+          courseId: { type: "string", example: "60d0fe4f5311236168a109ca" },
+          chapterId: { type: "string", example: "60d0fe4f5311236168a109cb" },
+          topicId: { type: "string", example: "60d0fe4f5311236168a109cc" },
+        },
+      },
+      SuccessResponse: {
+        type: "object",
+        properties: {
+          success: { type: "boolean", example: true },
+          error: { type: "boolean", example: false },
+          message: { type: "string" },
+          data: { type: "object" },
+        },
+      },
+      ErrorResponse: {
+        type: "object",
+        properties: {
+          success: { type: "boolean", example: false },
+          error: { type: "boolean", example: true },
+          message: { type: "string" },
+        },
+      },
+
+      // ── Cart Schemas (from sudhan_swagger) ───────────────────────────────
       CartItem: {
         type: "object",
         properties: {
@@ -81,27 +215,6 @@ const openApiSpec = {
           data: { $ref: "#/components/schemas/Cart" },
         },
       },
-      UpdateEnrollCoursesRequest: {
-        type: "object",
-        required: ["courseIds"],
-        properties: {
-          courseIds: {
-            type: "array",
-            items: { type: "string" },
-            description: "Array of course IDs to enroll in",
-          },
-        },
-      },
-      EnrolledCourse: {
-        type: "object",
-        properties: {
-          course: { $ref: "#/components/schemas/Course" },
-          enrolledAt: { type: "string", format: "date-time" },
-          progress: { type: "number" },
-          avgQuizScore: { type: "number" },
-          completedQuizzes: { type: "number" },
-        },
-      },
       UpdateEnrollCoursesResponse: {
         type: "object",
         properties: {
@@ -120,100 +233,558 @@ const openApiSpec = {
           },
         },
       },
-      RegisterRequest: {
-        type: "object",
-        required: ["name", "email", "password", "role"],
-        properties: {
-          name: { type: "string", example: "John Doe" },
-          email: { type: "string", format: "email", example: "john@example.com" },
-          password: { type: "string", minLength: 6, example: "password123" },
-          role: {
-            type: "string",
-            enum: ["Student", "Teacher", "Admin", "SuperAdmin"],
-            example: "Student",
-          },
-        },
-      },
-      LoginRequest: {
-        type: "object",
-        required: ["email", "password"],
-        properties: {
-          email: { type: "string", format: "email", example: "john@example.com" },
-          password: { type: "string", example: "password123" },
-        },
-      },
-      AuthResponse: {
-        type: "object",
-        properties: {
-          message: { type: "string" },
-          token: { type: "string" },
-          data: {
-            type: "object",
-            properties: {
-              id: { type: "string" },
-              name: { type: "string" },
-              email: { type: "string" },
-              role: { type: "string" },
-            },
-          },
-          success: { type: "boolean" },
-          error: { type: "boolean" },
-        },
-      },
-      ForgotPasswordRequest: {
-        type: "object",
-        required: ["email"],
-        properties: {
-          email: { type: "string", format: "email", example: "john@example.com" },
-        },
-      },
-      VerifyOtpRequest: {
-        type: "object",
-        required: ["email", "otp"],
-        properties: {
-          email: { type: "string", format: "email", example: "john@example.com" },
-          otp: { type: "string", example: "123456" },
-        },
-      },
-      ResetPasswordRequest: {
-        type: "object",
-        required: ["email", "otp", "newPassword"],
-        properties: {
-          email: { type: "string", format: "email", example: "john@example.com" },
-          otp: { type: "string", example: "123456" },
-          newPassword: { type: "string", minLength: 6, example: "newpassword123" },
-        },
-      },
-      UpdateProfileRequest: {
-        type: "object",
-        required: ["name"],
-        properties: {
-          name: { type: "string", example: "John Smith" },
-        },
-      },
-      ChangePasswordRequest: {
-        type: "object",
-        required: ["oldPassword", "newPassword"],
-        properties: {
-          oldPassword: { type: "string", example: "oldpassword123" },
-          newPassword: { type: "string", minLength: 6, example: "newpassword123" },
-        },
-      },
-      UserProfile: {
-        type: "object",
-        properties: {
-          _id: { type: "string" },
-          name: { type: "string" },
-          email: { type: "string" },
-          role: { type: "string" },
-          streak: { type: "number" },
-          bestStreak: { type: "number" },
-          lastLogin: { type: "string", format: "date-time" },
-        },
-      },
     },
   },
   paths: {
+    // ─────────────────────────────────────────────
+    // Student Routes
+    // ─────────────────────────────────────────────
+    "/student/test": {
+      get: {
+        tags: ["Student"],
+        summary: "Test student routes",
+        description: "Simple test endpoint to verify student routes are working",
+        responses: {
+          200: {
+            description: "Success",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string" },
+                    timestamp: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/student": {
+      get: {
+        tags: ["Student"],
+        summary: "Get all students",
+        description: "Retrieve list of all students with basic information",
+        responses: {
+          200: {
+            description: "Students retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    { $ref: "#/components/schemas/SuccessResponse" },
+                    {
+                      type: "object",
+                      properties: {
+                        data: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              _id: { type: "string" },
+                              name: { type: "string" },
+                              email: { type: "string" },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          500: {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ErrorResponse" },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/student/profile": {
+      get: {
+        tags: ["Student"],
+        summary: "Get student profile",
+        description:
+          "Retrieve authenticated student's profile with enrolled courses and statistics",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Profile retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    { $ref: "#/components/schemas/SuccessResponse" },
+                    {
+                      type: "object",
+                      properties: {
+                        data: { $ref: "#/components/schemas/Student" },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized - Invalid or missing token" },
+          403: { description: "Forbidden - Not a student" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/dashboard": {
+      get: {
+        tags: ["Student"],
+        summary: "Get student dashboard",
+        description: "Retrieve dashboard data for authenticated student",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Dashboard data retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden - Not a student" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/my-courses": {
+      get: {
+        tags: ["Student"],
+        summary: "Get student's enrolled courses",
+        description: "Retrieve all courses the authenticated student is enrolled in",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Enrolled courses retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden - Not a student" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/update-enrollCourses": {
+      put: {
+        tags: ["Student"],
+        summary: "Update enrolled courses",
+        description: "Update the list of courses the student is enrolled in",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateEnrollCoursesRequest" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Enrollment updated successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          400: { description: "Validation error" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden - Not a student" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/quiz_submit": {
+      post: {
+        tags: ["Student"],
+        summary: "Submit quiz answers",
+        description: "Submit quiz answers for a specific topic in a course",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/QuizSubmitRequest" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Quiz submitted successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          400: { description: "Validation error" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden - Not enrolled or not a student" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/courses": {
+      get: {
+        tags: ["Student"],
+        summary: "Get courses by student ID",
+        description: "Retrieve courses associated with the authenticated student",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Courses retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    { $ref: "#/components/schemas/SuccessResponse" },
+                    {
+                      type: "object",
+                      properties: {
+                        data: {
+                          type: "array",
+                          items: { $ref: "#/components/schemas/Course" },
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden - Not a student" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/quiz-submissions": {
+      get: {
+        tags: ["Student"],
+        summary: "Get quiz submissions",
+        description:
+          "Retrieve all quiz submissions for the authenticated student (aggregated)",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Quiz submissions retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden - Not a student" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/streak": {
+      get: {
+        tags: ["Student"],
+        summary: "Get streak statistics",
+        description:
+          "Retrieve activity streak and analytics for the authenticated student",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Streak stats retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden - Not a student" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/all-courses": {
+      get: {
+        tags: ["Student"],
+        summary: "Get all available courses",
+        description: "Browse all courses available on the platform (public access)",
+        responses: {
+          200: {
+            description: "Courses retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    { $ref: "#/components/schemas/SuccessResponse" },
+                    {
+                      type: "object",
+                      properties: {
+                        data: {
+                          type: "array",
+                          items: { $ref: "#/components/schemas/Course" },
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/courses/{courseId}": {
+      get: {
+        tags: ["Student"],
+        summary: "Get course by ID",
+        description: "Retrieve detailed information about a specific course",
+        parameters: [
+          {
+            in: "path",
+            name: "courseId",
+            required: true,
+            schema: { type: "string" },
+            description: "MongoDB ObjectId of the course",
+          },
+        ],
+        responses: {
+          200: {
+            description: "Course retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    { $ref: "#/components/schemas/SuccessResponse" },
+                    {
+                      type: "object",
+                      properties: {
+                        data: { $ref: "#/components/schemas/Course" },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          400: { description: "Invalid course ID" },
+          404: { description: "Course not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/courses/{courseId}/enroll": {
+      post: {
+        tags: ["Student"],
+        summary: "Enroll in a course",
+        description: "Enroll the authenticated student in a specific course",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "courseId",
+            required: true,
+            schema: { type: "string" },
+            description: "MongoDB ObjectId of the course to enroll in",
+          },
+        ],
+        responses: {
+          200: {
+            description: "Enrolled successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          400: { description: "Invalid course ID or already enrolled" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden - Not a student" },
+          404: { description: "Course not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/enrolled-courses": {
+      get: {
+        tags: ["Student"],
+        summary: "Get enrolled courses",
+        description:
+          "Retrieve all courses the authenticated student is currently enrolled in",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Enrolled courses retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    { $ref: "#/components/schemas/SuccessResponse" },
+                    {
+                      type: "object",
+                      properties: {
+                        data: {
+                          type: "array",
+                          items: { $ref: "#/components/schemas/EnrolledCourse" },
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden - Not a student" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/progress": {
+      post: {
+        tags: ["Student"],
+        summary: "Record student progress",
+        description: "Record learning minutes for the authenticated student",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/StudentProgressRequest" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Progress recorded successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          400: { description: "Validation error" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden - Not a student or not resource owner" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/get-progress": {
+      get: {
+        tags: ["Student"],
+        summary: "Get student progress",
+        description:
+          "Retrieve learning progress history for the authenticated student",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Progress retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    { $ref: "#/components/schemas/SuccessResponse" },
+                    {
+                      type: "object",
+                      properties: {
+                        data: {
+                          type: "array",
+                          items: { $ref: "#/components/schemas/StudentProgress" },
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden - Not a student" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/mark-topic-complete": {
+      post: {
+        tags: ["Student"],
+        summary: "Mark topic as complete",
+        description: "Mark a specific topic as completed in a course",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/MarkTopicCompleteRequest" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Topic marked as complete",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          400: { description: "Validation error" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden - Not enrolled or not a student" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/student/topic-completion": {
+      get: {
+        tags: ["Student"],
+        summary: "Get topic completion status",
+        description:
+          "Retrieve completion status for topics in the authenticated student's courses",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: "query",
+            name: "courseId",
+            schema: { type: "string" },
+            description: "Filter by specific course ID",
+          },
+        ],
+        responses: {
+          200: {
+            description: "Topic completion status retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden - Not a student" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+
+    // ─────────────────────────────────────────────
+    // SuperAdmin Routes
+    // ─────────────────────────────────────────────
     "/superadmin/overview": {
       get: {
         tags: ["SuperAdmin"],
@@ -419,283 +990,10 @@ const openApiSpec = {
         },
       },
     },
-    "/auth/register": {
-      post: {
-        tags: ["Auth"],
-        summary: "Register a new user",
-        description: "Register a new user as Student, Teacher, Admin, or SuperAdmin",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/RegisterRequest" },
-            },
-          },
-        },
-        responses: {
-          200: {
-            description: "User registered successfully",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    message: { type: "string", example: "Student registered successfully" },
-                    data: { type: "object" },
-                    success: { type: "boolean", example: true },
-                    error: { type: "boolean", example: false },
-                  },
-                },
-              },
-            },
-          },
-          400: {
-            description: "Validation error or user already exists",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    message: { type: "string", example: "User already exists with this email" },
-                    success: { type: "boolean", example: false },
-                    error: { type: "boolean", example: true },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    "/auth/login": {
-      post: {
-        tags: ["Auth"],
-        summary: "User login",
-        description: "Authenticate user and return JWT token",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/LoginRequest" },
-            },
-          },
-        },
-        responses: {
-          200: {
-            description: "Login successful",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/AuthResponse" },
-              },
-            },
-          },
-          400: {
-            description: "Invalid credentials",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    message: { type: "string", example: "Incorrect password" },
-                    success: { type: "boolean", example: false },
-                    error: { type: "boolean", example: true },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    "/auth/forgot-password": {
-      post: {
-        tags: ["Auth"],
-        summary: "Request password reset",
-        description: "Send OTP to user's email for password reset",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/ForgotPasswordRequest" },
-            },
-          },
-        },
-        responses: {
-          200: {
-            description: "OTP sent successfully",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    message: { type: "string", example: "OTP sent to your email" },
-                    success: { type: "boolean", example: true },
-                    error: { type: "boolean", example: false },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    "/auth/verify-otp": {
-      post: {
-        tags: ["Auth"],
-        summary: "Verify OTP",
-        description: "Verify the OTP sent to user's email",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/VerifyOtpRequest" },
-            },
-          },
-        },
-        responses: {
-          200: {
-            description: "OTP verified successfully",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    message: { type: "string", example: "OTP verified successfully" },
-                    success: { type: "boolean", example: true },
-                    error: { type: "boolean", example: false },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    "/auth/reset-password": {
-      post: {
-        tags: ["Auth"],
-        summary: "Reset password",
-        description: "Reset user password using OTP",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/ResetPasswordRequest" },
-            },
-          },
-        },
-        responses: {
-          200: {
-            description: "Password reset successfully",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    message: { type: "string", example: "Password reset successfully" },
-                    success: { type: "boolean", example: true },
-                    error: { type: "boolean", example: false },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    "/auth/profile": {
-      get: {
-        tags: ["Auth"],
-        summary: "Get user profile",
-        description: "Get current user's profile information",
-        security: [{ bearerAuth: [] }],
-        responses: {
-          200: {
-            description: "Profile retrieved successfully",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    message: { type: "string", example: "Profile retrieved successfully" },
-                    data: { $ref: "#/components/schemas/UserProfile" },
-                    success: { type: "boolean", example: true },
-                    error: { type: "boolean", example: false },
-                  },
-                },
-              },
-            },
-          },
-          401: { description: "Unauthorized" },
-        },
-      },
-      put: {
-        tags: ["Auth"],
-        summary: "Update user profile",
-        description: "Update current user's profile (name only)",
-        security: [{ bearerAuth: [] }],
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/UpdateProfileRequest" },
-            },
-          },
-        },
-        responses: {
-          200: {
-            description: "Profile updated successfully",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    message: { type: "string", example: "Profile updated successfully" },
-                    success: { type: "boolean", example: true },
-                    error: { type: "boolean", example: false },
-                  },
-                },
-              },
-            },
-          },
-          401: { description: "Unauthorized" },
-        },
-      },
-    },
-    "/auth/change-password": {
-      put: {
-        tags: ["Auth"],
-        summary: "Change password",
-        description: "Change current user's password",
-        security: [{ bearerAuth: [] }],
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/ChangePasswordRequest" },
-            },
-          },
-        },
-        responses: {
-          200: {
-            description: "Password changed successfully",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    message: { type: "string", example: "Password changed successfully" },
-                    success: { type: "boolean", example: true },
-                    error: { type: "boolean", example: false },
-                  },
-                },
-              },
-            },
-          },
-          401: { description: "Unauthorized" },
-        },
-      },
-    },
+
+    // ─────────────────────────────────────────────
+    // Cart Routes
+    // ─────────────────────────────────────────────
     "/cart": {
       get: {
         tags: ["Cart"],
@@ -747,7 +1045,10 @@ const openApiSpec = {
                   type: "object",
                   properties: {
                     success: { type: "boolean", example: false },
-                    message: { type: "string", example: "Course is already in cart" },
+                    message: {
+                      type: "string",
+                      example: "Course is already in cart",
+                    },
                   },
                 },
               },
@@ -811,7 +1112,8 @@ const openApiSpec = {
       put: {
         tags: ["Cart"],
         summary: "Complete purchase and enroll in courses",
-        description: "Process payment for cart items and enroll student in selected courses",
+        description:
+          "Process payment for cart items and enroll student in selected courses",
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
@@ -826,7 +1128,9 @@ const openApiSpec = {
             description: "Enrollment completed successfully",
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/UpdateEnrollCoursesResponse" },
+                schema: {
+                  $ref: "#/components/schemas/UpdateEnrollCoursesResponse",
+                },
               },
             },
           },
@@ -839,7 +1143,10 @@ const openApiSpec = {
                   properties: {
                     success: { type: "boolean", example: false },
                     error: { type: "boolean", example: true },
-                    message: { type: "string", example: "No courses supplied for enrollment" },
+                    message: {
+                      type: "string",
+                      example: "No courses supplied for enrollment",
+                    },
                   },
                 },
               },
