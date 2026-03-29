@@ -1,9 +1,9 @@
 const openApiSpec = {
   openapi: "3.0.3",
   info: {
-    title: "LMS SuperAdmin API",
+    title: "LMS API Documentation",
     version: "1.0.0",
-    description: "OpenAPI documentation for SuperAdmin endpoints only.",
+    description: "OpenAPI documentation for LMS API endpoints including SuperAdmin and Cart functionality.",
   },
   servers: [
     {
@@ -13,6 +13,7 @@ const openApiSpec = {
   ],
   tags: [
     { name: "SuperAdmin" },
+    { name: "Cart" },
   ],
   components: {
     securitySchemes: {
@@ -40,6 +41,82 @@ const openApiSpec = {
             enum: ["Student", "Teacher", "Admin"],
             example: "Student",
           }
+        },
+      },
+      Course: {
+        type: "object",
+        properties: {
+          _id: { type: "string" },
+          title: { type: "string" },
+          description: { type: "string" },
+          price: { type: "number" },
+          image: { type: "string" },
+        },
+      },
+      CartItem: {
+        type: "object",
+        properties: {
+          course: { $ref: "#/components/schemas/Course" },
+          addedAt: { type: "string", format: "date-time" },
+        },
+      },
+      Cart: {
+        type: "object",
+        properties: {
+          _id: { type: "string" },
+          student: { type: "string" },
+          items: {
+            type: "array",
+            items: { $ref: "#/components/schemas/CartItem" },
+          },
+          updatedAt: { type: "string", format: "date-time" },
+        },
+      },
+      CartResponse: {
+        type: "object",
+        properties: {
+          success: { type: "boolean" },
+          message: { type: "string" },
+          data: { $ref: "#/components/schemas/Cart" },
+        },
+      },
+      UpdateEnrollCoursesRequest: {
+        type: "object",
+        required: ["courseIds"],
+        properties: {
+          courseIds: {
+            type: "array",
+            items: { type: "string" },
+            description: "Array of course IDs to enroll in",
+          },
+        },
+      },
+      EnrolledCourse: {
+        type: "object",
+        properties: {
+          course: { $ref: "#/components/schemas/Course" },
+          enrolledAt: { type: "string", format: "date-time" },
+          progress: { type: "number" },
+          avgQuizScore: { type: "number" },
+          completedQuizzes: { type: "number" },
+        },
+      },
+      UpdateEnrollCoursesResponse: {
+        type: "object",
+        properties: {
+          success: { type: "boolean" },
+          error: { type: "boolean" },
+          message: { type: "string" },
+          data: {
+            type: "object",
+            properties: {
+              cart: { $ref: "#/components/schemas/Cart" },
+              enrolledCourses: {
+                type: "array",
+                items: { $ref: "#/components/schemas/EnrolledCourse" },
+              },
+            },
+          },
         },
       },
     },
@@ -247,6 +324,161 @@ const openApiSpec = {
           200: { description: "Enrollment trends" },
           401: { description: "Unauthorized" },
           403: { description: "Forbidden (SuperAdmin only)" },
+        },
+      },
+    },
+    "/cart": {
+      get: {
+        tags: ["Cart"],
+        summary: "Get cart contents",
+        description: "Retrieve the current user's shopping cart with all items",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Cart retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CartResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/cart/add/{courseId}": {
+      post: {
+        tags: ["Cart"],
+        summary: "Add course to cart",
+        description: "Add a specific course to the user's shopping cart",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "courseId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            description: "ID of the course to add to cart",
+          },
+        ],
+        responses: {
+          200: {
+            description: "Course added to cart successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CartResponse" },
+              },
+            },
+          },
+          400: {
+            description: "Course already in cart or already owned",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean", example: false },
+                    message: { type: "string", example: "Course is already in cart" },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          404: { description: "Course not found" },
+        },
+      },
+    },
+    "/cart/remove/{courseId}": {
+      delete: {
+        tags: ["Cart"],
+        summary: "Remove course from cart",
+        description: "Remove a specific course from the user's shopping cart",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "courseId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            description: "ID of the course to remove from cart",
+          },
+        ],
+        responses: {
+          200: {
+            description: "Course removed from cart successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CartResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          404: { description: "Cart not found" },
+        },
+      },
+    },
+    "/cart/clear": {
+      delete: {
+        tags: ["Cart"],
+        summary: "Clear entire cart",
+        description: "Remove all items from the user's shopping cart",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Cart cleared successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CartResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          404: { description: "Cart not found" },
+        },
+      },
+    },
+    "/cart/update-enroll-courses": {
+      put: {
+        tags: ["Cart"],
+        summary: "Complete purchase and enroll in courses",
+        description: "Process payment for cart items and enroll student in selected courses",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateEnrollCoursesRequest" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Enrollment completed successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UpdateEnrollCoursesResponse" },
+              },
+            },
+          },
+          400: {
+            description: "Invalid request or no valid courses",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean", example: false },
+                    error: { type: "boolean", example: true },
+                    message: { type: "string", example: "No courses supplied for enrollment" },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          404: { description: "Student not found" },
+          500: { description: "Internal server error" },
         },
       },
     },
