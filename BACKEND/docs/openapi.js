@@ -14,6 +14,7 @@ const openApiSpec = {
   tags: [
     { name: "SuperAdmin" },
     { name: "Cart" },
+    { name: "Auth" },
   ],
   components: {
     securitySchemes: {
@@ -117,6 +118,97 @@ const openApiSpec = {
               },
             },
           },
+        },
+      },
+      RegisterRequest: {
+        type: "object",
+        required: ["name", "email", "password", "role"],
+        properties: {
+          name: { type: "string", example: "John Doe" },
+          email: { type: "string", format: "email", example: "john@example.com" },
+          password: { type: "string", minLength: 6, example: "password123" },
+          role: {
+            type: "string",
+            enum: ["Student", "Teacher", "Admin", "SuperAdmin"],
+            example: "Student",
+          },
+        },
+      },
+      LoginRequest: {
+        type: "object",
+        required: ["email", "password"],
+        properties: {
+          email: { type: "string", format: "email", example: "john@example.com" },
+          password: { type: "string", example: "password123" },
+        },
+      },
+      AuthResponse: {
+        type: "object",
+        properties: {
+          message: { type: "string" },
+          token: { type: "string" },
+          data: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              name: { type: "string" },
+              email: { type: "string" },
+              role: { type: "string" },
+            },
+          },
+          success: { type: "boolean" },
+          error: { type: "boolean" },
+        },
+      },
+      ForgotPasswordRequest: {
+        type: "object",
+        required: ["email"],
+        properties: {
+          email: { type: "string", format: "email", example: "john@example.com" },
+        },
+      },
+      VerifyOtpRequest: {
+        type: "object",
+        required: ["email", "otp"],
+        properties: {
+          email: { type: "string", format: "email", example: "john@example.com" },
+          otp: { type: "string", example: "123456" },
+        },
+      },
+      ResetPasswordRequest: {
+        type: "object",
+        required: ["email", "otp", "newPassword"],
+        properties: {
+          email: { type: "string", format: "email", example: "john@example.com" },
+          otp: { type: "string", example: "123456" },
+          newPassword: { type: "string", minLength: 6, example: "newpassword123" },
+        },
+      },
+      UpdateProfileRequest: {
+        type: "object",
+        required: ["name"],
+        properties: {
+          name: { type: "string", example: "John Smith" },
+        },
+      },
+      ChangePasswordRequest: {
+        type: "object",
+        required: ["oldPassword", "newPassword"],
+        properties: {
+          oldPassword: { type: "string", example: "oldpassword123" },
+          newPassword: { type: "string", minLength: 6, example: "newpassword123" },
+        },
+      },
+      UserProfile: {
+        type: "object",
+        properties: {
+          _id: { type: "string" },
+          name: { type: "string" },
+          email: { type: "string" },
+          role: { type: "string" },
+          streak: { type: "number" },
+          bestStreak: { type: "number" },
+          lastLogin: { type: "string", format: "date-time" },
         },
       },
     },
@@ -324,6 +416,283 @@ const openApiSpec = {
           200: { description: "Enrollment trends" },
           401: { description: "Unauthorized" },
           403: { description: "Forbidden (SuperAdmin only)" },
+        },
+      },
+    },
+    "/auth/register": {
+      post: {
+        tags: ["Auth"],
+        summary: "Register a new user",
+        description: "Register a new user as Student, Teacher, Admin, or SuperAdmin",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/RegisterRequest" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "User registered successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "Student registered successfully" },
+                    data: { type: "object" },
+                    success: { type: "boolean", example: true },
+                    error: { type: "boolean", example: false },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: "Validation error or user already exists",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "User already exists with this email" },
+                    success: { type: "boolean", example: false },
+                    error: { type: "boolean", example: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/auth/login": {
+      post: {
+        tags: ["Auth"],
+        summary: "User login",
+        description: "Authenticate user and return JWT token",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/LoginRequest" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Login successful",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/AuthResponse" },
+              },
+            },
+          },
+          400: {
+            description: "Invalid credentials",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "Incorrect password" },
+                    success: { type: "boolean", example: false },
+                    error: { type: "boolean", example: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/auth/forgot-password": {
+      post: {
+        tags: ["Auth"],
+        summary: "Request password reset",
+        description: "Send OTP to user's email for password reset",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ForgotPasswordRequest" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "OTP sent successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "OTP sent to your email" },
+                    success: { type: "boolean", example: true },
+                    error: { type: "boolean", example: false },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/auth/verify-otp": {
+      post: {
+        tags: ["Auth"],
+        summary: "Verify OTP",
+        description: "Verify the OTP sent to user's email",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/VerifyOtpRequest" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "OTP verified successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "OTP verified successfully" },
+                    success: { type: "boolean", example: true },
+                    error: { type: "boolean", example: false },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/auth/reset-password": {
+      post: {
+        tags: ["Auth"],
+        summary: "Reset password",
+        description: "Reset user password using OTP",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ResetPasswordRequest" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Password reset successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "Password reset successfully" },
+                    success: { type: "boolean", example: true },
+                    error: { type: "boolean", example: false },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/auth/profile": {
+      get: {
+        tags: ["Auth"],
+        summary: "Get user profile",
+        description: "Get current user's profile information",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Profile retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "Profile retrieved successfully" },
+                    data: { $ref: "#/components/schemas/UserProfile" },
+                    success: { type: "boolean", example: true },
+                    error: { type: "boolean", example: false },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+        },
+      },
+      put: {
+        tags: ["Auth"],
+        summary: "Update user profile",
+        description: "Update current user's profile (name only)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateProfileRequest" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Profile updated successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "Profile updated successfully" },
+                    success: { type: "boolean", example: true },
+                    error: { type: "boolean", example: false },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/auth/change-password": {
+      put: {
+        tags: ["Auth"],
+        summary: "Change password",
+        description: "Change current user's password",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ChangePasswordRequest" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Password changed successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "Password changed successfully" },
+                    success: { type: "boolean", example: true },
+                    error: { type: "boolean", example: false },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
         },
       },
     },
