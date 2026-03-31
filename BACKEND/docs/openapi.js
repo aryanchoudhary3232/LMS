@@ -19,9 +19,7 @@ const openApiSpec = {
     { name: "Cart", description: "Shopping cart operations" },
     { name: "Auth", description: "Authentication and user management" },
   ],
-  security: [
-    { bearerAuth: [] }
-  ],
+  security: [{ bearerAuth: [] }],
   components: {
     securitySchemes: {
       bearerAuth: {
@@ -57,7 +55,11 @@ const openApiSpec = {
         properties: {
           _id: { type: "string", example: "60d0fe4f5311236168a109ca" },
           name: { type: "string", example: "John Doe" },
-          email: { type: "string", format: "email", example: "john.doe@example.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "john.doe@example.com",
+          },
           enrolledCourses: {
             type: "array",
             items: { $ref: "#/components/schemas/EnrolledCourse" },
@@ -125,10 +127,7 @@ const openApiSpec = {
             items: { type: "string" },
             minItems: 1,
             description: "Array of course IDs to enroll in",
-            example: [
-              "60d0fe4f5311236168a109ca",
-              "60d0fe4f5311236168a109cb",
-            ],
+            example: ["60d0fe4f5311236168a109ca", "60d0fe4f5311236168a109cb"],
           },
         },
       },
@@ -243,7 +242,11 @@ const openApiSpec = {
         required: ["name", "email", "password", "role"],
         properties: {
           name: { type: "string", example: "John Doe" },
-          email: { type: "string", format: "email", example: "john@example.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "john@example.com",
+          },
           password: { type: "string", minLength: 6, example: "password123" },
           role: {
             type: "string",
@@ -256,7 +259,11 @@ const openApiSpec = {
         type: "object",
         required: ["email", "password"],
         properties: {
-          email: { type: "string", format: "email", example: "john@example.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "john@example.com",
+          },
           password: { type: "string", example: "password123" },
         },
       },
@@ -282,14 +289,22 @@ const openApiSpec = {
         type: "object",
         required: ["email"],
         properties: {
-          email: { type: "string", format: "email", example: "john@example.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "john@example.com",
+          },
         },
       },
       VerifyOtpRequest: {
         type: "object",
         required: ["email", "otp"],
         properties: {
-          email: { type: "string", format: "email", example: "john@example.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "john@example.com",
+          },
           otp: { type: "string", example: "123456" },
         },
       },
@@ -297,9 +312,17 @@ const openApiSpec = {
         type: "object",
         required: ["email", "otp", "newPassword"],
         properties: {
-          email: { type: "string", format: "email", example: "john@example.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "john@example.com",
+          },
           otp: { type: "string", example: "123456" },
-          newPassword: { type: "string", minLength: 6, example: "newpassword123" },
+          newPassword: {
+            type: "string",
+            minLength: 6,
+            example: "newpassword123",
+          },
         },
       },
       UpdateProfileRequest: {
@@ -314,7 +337,11 @@ const openApiSpec = {
         required: ["oldPassword", "newPassword"],
         properties: {
           oldPassword: { type: "string", example: "oldpassword123" },
-          newPassword: { type: "string", minLength: 6, example: "newpassword123" },
+          newPassword: {
+            type: "string",
+            minLength: 6,
+            example: "newpassword123",
+          },
         },
       },
       UserProfile: {
@@ -339,7 +366,8 @@ const openApiSpec = {
       get: {
         tags: ["Student"],
         summary: "Test student routes",
-        description: "Simple test endpoint to verify student routes are working",
+        description:
+          "Simple test endpoint to verify student routes are working",
         security: [],
         responses: {
           200: {
@@ -461,7 +489,8 @@ const openApiSpec = {
       get: {
         tags: ["Student"],
         summary: "Get student's enrolled courses",
-        description: "Retrieve all courses the authenticated student is enrolled in",
+        description:
+          "Retrieve all courses the authenticated student is enrolled in",
         security: [{ bearerAuth: [] }],
         responses: {
           200: {
@@ -488,7 +517,9 @@ const openApiSpec = {
           required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/UpdateEnrollCoursesRequest" },
+              schema: {
+                $ref: "#/components/schemas/UpdateEnrollCoursesRequest",
+              },
             },
           },
         },
@@ -542,7 +573,8 @@ const openApiSpec = {
       get: {
         tags: ["Student"],
         summary: "Get courses by student ID",
-        description: "Retrieve courses associated with the authenticated student",
+        description:
+          "Retrieve courses associated with the authenticated student",
         security: [{ bearerAuth: [] }],
         responses: {
           200: {
@@ -620,7 +652,8 @@ const openApiSpec = {
       get: {
         tags: ["Student"],
         summary: "Get all available courses",
-        description: "Browse all courses available on the platform (public access)",
+        description:
+          "Browse all courses available on the platform (public access)",
         security: [],
         responses: {
           200: {
@@ -740,7 +773,9 @@ const openApiSpec = {
                       properties: {
                         data: {
                           type: "array",
-                          items: { $ref: "#/components/schemas/EnrolledCourse" },
+                          items: {
+                            $ref: "#/components/schemas/EnrolledCourse",
+                          },
                         },
                       },
                     },
@@ -780,7 +815,9 @@ const openApiSpec = {
           },
           400: { description: "Validation error" },
           401: { description: "Unauthorized" },
-          403: { description: "Forbidden - Not a student or not resource owner" },
+          403: {
+            description: "Forbidden - Not a student or not resource owner",
+          },
           500: { description: "Server error" },
         },
       },
@@ -805,7 +842,9 @@ const openApiSpec = {
                       properties: {
                         data: {
                           type: "array",
-                          items: { $ref: "#/components/schemas/StudentProgress" },
+                          items: {
+                            $ref: "#/components/schemas/StudentProgress",
+                          },
                         },
                       },
                     },
@@ -1097,7 +1136,8 @@ const openApiSpec = {
       post: {
         tags: ["Auth"],
         summary: "Register a new user",
-        description: "Register a new user as Student, Teacher, Admin, or SuperAdmin",
+        description:
+          "Register a new user as Student, Teacher, Admin, or SuperAdmin",
         requestBody: {
           required: true,
           content: {
@@ -1114,7 +1154,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "Student registered successfully" },
+                    message: {
+                      type: "string",
+                      example: "Student registered successfully",
+                    },
                     data: { type: "object" },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
@@ -1130,7 +1173,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "User already exists with this email" },
+                    message: {
+                      type: "string",
+                      example: "User already exists with this email",
+                    },
                     success: { type: "boolean", example: false },
                     error: { type: "boolean", example: true },
                   },
@@ -1202,7 +1248,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "OTP sent to your email" },
+                    message: {
+                      type: "string",
+                      example: "OTP sent to your email",
+                    },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
                   },
@@ -1234,7 +1283,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "OTP verified successfully" },
+                    message: {
+                      type: "string",
+                      example: "OTP verified successfully",
+                    },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
                   },
@@ -1266,7 +1318,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "Password reset successfully" },
+                    message: {
+                      type: "string",
+                      example: "Password reset successfully",
+                    },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
                   },
@@ -1291,7 +1346,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "Profile retrieved successfully" },
+                    message: {
+                      type: "string",
+                      example: "Profile retrieved successfully",
+                    },
                     data: { $ref: "#/components/schemas/UserProfile" },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
@@ -1324,7 +1382,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "Profile updated successfully" },
+                    message: {
+                      type: "string",
+                      example: "Profile updated successfully",
+                    },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
                   },
@@ -1358,7 +1419,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "Password changed successfully" },
+                    message: {
+                      type: "string",
+                      example: "Password changed successfully",
+                    },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
                   },
@@ -1499,7 +1563,9 @@ const openApiSpec = {
           required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/UpdateEnrollCoursesRequest" },
+              schema: {
+                $ref: "#/components/schemas/UpdateEnrollCoursesRequest",
+              },
             },
           },
         },
@@ -1608,7 +1674,8 @@ const openApiSpec = {
       put: {
         tags: ["Teacher"],
         summary: "Update own course",
-        description: "Update a teacher-owned course and optionally replace files.",
+        description:
+          "Update a teacher-owned course and optionally replace files.",
         security: [{ bearerAuth: [] }],
         parameters: [
           {
@@ -1817,7 +1884,8 @@ const openApiSpec = {
       get: {
         tags: ["Teacher"],
         summary: "Get teacher metrics",
-        description: "Retrieve revenue and customer analytics for teacher dashboard.",
+        description:
+          "Retrieve revenue and customer analytics for teacher dashboard.",
         security: [{ bearerAuth: [] }],
         parameters: [
           {
@@ -1908,7 +1976,6 @@ const openApiSpec = {
         },
       },
     },
-
   },
 };
 
