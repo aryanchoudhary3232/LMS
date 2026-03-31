@@ -7,12 +7,18 @@ const path = require("path");
 const fs = require("fs");
 const morgan = require("morgan");
 const swaggerUi = require("swagger-ui-express");
+const { createHandler } = require("graphql-http/lib/use/express");
 const {
   errorHandler,
   notFound,
   performanceMonitor,
 } = require("./middleware");
 const openApiSpec = require("./docs/openapi");
+const {
+  schema: graphQLSchema,
+  root: graphQLRoot,
+  createGraphQLContext,
+} = require("./graphql/schema");
 
 const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
@@ -62,6 +68,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.all(
+  "/graphql",
+  createHandler({
+    schema: graphQLSchema,
+    rootValue: graphQLRoot,
+    context: (req) => createGraphQLContext(req),
+  }),
+);
 
 if (!MONGO_URL) {
   console.error("Missing Mongo connection string. Set MONGO_URL or MONGO_URL_ATLAS.");
