@@ -17,6 +17,8 @@ router.post('/reset-password', authController.resetPassword);
 //  PROTECTED ROUTES (Authentication required)
 // ============================================
 
+router.post('/logout', verify, authController.logout);
+
 // Profile Management - Works for all roles (Student, Teacher, Admin)
 router.get('/profile', verify, authController.getProfile);      // Get current user profile
 router.put('/profile', verify, authController.updateProfile);   // Update profile (name only)

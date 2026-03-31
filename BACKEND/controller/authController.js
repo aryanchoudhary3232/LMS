@@ -186,6 +186,38 @@ async function login(req, res) {
   }
 }
 
+// 🔹 Logout (stateless JWT)
+async function logout(req, res) {
+  try {
+    const { _id, role } = req.user || {};
+
+    // Best-effort audit of logout time without blocking response
+    let Model = null;
+    if (role === "Student") Model = Student;
+    else if (role === "Teacher") Model = Teacher;
+    else if (role === "Admin" || role === "SuperAdmin") Model = Admin;
+
+    if (_id && Model) {
+      Model.findByIdAndUpdate(_id, { lastLogout: new Date() }).catch(() => {
+        // Do not fail logout if auditing fails
+      });
+    }
+
+    res.json({
+      message: "Logged out successfully",
+      success: true,
+      error: false,
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({
+      message: "Server error during logout",
+      success: false,
+      error: true,
+    });
+  }
+}
+
 // ============================================
 // 🔹 PROFILE MANAGEMENT FUNCTIONS
 // ============================================
@@ -596,6 +628,7 @@ async function resetPassword(req, res) {
 module.exports = {
   register,
   login,
+  logout,
   getProfile,
   updateProfile,
   changePassword,
