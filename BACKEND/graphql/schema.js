@@ -74,13 +74,17 @@ function computeRatingSummary(ratings = []) {
     return { average: 0, count: 0 };
   }
 
-  const total = ratings.reduce((sum, entry) => sum + (Number(entry.rating) || 0), 0);
+  const total = ratings.reduce(
+    (sum, entry) => sum + (Number(entry.rating) || 0),
+    0,
+  );
   const average = Math.round((total / ratings.length) * 10) / 10;
   return { average, count: ratings.length };
 }
 
 function mapCourse(courseDoc) {
-  const plain = typeof courseDoc.toObject === "function" ? courseDoc.toObject() : courseDoc;
+  const plain =
+    typeof courseDoc.toObject === "function" ? courseDoc.toObject() : courseDoc;
   const summary = computeRatingSummary(plain.ratings);
 
   return {

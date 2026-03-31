@@ -61,7 +61,9 @@ const ADD_TO_CART_MUTATION = `
 
 const extractFirstArray = (payload) => {
   if (!payload || typeof payload !== "object") return [];
-  const candidate = Object.values(payload).find((value) => Array.isArray(value));
+  const candidate = Object.values(payload).find((value) =>
+    Array.isArray(value),
+  );
   return Array.isArray(candidate) ? candidate : [];
 };
 
@@ -79,7 +81,8 @@ const extractCoursesFromGraphQL = (payload) => {
 
   for (const key of knownKeys) {
     if (Array.isArray(payload[key])) return payload[key];
-    if (payload[key] && Array.isArray(payload[key].data)) return payload[key].data;
+    if (payload[key] && Array.isArray(payload[key].data))
+      return payload[key].data;
   }
 
   return extractFirstArray(payload);
@@ -89,12 +92,10 @@ const extractOwnedIdsFromGraphQL = (payload) => {
   const rootList = Array.isArray(payload?.enrolledCourses)
     ? payload.enrolledCourses
     : Array.isArray(payload?.me?.enrolledCourses)
-    ? payload.me.enrolledCourses
-    : extractFirstArray(payload);
+      ? payload.me.enrolledCourses
+      : extractFirstArray(payload);
 
-  return rootList
-    .map((item) => item?.course?._id || item?._id)
-    .filter(Boolean);
+  return rootList.map((item) => item?.course?._id || item?._id).filter(Boolean);
 };
 
 const Courses = () => {
@@ -108,9 +109,10 @@ const Courses = () => {
 
   const [loading, setLoading] = useState(true);
   const [isGraphQLAvailable, setIsGraphQLAvailable] = useState(true);
-  
+
   const searchTimeout = useRef(null);
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const backendUrl =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   // Whether the user is logged in
   const isAuthenticated = !!getToken();
@@ -118,7 +120,9 @@ const Courses = () => {
   // Initialize owned courses
   const [ownedCourseIds, setOwnedCourseIds] = useState(() => {
     try {
-      const persisted = JSON.parse(localStorage.getItem("enrolledCourseIds") || "[]");
+      const persisted = JSON.parse(
+        localStorage.getItem("enrolledCourseIds") || "[]",
+      );
       return new Set(persisted);
     } catch (error) {
       console.error("Failed to parse enrolledCourseIds:", error);
@@ -138,7 +142,9 @@ const Courses = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`GraphQL request failed with status ${response.status}`);
+        throw new Error(
+          `GraphQL request failed with status ${response.status}`,
+        );
       }
 
       const payload = await response.json();
@@ -182,7 +188,10 @@ const Courses = () => {
           return extractCoursesFromGraphQL(graphData);
         } catch (error) {
           // If GraphQL endpoint/schema is unavailable, continue with REST.
-          console.warn("GraphQL unavailable for courses page, using REST fallback:", error.message);
+          console.warn(
+            "GraphQL unavailable for courses page, using REST fallback:",
+            error.message,
+          );
           setIsGraphQLAvailable(false);
         }
       }
@@ -198,7 +207,11 @@ const Courses = () => {
     const loadInitialCourses = async () => {
       setLoading(true);
       try {
-        const initialCourses = await fetchCoursesData({ query: "", category: "", level: "" });
+        const initialCourses = await fetchCoursesData({
+          query: "",
+          category: "",
+          level: "",
+        });
         if (isMounted) {
           setDefaultCourses(initialCourses);
         }
@@ -222,7 +235,8 @@ const Courses = () => {
   }, [fetchCoursesData]);
 
   // Helper: check if user is filtering
-  const isSearchActive = searchParams.query || searchParams.category || searchParams.level;
+  const isSearchActive =
+    searchParams.query || searchParams.category || searchParams.level;
 
   const handleSearch = (e) => {
     const { name, value } = e.target;
@@ -282,15 +296,26 @@ const Courses = () => {
 
       if (isGraphQLAvailable) {
         try {
-          const graphData = await requestGraphQL(ENROLLED_COURSES_QUERY, {}, token);
+          const graphData = await requestGraphQL(
+            ENROLLED_COURSES_QUERY,
+            {},
+            token,
+          );
           ownedIds = extractOwnedIdsFromGraphQL(graphData);
 
           if (ownedIds.length === 0) {
-            const graphDataFromMe = await requestGraphQL(ENROLLED_COURSES_ME_QUERY, {}, token);
+            const graphDataFromMe = await requestGraphQL(
+              ENROLLED_COURSES_ME_QUERY,
+              {},
+              token,
+            );
             ownedIds = extractOwnedIdsFromGraphQL(graphDataFromMe);
           }
         } catch (error) {
-          console.warn("GraphQL unavailable for enrolled courses, using REST fallback:", error.message);
+          console.warn(
+            "GraphQL unavailable for enrolled courses, using REST fallback:",
+            error.message,
+          );
           setIsGraphQLAvailable(false);
         }
       }
@@ -343,8 +368,12 @@ const Courses = () => {
             null;
 
           const isSuccess =
-            typeof result?.success === "boolean" ? result.success : Boolean(result ?? true);
-          const message = result?.message || (isSuccess ? "Added to cart!" : "Failed to add to cart");
+            typeof result?.success === "boolean"
+              ? result.success
+              : Boolean(result ?? true);
+          const message =
+            result?.message ||
+            (isSuccess ? "Added to cart!" : "Failed to add to cart");
 
           if (isSuccess) {
             alert(message);
@@ -355,7 +384,10 @@ const Courses = () => {
           alert(message);
           return;
         } catch (error) {
-          console.warn("GraphQL unavailable for add-to-cart, using REST fallback:", error.message);
+          console.warn(
+            "GraphQL unavailable for add-to-cart, using REST fallback:",
+            error.message,
+          );
           setIsGraphQLAvailable(false);
         }
       }
@@ -392,23 +424,25 @@ const Courses = () => {
     if (loading) {
       return (
         <div className="loading-state">
-           <div className="spinner"></div>
-           <p>Finding best courses...</p>
+          <div className="spinner"></div>
+          <p>Finding best courses...</p>
         </div>
       );
     }
 
     const listToRender = isSearchActive ? courses : defaultCourses;
-    const emptyMessage = isSearchActive ? "No matching courses found." : "No courses available.";
+    const emptyMessage = isSearchActive
+      ? "No matching courses found."
+      : "No courses available.";
 
     if (listToRender.length === 0) {
       return <p className="no-courses">{emptyMessage}</p>;
     }
 
     return listToRender.map((course, index) => (
-      <div 
-        key={course._id} 
-        className="fade-in-up" 
+      <div
+        key={course._id}
+        className="fade-in-up"
         style={{ animationDelay: `${index * 0.05}s` }} // Staggered animation
       >
         <CourseCard
@@ -426,7 +460,9 @@ const Courses = () => {
     <div className="courses-page-container">
       <div className="courses-header">
         <h1>Explore Courses</h1>
-        <p className="header-subtitle">Expand your knowledge with our top-rated tutorials.</p>
+        <p className="header-subtitle">
+          Expand your knowledge with our top-rated tutorials.
+        </p>
       </div>
 
       <div className="courses-filter-bar">
@@ -472,16 +508,14 @@ const Courses = () => {
             </select>
             <FaChevronDown className="dropdown-icon" />
           </div>
-          
+
           <button className="modern-search-btn" onClick={handleSearchButton}>
             Search
           </button>
         </div>
       </div>
 
-      <div className="courses-grid">
-        {renderContent()}
-      </div>
+      <div className="courses-grid">{renderContent()}</div>
     </div>
   );
 };
