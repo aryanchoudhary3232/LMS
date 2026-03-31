@@ -15,6 +15,7 @@ const openApiSpec = {
   tags: [
     { name: "Student", description: "Student-related operations" },
     { name: "Teacher", description: "Teacher-related operations" },
+    { name: "Admin", description: "Administrator operations" },
     { name: "SuperAdmin", description: "SuperAdmin operations" },
     { name: "Cart", description: "Shopping cart operations" },
     { name: "Auth", description: "Authentication and user management" },
@@ -265,6 +266,16 @@ const openApiSpec = {
             example: "john@example.com",
           },
           password: { type: "string", example: "password123" },
+        },
+      },
+      ApproveRejectTeacherRequest: {
+        type: "object",
+        properties: {
+          notes: {
+            type: "string",
+            description: "Optional notes included in the verification decision",
+            example: "Verified qualifications via phone interview",
+          },
         },
       },
       AuthResponse: {
@@ -1130,6 +1141,237 @@ const openApiSpec = {
     },
 
     // ─────────────────────────────────────────────
+    // Admin Routes
+    // ─────────────────────────────────────────────
+    "/admin/dashboard": {
+      get: {
+        tags: ["Admin"],
+        summary: "Get admin dashboard stats",
+        description: "Retrieve counts for students, teachers, and courses",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Dashboard data retrieved" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden (Admin only)" },
+        },
+      },
+    },
+    "/admin/users": {
+      get: {
+        tags: ["Admin"],
+        summary: "List students and teachers",
+        description: "Get all active students and teachers (passwords excluded)",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Users retrieved successfully" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden (Admin only)" },
+        },
+      },
+    },
+    "/admin/deleted-members": {
+      get: {
+        tags: ["Admin"],
+        summary: "Get soft-deleted members",
+        description: "Returns deleted students and teachers with deletion metadata",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Deleted members retrieved" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden (Admin only)" },
+        },
+      },
+    },
+    "/admin/teachers/{teacherId}": {
+      get: {
+        tags: ["Admin"],
+        summary: "Get teacher details",
+        description: "Retrieve a teacher profile with course info",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "teacherId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            description: "Teacher ID",
+          },
+        ],
+        responses: {
+          200: { description: "Teacher retrieved" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden (Admin only)" },
+          404: { description: "Teacher not found" },
+        },
+      },
+      delete: {
+        tags: ["Admin"],
+        summary: "Soft delete teacher",
+        description: "Soft deletes teacher and their courses",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "teacherId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            description: "Teacher ID",
+          },
+        ],
+        responses: {
+          200: { description: "Teacher deleted" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden (Admin only)" },
+          404: { description: "Teacher not found" },
+        },
+      },
+    },
+    "/admin/teachers/{teacherId}/approve": {
+      put: {
+        tags: ["Admin"],
+        summary: "Approve teacher verification",
+        description: "Approve a teacher's verification request with optional notes",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "teacherId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            description: "Teacher ID",
+          },
+        ],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ApproveRejectTeacherRequest" },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Teacher approved" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden (Admin only)" },
+          404: { description: "Teacher not found" },
+        },
+      },
+    },
+    "/admin/teachers/{teacherId}/reject": {
+      put: {
+        tags: ["Admin"],
+        summary: "Reject teacher verification",
+        description: "Reject a teacher's verification with optional notes",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "teacherId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            description: "Teacher ID",
+          },
+        ],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ApproveRejectTeacherRequest" },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Teacher rejected" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden (Admin only)" },
+          404: { description: "Teacher not found" },
+        },
+      },
+    },
+    "/admin/students/{studentId}": {
+      delete: {
+        tags: ["Admin"],
+        summary: "Soft delete student",
+        description: "Soft deletes a student account",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "studentId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            description: "Student ID",
+          },
+        ],
+        responses: {
+          200: { description: "Student deleted" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden (Admin only)" },
+          404: { description: "Student not found" },
+        },
+      },
+    },
+    "/admin/courses": {
+      get: {
+        tags: ["Admin"],
+        summary: "List courses",
+        description: "Retrieve all non-deleted courses with teacher info",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Courses retrieved" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden (Admin only)" },
+        },
+      },
+    },
+    "/admin/courses/{courseId}": {
+      get: {
+        tags: ["Admin"],
+        summary: "Get course details",
+        description: "Retrieve a course with enrolled student details",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "courseId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            description: "Course ID",
+          },
+        ],
+        responses: {
+          200: { description: "Course retrieved" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden (Admin only)" },
+          404: { description: "Course not found" },
+        },
+      },
+    },
+    "/admin/courses/{id}": {
+      delete: {
+        tags: ["Admin"],
+        summary: "Soft delete course",
+        description: "Soft deletes a course",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            description: "Course ID",
+          },
+        ],
+        responses: {
+          200: { description: "Course deleted" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden (Admin only)" },
+          404: { description: "Course not found" },
+        },
+      },
+    },
+
+    // ─────────────────────────────────────────────
     // Auth Routes
     // ─────────────────────────────────────────────
     "/auth/register": {
@@ -1224,6 +1466,35 @@ const openApiSpec = {
               },
             },
           },
+        },
+      },
+    },
+    "/auth/logout": {
+      post: {
+        tags: ["Auth"],
+        summary: "Logout current user",
+        description: "Invalidate the current session on the client; JWT remains stateless on the server",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Logout acknowledged",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      example: "Logged out successfully",
+                    },
+                    success: { type: "boolean", example: true },
+                    error: { type: "boolean", example: false },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
         },
       },
     },
