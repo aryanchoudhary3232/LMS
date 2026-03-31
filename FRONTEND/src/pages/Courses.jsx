@@ -2,28 +2,117 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import "../css/teacher/Courses.css";
 import CourseCard from "./CourseCard";
 import { FaSearch, FaChevronDown } from "react-icons/fa";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchCourses } from "../features/courses/coursesSlice";
 
 const getToken = () => localStorage.getItem("token") || "";
 
+const COURSE_FIELDS = `
+  _id
+  title
+  description
+  image
+  category
+  level
+  price
+  rating
+  ratingCount
+  studentCount
+`;
+
+const COURSES_QUERY = `
+  query Courses($query: String, $category: String, $level: String) {
+    courses(query: $query, category: $category, level: $level) {
+      ${COURSE_FIELDS}
+    }
+  }
+`;
+
+const ENROLLED_COURSES_QUERY = `
+  query EnrolledCourses {
+    enrolledCourses {
+      _id
+      course {
+        _id
+      }
+    }
+  }
+`;
+
+const ENROLLED_COURSES_ME_QUERY = `
+  query EnrolledCoursesFromMe {
+    me {
+      enrolledCourses {
+        _id
+        course {
+          _id
+        }
+      }
+    }
+  }
+`;
+
+const ADD_TO_CART_MUTATION = `
+  mutation AddToCart($courseId: ID!) {
+    addToCart(courseId: $courseId) {
+      success
+      message
+    }
+  }
+`;
+
+const extractFirstArray = (payload) => {
+  if (!payload || typeof payload !== "object") return [];
+  const candidate = Object.values(payload).find((value) =>
+    Array.isArray(value),
+  );
+  return Array.isArray(candidate) ? candidate : [];
+};
+
+const extractCoursesFromGraphQL = (payload) => {
+  if (!payload || typeof payload !== "object") return [];
+
+  const knownKeys = [
+    "courses",
+    "searchCourses",
+    "allCourses",
+    "getCourses",
+    "courseList",
+    "listCourses",
+  ];
+
+  for (const key of knownKeys) {
+    if (Array.isArray(payload[key])) return payload[key];
+    if (payload[key] && Array.isArray(payload[key].data))
+      return payload[key].data;
+  }
+
+  return extractFirstArray(payload);
+};
+
+const extractOwnedIdsFromGraphQL = (payload) => {
+  const rootList = Array.isArray(payload?.enrolledCourses)
+    ? payload.enrolledCourses
+    : Array.isArray(payload?.me?.enrolledCourses)
+      ? payload.me.enrolledCourses
+      : extractFirstArray(payload);
+
+  return rootList.map((item) => item?.course?._id || item?._id).filter(Boolean);
+};
+
 const Courses = () => {
   const [courses, setCourses] = useState([]);
+  const [defaultCourses, setDefaultCourses] = useState([]);
   const [searchParams, setSearchParams] = useState({
     query: "",
     category: "",
     level: "",
   });
-  
-  // Local loading state for search operations
-  const [loading, setLoading] = useState(false);
-  
-  const searchTimeout = useRef(null);
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-  const dispatch = useDispatch();
 
-  // Redux state for default list
-  const coursesList = useSelector((state) => state.courses.list);
+  const [loading, setLoading] = useState(true);
+  const [isGraphQLAvailable, setIsGraphQLAvailable] = useState(true);
+
+  const searchTimeout = useRef(null);
+  const backendUrl =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   // Whether the user is logged in
   const isAuthenticated = !!getToken();
@@ -31,7 +120,9 @@ const Courses = () => {
   // Initialize owned courses
   const [ownedCourseIds, setOwnedCourseIds] = useState(() => {
     try {
-      const persisted = JSON.parse(localStorage.getItem("enrolledCourseIds") || "[]");
+      const persisted = JSON.parse(
+        localStorage.getItem("enrolledCourseIds") || "[]",
+      );
       return new Set(persisted);
     } catch (error) {
       console.error("Failed to parse enrolledCourseIds:", error);
@@ -39,32 +130,127 @@ const Courses = () => {
     }
   });
 
+  const requestGraphQL = useCallback(
+    async (query, variables = {}, token = "") => {
+      const response = await fetch(`${backendUrl}/graphql`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ query, variables }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `GraphQL request failed with status ${response.status}`,
+        );
+      }
+
+      const payload = await response.json();
+      if (payload?.errors?.length) {
+        throw new Error(payload.errors[0].message || "GraphQL query failed");
+      }
+
+      return payload?.data || {};
+    },
+    [backendUrl],
+  );
+
+  const fetchCoursesViaRest = useCallback(
+    async (params) => {
+      const hasFilters = !!(params.query || params.category || params.level);
+      const queryString = new URLSearchParams(params).toString();
+      const endpoint = hasFilters
+        ? `${backendUrl}/courses/search?${queryString}`
+        : `${backendUrl}/courses`;
+
+      const response = await fetch(endpoint);
+      const data = await response.json();
+
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.data)) return data.data;
+      return [];
+    },
+    [backendUrl],
+  );
+
+  const fetchCoursesData = useCallback(
+    async (params) => {
+      if (isGraphQLAvailable) {
+        try {
+          const graphData = await requestGraphQL(COURSES_QUERY, {
+            query: params.query || null,
+            category: params.category || null,
+            level: params.level || null,
+          });
+
+          return extractCoursesFromGraphQL(graphData);
+        } catch (error) {
+          // If GraphQL endpoint/schema is unavailable, continue with REST.
+          console.warn(
+            "GraphQL unavailable for courses page, using REST fallback:",
+            error.message,
+          );
+          setIsGraphQLAvailable(false);
+        }
+      }
+
+      return fetchCoursesViaRest(params);
+    },
+    [isGraphQLAvailable, requestGraphQL, fetchCoursesViaRest],
+  );
+
   useEffect(() => {
-    dispatch(fetchCourses());
-  }, [dispatch]);
+    let isMounted = true;
+
+    const loadInitialCourses = async () => {
+      setLoading(true);
+      try {
+        const initialCourses = await fetchCoursesData({
+          query: "",
+          category: "",
+          level: "",
+        });
+        if (isMounted) {
+          setDefaultCourses(initialCourses);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setDefaultCourses([]);
+        }
+        console.error("Failed to load courses:", error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadInitialCourses();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchCoursesData]);
 
   // Helper: check if user is filtering
-  const isSearchActive = searchParams.query || searchParams.category || searchParams.level;
+  const isSearchActive =
+    searchParams.query || searchParams.category || searchParams.level;
 
-  // --- CORE FIX: Handle Search with Immediate Loading ---
   const handleSearch = (e) => {
     const { name, value } = e.target;
-    
-    // 1. Update params immediately
+
     const nextParams = { ...searchParams, [name]: value };
     setSearchParams(nextParams);
 
-    // 2. Clear existing timer
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
     }
 
-    // 3. SET LOADING IMMEDIATELY (Fixes the flash of "No courses found")
     setLoading(true);
 
-    // 4. Debounce the fetch
     searchTimeout.current = setTimeout(async () => {
-      // If all fields are empty, stop loading and return to default view
       if (!nextParams.query && !nextParams.category && !nextParams.level) {
         setLoading(false);
         setCourses([]);
@@ -72,36 +258,27 @@ const Courses = () => {
       }
 
       try {
-        const queryString = new URLSearchParams(nextParams).toString();
-        const response = await fetch(`${backendUrl}/courses/search?${queryString}`);
-        const data = await response.json();
-        
-        if (data.success) {
-          setCourses(data.data);
-        } else {
-          setCourses([]);
-        }
+        const searchedCourses = await fetchCoursesData(nextParams);
+        setCourses(searchedCourses);
       } catch (error) {
         setCourses([]);
         console.error("Search error:", error);
       } finally {
         setLoading(false);
       }
-    }, 500); // Increased slightly to 500ms for smoother feel while typing
+    }, 500);
   };
 
-  // Manual search button
   const handleSearchButton = async () => {
+    if (!searchParams.query && !searchParams.category && !searchParams.level) {
+      setCourses([]);
+      return;
+    }
+
     setLoading(true);
     try {
-      const queryString = new URLSearchParams(searchParams).toString();
-      const response = await fetch(`${backendUrl}/courses/search?${queryString}`);
-      const data = await response.json();
-      if (data.success) {
-        setCourses(data.data);
-      } else {
-        setCourses([]);
-      }
+      const searchedCourses = await fetchCoursesData(searchParams);
+      setCourses(searchedCourses);
     } catch (searchError) {
       setCourses([]);
       console.error("Manual search error:", searchError);
@@ -114,19 +291,51 @@ const Courses = () => {
     try {
       const token = getToken();
       if (!token) return;
-      const response = await fetch(`${backendUrl}/student/enrolled-courses`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      if (response.ok && data.success && Array.isArray(data.data)) {
-        const ownedIds = data.data.map((course) => course._id);
-        setOwnedCourseIds(new Set(ownedIds));
-        localStorage.setItem("enrolledCourseIds", JSON.stringify(ownedIds));
+
+      let ownedIds = [];
+
+      if (isGraphQLAvailable) {
+        try {
+          const graphData = await requestGraphQL(
+            ENROLLED_COURSES_QUERY,
+            {},
+            token,
+          );
+          ownedIds = extractOwnedIdsFromGraphQL(graphData);
+
+          if (ownedIds.length === 0) {
+            const graphDataFromMe = await requestGraphQL(
+              ENROLLED_COURSES_ME_QUERY,
+              {},
+              token,
+            );
+            ownedIds = extractOwnedIdsFromGraphQL(graphDataFromMe);
+          }
+        } catch (error) {
+          console.warn(
+            "GraphQL unavailable for enrolled courses, using REST fallback:",
+            error.message,
+          );
+          setIsGraphQLAvailable(false);
+        }
       }
+
+      if (ownedIds.length === 0) {
+        const response = await fetch(`${backendUrl}/student/enrolled-courses`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (response.ok && data.success && Array.isArray(data.data)) {
+          ownedIds = data.data.map((course) => course._id);
+        }
+      }
+
+      setOwnedCourseIds(new Set(ownedIds));
+      localStorage.setItem("enrolledCourseIds", JSON.stringify(ownedIds));
     } catch (error) {
       console.error("Error fetching enrolled courses", error);
     }
-  }, [backendUrl]);
+  }, [backendUrl, isGraphQLAvailable, requestGraphQL]);
 
   useEffect(() => {
     loadOwnedCourses();
@@ -142,17 +351,59 @@ const Courses = () => {
       alert("You already own this course");
       return;
     }
+
     try {
-      const res = await fetch(`${backendUrl}/cart/add/${courseId}`, {
+      if (isGraphQLAvailable) {
+        try {
+          const graphData = await requestGraphQL(
+            ADD_TO_CART_MUTATION,
+            { courseId },
+            token,
+          );
+
+          const result =
+            graphData?.addToCart ||
+            graphData?.addCourseToCart ||
+            graphData?.cartAdd ||
+            null;
+
+          const isSuccess =
+            typeof result?.success === "boolean"
+              ? result.success
+              : Boolean(result ?? true);
+          const message =
+            result?.message ||
+            (isSuccess ? "Added to cart!" : "Failed to add to cart");
+
+          if (isSuccess) {
+            alert(message);
+            window.dispatchEvent(new Event("cartUpdated"));
+            return;
+          }
+
+          alert(message);
+          return;
+        } catch (error) {
+          console.warn(
+            "GraphQL unavailable for add-to-cart, using REST fallback:",
+            error.message,
+          );
+          setIsGraphQLAvailable(false);
+        }
+      }
+
+      const response = await fetch(`${backendUrl}/cart/add/${courseId}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      if (res.ok) {
+      const data = await response.json();
+
+      if (response.ok) {
         alert("Added to cart!");
-        // Dispatch event to update navbar
         window.dispatchEvent(new Event("cartUpdated"));
-      } else alert(data.message || "Failed to add to cart");
+      } else {
+        alert(data.message || "Failed to add to cart");
+      }
     } catch (cartError) {
       console.error("Error adding to cart:", cartError);
       alert("Error adding to cart");
@@ -169,29 +420,29 @@ const Courses = () => {
     window.location.href = `/courses/${courseId}/flashcards`;
   };
 
-  // --- Render Logic Helper ---
   const renderContent = () => {
     if (loading) {
       return (
         <div className="loading-state">
-           <div className="spinner"></div>
-           <p>Finding best courses...</p>
+          <div className="spinner"></div>
+          <p>Finding best courses...</p>
         </div>
       );
     }
 
-    // Determine which list to show
-    const listToRender = isSearchActive ? courses : coursesList;
-    const emptyMessage = isSearchActive ? "No matching courses found." : "No courses available.";
+    const listToRender = isSearchActive ? courses : defaultCourses;
+    const emptyMessage = isSearchActive
+      ? "No matching courses found."
+      : "No courses available.";
 
     if (listToRender.length === 0) {
       return <p className="no-courses">{emptyMessage}</p>;
     }
 
     return listToRender.map((course, index) => (
-      <div 
-        key={course._id} 
-        className="fade-in-up" 
+      <div
+        key={course._id}
+        className="fade-in-up"
         style={{ animationDelay: `${index * 0.05}s` }} // Staggered animation
       >
         <CourseCard
@@ -209,7 +460,9 @@ const Courses = () => {
     <div className="courses-page-container">
       <div className="courses-header">
         <h1>Explore Courses</h1>
-        <p className="header-subtitle">Expand your knowledge with our top-rated tutorials.</p>
+        <p className="header-subtitle">
+          Expand your knowledge with our top-rated tutorials.
+        </p>
       </div>
 
       <div className="courses-filter-bar">
@@ -255,16 +508,14 @@ const Courses = () => {
             </select>
             <FaChevronDown className="dropdown-icon" />
           </div>
-          
+
           <button className="modern-search-btn" onClick={handleSearchButton}>
             Search
           </button>
         </div>
       </div>
 
-      <div className="courses-grid">
-        {renderContent()}
-      </div>
+      <div className="courses-grid">{renderContent()}</div>
     </div>
   );
 };

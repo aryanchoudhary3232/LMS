@@ -7,12 +7,14 @@ const path = require("path");
 const fs = require("fs");
 const morgan = require("morgan");
 const swaggerUi = require("swagger-ui-express");
-const {
-  errorHandler,
-  notFound,
-  performanceMonitor,
-} = require("./middleware");
+const { createHandler } = require("graphql-http/lib/use/express");
+const { errorHandler, notFound, performanceMonitor } = require("./middleware");
 const openApiSpec = require("./docs/openapi");
+const {
+  schema: graphQLSchema,
+  root: graphQLRoot,
+  createGraphQLContext,
+} = require("./graphql/schema");
 
 const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
@@ -23,11 +25,11 @@ const superadminRoutes = require("./routes/superadminRoutes");
 const assignmentRoutes = require("./routes/assignmentRoutes");
 const contactRoutes = require("./routes/contactRoutes");
 const cartRoutes = require("./routes/cartRoutes");
-const flashcardRoutes = require('./routes/flashcardRoutes');
+const flashcardRoutes = require("./routes/flashcardRoutes");
 const statsRoutes = require("./routes/statsRoutes");
 
 const PORT = Number(process.env.PORT) || 3000;
-const MONGO_URL =  process.env.MONGO_URL_ATLAS;
+const MONGO_URL = process.env.MONGO_URL_ATLAS;
 
 // Logging middleware
 const logsDir = path.join(__dirname, "logs");
@@ -35,36 +37,47 @@ if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
 
-const accessLogStream = fs.createWriteStream(
-  path.join(logsDir, "access.log"),
-  { flags: "a" }
-);
+const accessLogStream = fs.createWriteStream(path.join(logsDir, "access.log"), {
+  flags: "a",
+});
 
 app.use(
   morgan(process.env.NODE_ENV === "production" ? "combined" : "dev", {
     stream: accessLogStream,
-  })
+  }),
 );
-
 
 // Performance monitoring
 app.use(performanceMonitor);
 
 // CORS configuration
-app.use(cors({
-  origin: true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+app.all(
+  "/graphql",
+  createHandler({
+    schema: graphQLSchema,
+    rootValue: graphQLRoot,
+    context: (req) => createGraphQLContext(req),
+  }),
+);
+
 if (!MONGO_URL) {
-  console.error("Missing Mongo connection string. Set MONGO_URL or MONGO_URL_ATLAS.");
+  console.error(
+    "Missing Mongo connection string. Set MONGO_URL or MONGO_URL_ATLAS.",
+  );
   process.exit(1);
 }
 
@@ -82,10 +95,10 @@ app.use("/auth", authRoutes);
 app.use("/courses", courseRoutes);
 
 // contact form
-app.use('/contact', contactRoutes);
+app.use("/contact", contactRoutes);
 
 // cart routes
-app.use('/cart', cartRoutes);
+app.use("/cart", cartRoutes);
 
 //teacher routes
 app.use("/teacher", teacherRoutes);
@@ -103,7 +116,7 @@ app.use("/superadmin", superadminRoutes);
 app.use("/assignments", assignmentRoutes);
 
 // flashcard routes
-app.use('/api/flashcards', flashcardRoutes);
+app.use("/api/flashcards", flashcardRoutes);
 
 // stats routes
 app.use("/stats", statsRoutes);
