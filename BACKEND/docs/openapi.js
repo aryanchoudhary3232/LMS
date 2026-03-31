@@ -4,7 +4,7 @@ const openApiSpec = {
     title: "LMS API Documentation",
     version: "1.0.0",
     description:
-      "OpenAPI documentation for LMS API endpoints including Student, SuperAdmin, and Cart functionality.",
+      "OpenAPI documentation for LMS API endpoints including Auth, Student, Teacher, SuperAdmin, and Cart functionality.",
   },
   servers: [
     {
@@ -14,13 +14,12 @@ const openApiSpec = {
   ],
   tags: [
     { name: "Student", description: "Student-related operations" },
+    { name: "Teacher", description: "Teacher-related operations" },
     { name: "SuperAdmin", description: "SuperAdmin operations" },
     { name: "Cart", description: "Shopping cart operations" },
     { name: "Auth", description: "Authentication and user management" },
   ],
-  security: [
-    { bearerAuth: [] }
-  ],
+  security: [{ bearerAuth: [] }],
   components: {
     securitySchemes: {
       bearerAuth: {
@@ -56,7 +55,11 @@ const openApiSpec = {
         properties: {
           _id: { type: "string", example: "60d0fe4f5311236168a109ca" },
           name: { type: "string", example: "John Doe" },
-          email: { type: "string", format: "email", example: "john.doe@example.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "john.doe@example.com",
+          },
           enrolledCourses: {
             type: "array",
             items: { $ref: "#/components/schemas/EnrolledCourse" },
@@ -124,10 +127,7 @@ const openApiSpec = {
             items: { type: "string" },
             minItems: 1,
             description: "Array of course IDs to enroll in",
-            example: [
-              "60d0fe4f5311236168a109ca",
-              "60d0fe4f5311236168a109cb",
-            ],
+            example: ["60d0fe4f5311236168a109ca", "60d0fe4f5311236168a109cb"],
           },
         },
       },
@@ -242,7 +242,11 @@ const openApiSpec = {
         required: ["name", "email", "password", "role"],
         properties: {
           name: { type: "string", example: "John Doe" },
-          email: { type: "string", format: "email", example: "john@example.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "john@example.com",
+          },
           password: { type: "string", minLength: 6, example: "password123" },
           role: {
             type: "string",
@@ -255,7 +259,11 @@ const openApiSpec = {
         type: "object",
         required: ["email", "password"],
         properties: {
-          email: { type: "string", format: "email", example: "john@example.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "john@example.com",
+          },
           password: { type: "string", example: "password123" },
         },
       },
@@ -281,14 +289,22 @@ const openApiSpec = {
         type: "object",
         required: ["email"],
         properties: {
-          email: { type: "string", format: "email", example: "john@example.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "john@example.com",
+          },
         },
       },
       VerifyOtpRequest: {
         type: "object",
         required: ["email", "otp"],
         properties: {
-          email: { type: "string", format: "email", example: "john@example.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "john@example.com",
+          },
           otp: { type: "string", example: "123456" },
         },
       },
@@ -296,9 +312,17 @@ const openApiSpec = {
         type: "object",
         required: ["email", "otp", "newPassword"],
         properties: {
-          email: { type: "string", format: "email", example: "john@example.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "john@example.com",
+          },
           otp: { type: "string", example: "123456" },
-          newPassword: { type: "string", minLength: 6, example: "newpassword123" },
+          newPassword: {
+            type: "string",
+            minLength: 6,
+            example: "newpassword123",
+          },
         },
       },
       UpdateProfileRequest: {
@@ -313,7 +337,11 @@ const openApiSpec = {
         required: ["oldPassword", "newPassword"],
         properties: {
           oldPassword: { type: "string", example: "oldpassword123" },
-          newPassword: { type: "string", minLength: 6, example: "newpassword123" },
+          newPassword: {
+            type: "string",
+            minLength: 6,
+            example: "newpassword123",
+          },
         },
       },
       UserProfile: {
@@ -338,7 +366,8 @@ const openApiSpec = {
       get: {
         tags: ["Student"],
         summary: "Test student routes",
-        description: "Simple test endpoint to verify student routes are working",
+        description:
+          "Simple test endpoint to verify student routes are working",
         security: [],
         responses: {
           200: {
@@ -460,7 +489,8 @@ const openApiSpec = {
       get: {
         tags: ["Student"],
         summary: "Get student's enrolled courses",
-        description: "Retrieve all courses the authenticated student is enrolled in",
+        description:
+          "Retrieve all courses the authenticated student is enrolled in",
         security: [{ bearerAuth: [] }],
         responses: {
           200: {
@@ -487,7 +517,9 @@ const openApiSpec = {
           required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/UpdateEnrollCoursesRequest" },
+              schema: {
+                $ref: "#/components/schemas/UpdateEnrollCoursesRequest",
+              },
             },
           },
         },
@@ -541,7 +573,8 @@ const openApiSpec = {
       get: {
         tags: ["Student"],
         summary: "Get courses by student ID",
-        description: "Retrieve courses associated with the authenticated student",
+        description:
+          "Retrieve courses associated with the authenticated student",
         security: [{ bearerAuth: [] }],
         responses: {
           200: {
@@ -619,7 +652,8 @@ const openApiSpec = {
       get: {
         tags: ["Student"],
         summary: "Get all available courses",
-        description: "Browse all courses available on the platform (public access)",
+        description:
+          "Browse all courses available on the platform (public access)",
         security: [],
         responses: {
           200: {
@@ -739,7 +773,9 @@ const openApiSpec = {
                       properties: {
                         data: {
                           type: "array",
-                          items: { $ref: "#/components/schemas/EnrolledCourse" },
+                          items: {
+                            $ref: "#/components/schemas/EnrolledCourse",
+                          },
                         },
                       },
                     },
@@ -779,7 +815,9 @@ const openApiSpec = {
           },
           400: { description: "Validation error" },
           401: { description: "Unauthorized" },
-          403: { description: "Forbidden - Not a student or not resource owner" },
+          403: {
+            description: "Forbidden - Not a student or not resource owner",
+          },
           500: { description: "Server error" },
         },
       },
@@ -804,7 +842,9 @@ const openApiSpec = {
                       properties: {
                         data: {
                           type: "array",
-                          items: { $ref: "#/components/schemas/StudentProgress" },
+                          items: {
+                            $ref: "#/components/schemas/StudentProgress",
+                          },
                         },
                       },
                     },
@@ -1096,7 +1136,8 @@ const openApiSpec = {
       post: {
         tags: ["Auth"],
         summary: "Register a new user",
-        description: "Register a new user as Student, Teacher, Admin, or SuperAdmin",
+        description:
+          "Register a new user as Student, Teacher, Admin, or SuperAdmin",
         requestBody: {
           required: true,
           content: {
@@ -1113,7 +1154,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "Student registered successfully" },
+                    message: {
+                      type: "string",
+                      example: "Student registered successfully",
+                    },
                     data: { type: "object" },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
@@ -1129,7 +1173,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "User already exists with this email" },
+                    message: {
+                      type: "string",
+                      example: "User already exists with this email",
+                    },
                     success: { type: "boolean", example: false },
                     error: { type: "boolean", example: true },
                   },
@@ -1201,7 +1248,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "OTP sent to your email" },
+                    message: {
+                      type: "string",
+                      example: "OTP sent to your email",
+                    },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
                   },
@@ -1233,7 +1283,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "OTP verified successfully" },
+                    message: {
+                      type: "string",
+                      example: "OTP verified successfully",
+                    },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
                   },
@@ -1265,7 +1318,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "Password reset successfully" },
+                    message: {
+                      type: "string",
+                      example: "Password reset successfully",
+                    },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
                   },
@@ -1290,7 +1346,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "Profile retrieved successfully" },
+                    message: {
+                      type: "string",
+                      example: "Profile retrieved successfully",
+                    },
                     data: { $ref: "#/components/schemas/UserProfile" },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
@@ -1323,7 +1382,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "Profile updated successfully" },
+                    message: {
+                      type: "string",
+                      example: "Profile updated successfully",
+                    },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
                   },
@@ -1357,7 +1419,10 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "Password changed successfully" },
+                    message: {
+                      type: "string",
+                      example: "Password changed successfully",
+                    },
                     success: { type: "boolean", example: true },
                     error: { type: "boolean", example: false },
                   },
@@ -1498,7 +1563,9 @@ const openApiSpec = {
           required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/UpdateEnrollCoursesRequest" },
+              schema: {
+                $ref: "#/components/schemas/UpdateEnrollCoursesRequest",
+              },
             },
           },
         },
@@ -1533,6 +1600,378 @@ const openApiSpec = {
           },
           401: { description: "Unauthorized" },
           404: { description: "Student not found" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+
+    // ─────────────────────────────────────────────
+    // Teacher Routes
+    // ─────────────────────────────────────────────
+    "/teacher/courses/create_course": {
+      post: {
+        tags: ["Teacher"],
+        summary: "Create course",
+        description: "Create a new course with media files and chapter data.",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: [
+                  "title",
+                  "description",
+                  "category",
+                  "level",
+                  "duration",
+                  "price",
+                  "image",
+                  "video",
+                  "chapters",
+                ],
+                properties: {
+                  title: { type: "string" },
+                  description: { type: "string" },
+                  category: { type: "string" },
+                  level: {
+                    type: "string",
+                    enum: ["Beginner", "Intermediate", "Advanced"],
+                  },
+                  duration: { type: "string" },
+                  price: { type: "number" },
+                  image: { type: "string", format: "binary" },
+                  video: { type: "string", format: "binary" },
+                  notes: { type: "string", format: "binary" },
+                  chapters: {
+                    type: "string",
+                    description:
+                      "JSON string representing course chapters and topics.",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Course created successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          400: { description: "Validation or upload error" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/courses/{courseId}": {
+      put: {
+        tags: ["Teacher"],
+        summary: "Update own course",
+        description:
+          "Update a teacher-owned course and optionally replace files.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "courseId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            description: "Course ID",
+          },
+        ],
+        requestBody: {
+          required: false,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  description: { type: "string" },
+                  category: { type: "string" },
+                  level: {
+                    type: "string",
+                    enum: ["Beginner", "Intermediate", "Advanced"],
+                  },
+                  duration: { type: "string" },
+                  price: { type: "number" },
+                  image: { type: "string", format: "binary" },
+                  video: { type: "string", format: "binary" },
+                  notes: { type: "string", format: "binary" },
+                  chapters: {
+                    type: "string",
+                    description:
+                      "JSON string representing updated chapters and topics.",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Course updated successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          404: { description: "Course not found" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/courses": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get teacher courses",
+        description: "Retrieve courses created by the authenticated teacher.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Teacher courses retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/verification/upload": {
+      post: {
+        tags: ["Teacher"],
+        summary: "Upload teacher qualification",
+        description: "Upload qualification document for teacher verification.",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: ["qualification"],
+                properties: {
+                  qualification: {
+                    type: "string",
+                    format: "binary",
+                    description: "Qualification document file",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Qualification uploaded successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          400: { description: "Invalid or missing file" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/verification/status": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get qualification status",
+        description: "Get teacher verification status and notes.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Verification status retrieved",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/courses/get_courses": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get public courses",
+        description: "Retrieve all courses (public teacher endpoint).",
+        security: [],
+        responses: {
+          200: {
+            description: "Courses retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/courses/get_course_by_id/{courseId}": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get course by ID",
+        description: "Retrieve a single course by ID.",
+        security: [],
+        parameters: [
+          {
+            name: "courseId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            description: "Course ID",
+          },
+        ],
+        responses: {
+          200: {
+            description: "Course retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          404: { description: "Course not found" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get teachers",
+        description: "Retrieve all teachers with basic details.",
+        security: [],
+        responses: {
+          200: {
+            description: "Teachers retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/metrics": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get teacher metrics",
+        description:
+          "Retrieve revenue and customer analytics for teacher dashboard.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "days",
+            in: "query",
+            required: false,
+            schema: { type: "integer", minimum: 1, example: 30 },
+            description: "Analytics period in days",
+          },
+        ],
+        responses: {
+          200: {
+            description: "Metrics retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/students": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get enrolled students",
+        description: "Retrieve students enrolled in teacher courses.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Students retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    students: {
+                      type: "array",
+                      items: { type: "object" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/dashboard": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get teacher dashboard",
+        description: "Retrieve teacher dashboard overview data.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Dashboard data retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    totalCourses: { type: "number" },
+                    totalStudents: { type: "number" },
+                    avgRating: { type: "string" },
+                    enrollmentData: {
+                      type: "array",
+                      items: { type: "object" },
+                    },
+                    recentActivity: {
+                      type: "array",
+                      items: { type: "object" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
           500: { description: "Internal server error" },
         },
       },
