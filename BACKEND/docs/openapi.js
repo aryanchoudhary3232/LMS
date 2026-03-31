@@ -4,7 +4,7 @@ const openApiSpec = {
     title: "LMS API Documentation",
     version: "1.0.0",
     description:
-      "OpenAPI documentation for LMS API endpoints including Student, SuperAdmin, and Cart functionality.",
+      "OpenAPI documentation for LMS API endpoints including Auth, Student, Teacher, SuperAdmin, and Cart functionality.",
   },
   servers: [
     {
@@ -14,6 +14,7 @@ const openApiSpec = {
   ],
   tags: [
     { name: "Student", description: "Student-related operations" },
+    { name: "Teacher", description: "Teacher-related operations" },
     { name: "SuperAdmin", description: "SuperAdmin operations" },
     { name: "Cart", description: "Shopping cart operations" },
     { name: "Auth", description: "Authentication and user management" },
@@ -1537,6 +1538,377 @@ const openApiSpec = {
         },
       },
     },
+
+    // ─────────────────────────────────────────────
+    // Teacher Routes
+    // ─────────────────────────────────────────────
+    "/teacher/courses/create_course": {
+      post: {
+        tags: ["Teacher"],
+        summary: "Create course",
+        description: "Create a new course with media files and chapter data.",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: [
+                  "title",
+                  "description",
+                  "category",
+                  "level",
+                  "duration",
+                  "price",
+                  "image",
+                  "video",
+                  "chapters",
+                ],
+                properties: {
+                  title: { type: "string" },
+                  description: { type: "string" },
+                  category: { type: "string" },
+                  level: {
+                    type: "string",
+                    enum: ["Beginner", "Intermediate", "Advanced"],
+                  },
+                  duration: { type: "string" },
+                  price: { type: "number" },
+                  image: { type: "string", format: "binary" },
+                  video: { type: "string", format: "binary" },
+                  notes: { type: "string", format: "binary" },
+                  chapters: {
+                    type: "string",
+                    description:
+                      "JSON string representing course chapters and topics.",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Course created successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          400: { description: "Validation or upload error" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/courses/{courseId}": {
+      put: {
+        tags: ["Teacher"],
+        summary: "Update own course",
+        description: "Update a teacher-owned course and optionally replace files.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "courseId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            description: "Course ID",
+          },
+        ],
+        requestBody: {
+          required: false,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  description: { type: "string" },
+                  category: { type: "string" },
+                  level: {
+                    type: "string",
+                    enum: ["Beginner", "Intermediate", "Advanced"],
+                  },
+                  duration: { type: "string" },
+                  price: { type: "number" },
+                  image: { type: "string", format: "binary" },
+                  video: { type: "string", format: "binary" },
+                  notes: { type: "string", format: "binary" },
+                  chapters: {
+                    type: "string",
+                    description:
+                      "JSON string representing updated chapters and topics.",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Course updated successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          404: { description: "Course not found" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/courses": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get teacher courses",
+        description: "Retrieve courses created by the authenticated teacher.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Teacher courses retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/verification/upload": {
+      post: {
+        tags: ["Teacher"],
+        summary: "Upload teacher qualification",
+        description: "Upload qualification document for teacher verification.",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: ["qualification"],
+                properties: {
+                  qualification: {
+                    type: "string",
+                    format: "binary",
+                    description: "Qualification document file",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Qualification uploaded successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          400: { description: "Invalid or missing file" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/verification/status": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get qualification status",
+        description: "Get teacher verification status and notes.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Verification status retrieved",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/courses/get_courses": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get public courses",
+        description: "Retrieve all courses (public teacher endpoint).",
+        security: [],
+        responses: {
+          200: {
+            description: "Courses retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/courses/get_course_by_id/{courseId}": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get course by ID",
+        description: "Retrieve a single course by ID.",
+        security: [],
+        parameters: [
+          {
+            name: "courseId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            description: "Course ID",
+          },
+        ],
+        responses: {
+          200: {
+            description: "Course retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          404: { description: "Course not found" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get teachers",
+        description: "Retrieve all teachers with basic details.",
+        security: [],
+        responses: {
+          200: {
+            description: "Teachers retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/metrics": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get teacher metrics",
+        description: "Retrieve revenue and customer analytics for teacher dashboard.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "days",
+            in: "query",
+            required: false,
+            schema: { type: "integer", minimum: 1, example: 30 },
+            description: "Analytics period in days",
+          },
+        ],
+        responses: {
+          200: {
+            description: "Metrics retrieved successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SuccessResponse" },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/students": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get enrolled students",
+        description: "Retrieve students enrolled in teacher courses.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Students retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    students: {
+                      type: "array",
+                      items: { type: "object" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/teacher/dashboard": {
+      get: {
+        tags: ["Teacher"],
+        summary: "Get teacher dashboard",
+        description: "Retrieve teacher dashboard overview data.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Dashboard data retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    totalCourses: { type: "number" },
+                    totalStudents: { type: "number" },
+                    avgRating: { type: "string" },
+                    enrollmentData: {
+                      type: "array",
+                      items: { type: "object" },
+                    },
+                    recentActivity: {
+                      type: "array",
+                      items: { type: "object" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Internal server error" },
+        },
+      },
+    },
+
   },
 };
 
