@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import "../../css/teacher/TeacherQualification.css";
 
 const initialForm = {
@@ -20,7 +19,6 @@ const TeacherQualificationUpload = () => {
   const [lastUploadedFileName, setLastUploadedFileName] = useState("");
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const fileInputRef = useRef(null);
-  const navigate = useNavigate();
 
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -184,21 +182,6 @@ const TeacherQualificationUpload = () => {
 
   let status = verificationStatus?.verificationStatus || "Not Submitted";
   if (status === "NotSubmitted") status = "Not Submitted";
-  const statusStyles = {
-    Verified: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-    Pending: "bg-amber-50 text-amber-700 ring-amber-200",
-    Rejected: "bg-rose-50 text-rose-700 ring-rose-200",
-    "Not Submitted": "bg-purple-50 text-purple-700 ring-purple-200",
-  };
-  const statusMessage =
-    status === "Verified"
-      ? "Verification completed. You can access all teacher tools."
-      : status === "Rejected"
-        ? "Verification was rejected. Please update your details and resubmit."
-        : status === "Pending"
-          ? "Your details are under review. We will notify you soon."
-          : "Not Submitted, application under progress. Please complete your details below.";
-
   const calculateCompletion = () => {
     let count = 0;
     if (formData.degree.trim()) count++;
