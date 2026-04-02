@@ -193,6 +193,25 @@ const schemas = {
     chapters: { type: "jsonString" },
   },
 
+  teacherVerification: {
+    degree: { type: "string", required: true, minLength: 2, maxLength: 120 },
+    institution: {
+      type: "string",
+      required: true,
+      minLength: 2,
+      maxLength: 200,
+    },
+    specialization: { type: "string", maxLength: 120 },
+    experienceYears: {
+      type: "number",
+      required: true,
+      min: 0,
+      max: 60,
+      integer: true,
+    },
+    bio: { type: "string", maxLength: 1000 },
+  },
+
   // ── Student ──────────────────────────────────
 
   quizSubmit: {

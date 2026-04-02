@@ -27,7 +27,7 @@ const AdminTeacherDetail = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const data = await response.json();
@@ -61,13 +61,13 @@ const AdminTeacherDetail = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const data = await response.json();
       if (data.success) {
         alert(
-          `Teacher deleted successfully! ${data.data.deletedCoursesCount} courses were also removed.`
+          `Teacher deleted successfully! ${data.data.deletedCoursesCount} courses were also removed.`,
         );
         navigate("/admin/users");
       } else {
@@ -95,14 +95,14 @@ const AdminTeacherDetail = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ notes: approvalNotes }),
-        }
+        },
       );
 
       const data = await response.json();
       if (data.success) {
         alert("Teacher verification approved successfully!");
         setShowApproveModal(false);
-        fetchTeacherDetails(); // Refresh data
+        fetchTeacherDetails();
       } else {
         alert("Error: " + data.message);
       }
@@ -127,14 +127,14 @@ const AdminTeacherDetail = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ notes: rejectionNotes }),
-        }
+        },
       );
 
       const data = await response.json();
       if (data.success) {
         alert("Teacher verification rejected.");
         setShowRejectModal(false);
-        fetchTeacherDetails(); // Refresh data
+        fetchTeacherDetails();
       } else {
         alert("Error: " + data.message);
       }
@@ -143,32 +143,6 @@ const AdminTeacherDetail = () => {
       alert("Failed to reject teacher");
     } finally {
       setProcessing(false);
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Verified":
-        return "#10b981";
-      case "Rejected":
-        return "#ef4444";
-      case "Pending":
-        return "#f59e0b";
-      default:
-        return "#6b7280";
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "Verified":
-        return "✅";
-      case "Rejected":
-        return "❌";
-      case "Pending":
-        return "⏳";
-      default:
-        return "❓";
     }
   };
 
@@ -195,119 +169,190 @@ const AdminTeacherDetail = () => {
   return (
     <div className="admin-teacher-detail">
       <div className="detail-header">
-        <button onClick={() => navigate("/admin/users")} className="btn-back">
-          ← Back to Users
-        </button>
-        <h2>Teacher Review</h2>
+        <h2>Teacher Verification Review</h2>
       </div>
 
       <div className="detail-content">
-        {/* Teacher Info Card */}
-        <div className="info-card">
-          <div className="card-header">
-            <h3>👨‍🏫 Teacher Information</h3>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="btn-delete-teacher"
+        <div className="info-card approval-card">
+          <div className="card-header approval-header">
+            <div className="approval-title">
+              <h3>Teacher Submission</h3>
+              <p className="approval-subtitle">
+                Review the submitted details and take action.
+              </p>
+            </div>
+          </div>
+
+          <form className="qualification-form">
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "20px",
+                marginBottom: "20px",
+              }}
             >
-              🗑️ Delete Teacher
-            </button>
-          </div>
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "5px",
+                    fontWeight: "600",
+                  }}
+                >
+                  Degree
+                </label>
+                <input
+                  type="text"
+                  value={teacher.qualificationDetails?.degree || ""}
+                  readOnly
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "5px",
+                    fontSize: "14px",
+                    backgroundColor: "#f9fafb",
+                  }}
+                />
+              </div>
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "5px",
+                    fontWeight: "600",
+                  }}
+                >
+                  Institution
+                </label>
+                <input
+                  type="text"
+                  value={teacher.qualificationDetails?.institution || ""}
+                  readOnly
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "5px",
+                    fontSize: "14px",
+                    backgroundColor: "#f9fafb",
+                  }}
+                />
+              </div>
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "5px",
+                    fontWeight: "600",
+                  }}
+                >
+                  Specialization
+                </label>
+                <input
+                  type="text"
+                  value={teacher.qualificationDetails?.specialization || ""}
+                  readOnly
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "5px",
+                    fontSize: "14px",
+                    backgroundColor: "#f9fafb",
+                  }}
+                />
+              </div>
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "5px",
+                    fontWeight: "600",
+                  }}
+                >
+                  Experience (Years)
+                </label>
+                <input
+                  type="number"
+                  value={teacher.qualificationDetails?.experienceYears || 0}
+                  readOnly
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "5px",
+                    fontSize: "14px",
+                    backgroundColor: "#f9fafb",
+                  }}
+                />
+              </div>
+            </div>
 
-          <div className="info-grid">
-            <div className="info-item">
-              <label>Name:</label>
-              <span>{teacher.name}</span>
-            </div>
-            <div className="info-item">
-              <label>Email:</label>
-              <span>{teacher.email}</span>
-            </div>
-            <div className="info-item">
-              <label>Role:</label>
-              <span className="badge badge-teacher">Teacher</span>
-            </div>
-            <div className="info-item">
-              <label>Total Courses:</label>
-              <span className="badge badge-count">
-                {teacher.courses?.length || 0}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Verification Status Card */}
-        <div className="info-card">
-          <div className="card-header">
-            <h3>📋 Verification Status</h3>
-          </div>
-
-          <div className="verification-info">
-            <div className="status-display">
-              <span className="status-icon">
-                {getStatusIcon(teacher.verificationStatus)}
-              </span>
-              <span
-                className="status-badge-large"
+            <div style={{ marginBottom: "20px" }}>
+              <label
                 style={{
-                  background: getStatusColor(teacher.verificationStatus),
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "600",
                 }}
               >
-                {teacher.verificationStatus}
-              </span>
+                Bio
+              </label>
+              <textarea
+                value={teacher.qualificationDetails?.bio || ""}
+                readOnly
+                rows={3}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  borderRadius: "5px",
+                  fontSize: "14px",
+                  backgroundColor: "#f9fafb",
+                  resize: "vertical",
+                }}
+              />
             </div>
 
-            {/* Approve/Reject Buttons */}
-            {teacher.verificationStatus === "Pending" &&
-              teacher.qualificationDoc?.url && (
-                <div className="verification-actions">
-                  <button
-                    onClick={() => setShowApproveModal(true)}
-                    className="btn-approve"
-                  >
-                    ✅ Approve Verification
-                  </button>
-                  <button
-                    onClick={() => setShowRejectModal(true)}
-                    className="btn-reject"
-                  >
-                    ❌ Reject Verification
-                  </button>
-                </div>
-              )}
-
-            {teacher.verificationNotes && (
-              <div className="notes-section">
-                <label>Admin Feedback:</label>
-                <p className="notes-text">{teacher.verificationNotes}</p>
-              </div>
-            )}
-
-            {teacher.qualificationDoc?.url ? (
-              <div className="document-section">
-                <label>Qualification Document:</label>
-                <div className="doc-info">
-                  <div className="doc-details">
-                    <p>
-                      📄{" "}
+            <div style={{ marginBottom: "20px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "600",
+                }}
+              >
+                Document
+              </label>
+              {teacher.qualificationDoc?.url ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "16px",
+                    padding: "12px",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                    backgroundColor: "#f9fafb",
+                  }}
+                >
+                  <div>
+                    <p style={{ margin: 0, fontWeight: "600" }}>
                       {teacher.qualificationDoc.format?.toUpperCase() ||
                         "Document"}
                     </p>
-                    <p className="doc-size">
+                    <p
+                      style={{ margin: 0, color: "#6b7280", fontSize: "13px" }}
+                    >
                       {teacher.qualificationDoc.bytes
                         ? `${(teacher.qualificationDoc.bytes / 1024).toFixed(
-                            2
+                            2,
                           )} KB`
                         : "Unknown size"}
                     </p>
-                    {teacher.qualificationDoc.uploadedAt && (
-                      <p className="doc-date">
-                        Uploaded:{" "}
-                        {new Date(
-                          teacher.qualificationDoc.uploadedAt
-                        ).toLocaleDateString()}
-                      </p>
-                    )}
                   </div>
                   <a
                     href={teacher.qualificationDoc.url}
@@ -315,90 +360,33 @@ const AdminTeacherDetail = () => {
                     rel="noopener noreferrer"
                     className="btn-view-doc"
                   >
-                    📎 View Document
+                    View Document
                   </a>
                 </div>
-              </div>
-            ) : (
-              <div className="no-document">
-                <p>❌ No qualification document uploaded</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Courses Card */}
-        <div className="info-card">
-          <div className="card-header">
-            <h3>📚 Created Courses ({teacher.courses?.length || 0})</h3>
-          </div>
-
-          {teacher.courses && teacher.courses.length > 0 ? (
-            <div className="courses-list">
-              {teacher.courses.map((course) => (
-                <div key={course._id} className="course-item">
-                  {course.thumbnail && (
-                    <img
-                      src={course.thumbnail}
-                      alt={course.title}
-                      className="course-thumbnail-small"
-                    />
-                  )}
-                  <div className="course-info">
-                    <h4>{course.title}</h4>
-                    <p>{course.description?.substring(0, 100)}...</p>
-                  </div>
-                  <button
-                    onClick={() => navigate(`/admin/courses/${course._id}`)}
-                    className="btn-view-course"
-                  >
-                    View →
-                  </button>
+              ) : (
+                <div className="no-document">
+                  <p>No qualification document uploaded</p>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="no-courses">
-              <p>No courses created yet</p>
-            </div>
-          )}
-        </div>
-
-        {/* Assessment Section */}
-        <div className="info-card assessment-card">
-          <div className="card-header">
-            <h3>⚖️ Admin Assessment</h3>
-          </div>
-
-          <div className="assessment-content">
-            <div className="assessment-criteria">
-              <h4>Review Checklist:</h4>
-              <ul>
-                <li>✓ Valid qualification document submitted</li>
-                <li>✓ Professional email and profile information</li>
-                <li>✓ Course content quality (if applicable)</li>
-                <li>✓ Compliance with platform policies</li>
-              </ul>
+              )}
             </div>
 
-            <div className="assessment-actions">
-              <p className="warning-text">
-                ⚠️ <strong>Warning:</strong> Deleting this teacher will
-                permanently remove:
-              </p>
-              <ul className="deletion-impact">
-                <li>Teacher account and profile</li>
-                <li>
-                  All {teacher.courses?.length || 0} course(s) created by this
-                  teacher
-                </li>
-                <li>Course enrollments and student progress</li>
-              </ul>
-              <p className="recommendation">
-                Consider rejecting verification instead of deletion if possible.
-              </p>
+            <div className="verification-actions approval-actions">
+              <button
+                onClick={() => setShowApproveModal(true)}
+                className="btn-approve"
+                type="button"
+              >
+                Approve Verification
+              </button>
+              <button
+                onClick={() => setShowRejectModal(true)}
+                className="btn-reject"
+                type="button"
+              >
+                Reject Verification
+              </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
 

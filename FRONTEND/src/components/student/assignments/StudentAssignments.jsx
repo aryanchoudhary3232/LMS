@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../../../css/student/Assignments.css";
 
 const StudentAssignments = () => {
@@ -7,9 +7,14 @@ const StudentAssignments = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const navigate = useNavigate();
-  
+  const location = useLocation();
+
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+  const assignmentBasePath = location.pathname.startsWith("/student/sidebar")
+    ? "/student/sidebar/assignments"
+    : "/student/assignments";
 
   const fetchAssignments = useCallback(async () => {
     try {
@@ -148,7 +153,7 @@ const StudentAssignments = () => {
                     <p className="submitted-at">
                       ✅ Submitted on:{" "}
                       {new Date(
-                        assignment.submissionStatus.submittedAt
+                        assignment.submissionStatus.submittedAt,
                       ).toLocaleString()}
                     </p>
                     {assignment.submissionStatus.grade?.marks !== null && (
@@ -172,7 +177,7 @@ const StudentAssignments = () => {
                 {assignment.submissionStatus.submitted ? (
                   <button
                     onClick={() =>
-                      navigate(`/student/assignments/${assignment._id}/view`)
+                      navigate(`${assignmentBasePath}/${assignment._id}/view`)
                     }
                     className="btn-view"
                   >
@@ -181,7 +186,7 @@ const StudentAssignments = () => {
                 ) : (
                   <button
                     onClick={() =>
-                      navigate(`/student/assignments/${assignment._id}/submit`)
+                      navigate(`${assignmentBasePath}/${assignment._id}/submit`)
                     }
                     className="btn-submit-assignment"
                   >

@@ -49,6 +49,7 @@ router.post(
   verify,
   verifyTeacher,
   upload.single("qualification"),
+  validate(schemas.teacherVerification),
   validateFiles(fileConfigs.qualificationUpload),
   teacherController.uploadQualification,
 );

@@ -1,6 +1,6 @@
 :root {
-  --primary-color: #2337AD;
-  --primary-hover: #1a298a;
+  --primary-color: #7c3aed;
+  --primary-hover: #6d28d9;
   --success-color: #10b981;
   --warning-color: #f59e0b;
   --danger-color: #ef4444;
@@ -31,6 +31,7 @@
   margin-bottom: 40px;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 20px;
+  position: relative;
 }
 
 .back-btn {
