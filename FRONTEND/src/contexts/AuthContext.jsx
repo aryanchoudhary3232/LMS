@@ -14,6 +14,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (formData, setFormData) => {
+    const result = {
+      success: false,
+      requiresVerification: false,
+      verificationStatus: null,
+      message: "",
+    };
     try {
       const backendUrl =
         import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -33,6 +39,7 @@ export const AuthProvider = ({ children }) => {
         setToken(data.token);
         setRole(data.data.role);
         setAuthToken(data.token);
+        result.success = true;
 
         setFormData({
           name: "",
@@ -43,7 +50,28 @@ export const AuthProvider = ({ children }) => {
 
         // Navigate based on role
         if (data.data.role === "Teacher") {
-          navigate("/teacher/home");
+          try {
+            const statusResponse = await fetch(
+              `${backendUrl}/teacher/verification/status`,
+              {
+                headers: { Authorization: `Bearer ${data.token}` },
+              }
+            );
+            const statusData = await statusResponse.json();
+            const status = statusData?.data?.verificationStatus;
+            if (status && status !== "Verified") {
+              result.requiresVerification = true;
+              result.verificationStatus = status;
+              navigate("/teacher/upload-qualification");
+              return result;
+            }
+            navigate("/teacher/home");
+            return result;
+          } catch (statusError) {
+            console.error("Error fetching teacher verification status:", statusError);
+            navigate("/teacher/home");
+            return result;
+          }
         } else if (data.data.role === "Admin") {
           navigate("/admin/dashboard");
         } else if (data.data.role === "SuperAdmin") {
@@ -53,12 +81,24 @@ export const AuthProvider = ({ children }) => {
         } else {
           navigate("/");
         }
-      } else {
-        alert("Login Error: " + (data.message || "Invalid credentials"));
+        return result;
       }
+
+      if (data?.code === "TEACHER_VERIFICATION_PENDING") {
+        result.requiresVerification = true;
+        result.verificationStatus = data.verificationStatus || null;
+        result.message = data.message || "Verification is not done yet.";
+        return result;
+      }
+
+      result.message = data.message || "Invalid credentials";
+      alert("Login Error: " + result.message);
+      return result;
     } catch (error) {
       console.log("Login error:", error);
-      alert("Network error during login. Please try again.");
+      result.message = "Network error during login. Please try again.";
+      alert(result.message);
+      return result;
     }
   };
 

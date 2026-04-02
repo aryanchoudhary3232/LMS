@@ -26,6 +26,7 @@ import Streak from "./components/student/Streak";
 import StudentCourses from "./components/student/StudentCourses";
 import StudentFlashcards from "./components/student/StudentFlashcards";
 import StudentStudyDeck from "./components/student/StudentStudyDeck";
+import StudentQuizHistory from "./components/student/StudentQuizHistory";
 //teacher routes
 import Teacher from "./components/teacher/Teacher";
 import TeacherHome from "./components/teacher/Home";
@@ -45,6 +46,7 @@ import AdminUsers from "./components/admin/AdminUsers";
 import AdminCourses from "./components/admin/AdminCourses";
 import AdminCourseDetail from "./components/admin/AdminCourseDetail";
 import AdminTeacherDetail from "./components/admin/AdminTeacherDetail";
+import AdminApprovals from "./components/admin/AdminApprovals";
 import AdminDeletedMembers from "./components/admin/AdminDeletedMembers";
 import AdminSidebar from "./components/admin/AdminSidebar";
 //superadmin routes
@@ -162,7 +164,17 @@ function Main() {
             element={<StudentFlashcards />}
           />
           <Route path="deck/:deckId" element={<StudentStudyDeck />} />
+          <Route path="assignments" element={<StudentAssignments />} />
+          <Route
+            path="assignments/:assignmentId/submit"
+            element={<SubmitAssignment />}
+          />
+          <Route
+            path="assignments/:assignmentId/view"
+            element={<ViewSubmission />}
+          />
           <Route path="streak" element={<Streak />} />
+          <Route path="quizzes" element={<StudentQuizHistory />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
         </Route>
@@ -178,6 +190,7 @@ function Main() {
         >
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="approvals" element={<AdminApprovals />} />
           <Route path="deleted-members" element={<AdminDeletedMembers />} />
           <Route path="teachers/:teacherId" element={<AdminTeacherDetail />} />
           <Route path="courses" element={<AdminCourses />} />
@@ -202,6 +215,7 @@ function Main() {
 
       {!hideShell &&
         !(location.pathname === "/teacher/courses/add") &&
+        !(location.pathname === "/teacher/upload-qualification") &&
         !location.pathname.startsWith("/admin") &&
         !location.pathname.startsWith("/teacher/sidebar") &&
         !location.pathname.startsWith("/student/sidebar") && <Footer />}

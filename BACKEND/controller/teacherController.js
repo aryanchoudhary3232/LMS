@@ -414,6 +414,23 @@ async function uploadQualification(req, res) {
       });
     }
 
+    const {
+      degree,
+      institution,
+      specialization,
+      experienceYears,
+      bio,
+    } = req.body;
+
+    const parsedExperience = Number(experienceYears);
+    const qualificationDetails = {
+      degree: (degree || "").trim(),
+      institution: (institution || "").trim(),
+      specialization: (specialization || "").trim(),
+      experienceYears: Number.isNaN(parsedExperience) ? 0 : parsedExperience,
+      bio: (bio || "").trim(),
+    };
+
     // Derive some metadata
     const {
       path: url,
@@ -438,6 +455,7 @@ async function uploadQualification(req, res) {
         bytes: size,
         uploadedAt: new Date(),
       },
+      qualificationDetails,
       verificationStatus: "Pending",
       verificationNotes: "",
     };
@@ -458,6 +476,7 @@ async function uploadQualification(req, res) {
       data: {
         verificationStatus: teacher.verificationStatus,
         qualificationDoc: teacher.qualificationDoc,
+        qualificationDetails: teacher.qualificationDetails,
       },
     });
   } catch (error) {
@@ -482,7 +501,7 @@ async function getQualificationStatus(req, res) {
     }
 
     const teacher = await Teacher.findById(_id).select(
-      "verificationStatus verificationNotes qualificationDoc name email"
+      "verificationStatus verificationNotes qualificationDoc qualificationDetails name email"
     );
 
     if (!teacher) {

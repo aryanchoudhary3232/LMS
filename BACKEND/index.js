@@ -64,6 +64,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+const publicDir = path.join(__dirname, "../FRONTEND/public");
+if (fs.existsSync(publicDir)) {
+  app.use("/public", express.static(publicDir));
+}
 
 app.all(
   "/graphql",

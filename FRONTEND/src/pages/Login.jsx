@@ -84,10 +84,10 @@ const Login = () => {
   const handleOnChange = (e) => {
     const { name, value } = e.target;
 
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
 
     if (touched[name]) {
       const error = validateField(name, value);
@@ -146,7 +146,11 @@ const Login = () => {
       console.log("Registration response:", data);
 
       if (response.ok && data.success) {
-        alert("Registration successful! Please login with your credentials.");
+        alert(
+          formData.role === "Teacher"
+            ? "Registration successful! Please login to complete your profile."
+            : "Registration successful! Please login with your credentials."
+        );
         setFormData({
           name: "",
           email: "",

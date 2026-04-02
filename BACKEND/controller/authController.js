@@ -41,7 +41,12 @@ async function register(req, res) {
     if (role === "Student") {
       newUser = new Student({ name, email, password: hashedPassword, role });
     } else if (role === "Teacher") {
-      newUser = new Teacher({ name, email, password: hashedPassword, role });
+      newUser = new Teacher({
+        name,
+        email,
+        password: hashedPassword,
+        role,
+      });
     } else if (role === "Admin") {
       newUser = new Admin({ name, email, password: hashedPassword, role });
     } else if (role === "SuperAdmin") {

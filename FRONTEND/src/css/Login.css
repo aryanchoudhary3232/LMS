@@ -126,6 +126,15 @@
   color: var(--color-text-tertiary);
 }
 
+.form-textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.form-file {
+  padding: var(--space-3) var(--space-4);
+}
+
 /* Error State for Inputs */
 .form-input.error,
 .form-select.error {
@@ -240,6 +249,39 @@
 
 .submit-btn:active {
   transform: translateY(0);
+}
+
+/* Login Toast */
+.login-toast {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background: var(--color-primary-light);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  color: var(--color-primary-dark);
+  margin-bottom: var(--space-5);
+}
+
+.toast-title {
+  font-weight: 700;
+  margin-bottom: var(--space-1);
+}
+
+.toast-text {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: var(--color-primary-dark);
+  font-size: 1.25rem;
+  cursor: pointer;
+  line-height: 1;
 }
 
 /* Sign Up Link */

@@ -86,6 +86,20 @@ const AdminSidebar = () => {
               {role === "Admin" && (
                 <li className="admin-nav-item">
                   <NavLink
+                    to="/admin/approvals"
+                    className={({ isActive }) =>
+                      `admin-nav-link ${isActive ? "active" : ""}`
+                    }
+                    onClick={closeSidebar}
+                  >
+                    <span className="admin-nav-icon">✅</span>
+                    Approvals
+                  </NavLink>
+                </li>
+              )}
+              {role === "Admin" && (
+                <li className="admin-nav-item">
+                  <NavLink
                     to="/admin/deleted-members"
                     className={({ isActive }) =>
                       `admin-nav-link ${isActive ? "active" : ""}`
@@ -118,6 +132,20 @@ const AdminSidebar = () => {
               {role === "Student" && (
                 <li className="admin-nav-item">
                   <NavLink
+                    to="/student/sidebar/assignments"
+                    className={({ isActive }) =>
+                      `admin-nav-link ${isActive ? "active" : ""}`
+                    }
+                    onClick={closeSidebar}
+                  >
+                    <span className="admin-nav-icon">🗂️</span>
+                    Assignments
+                  </NavLink>
+                </li>
+              )}
+              {role === "Student" && (
+                <li className="admin-nav-item">
+                  <NavLink
                     to={"/student/sidebar/streak"}
                     className={({ isActive }) =>
                       `admin-nav-link ${isActive ? "active" : ""}`
@@ -126,6 +154,20 @@ const AdminSidebar = () => {
                   >
                     <span className="admin-nav-icon">🏅</span>
                     Streak
+                  </NavLink>
+                </li>
+              )}
+              {role === "Student" && (
+                <li className="admin-nav-item">
+                  <NavLink
+                    to={"/student/sidebar/quizzes"}
+                    className={({ isActive }) =>
+                      `admin-nav-link ${isActive ? "active" : ""}`
+                    }
+                    onClick={closeSidebar}
+                  >
+                    <span className="admin-nav-icon">📝</span>
+                    Past Quizzes
                   </NavLink>
                 </li>
               )}

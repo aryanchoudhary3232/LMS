@@ -38,6 +38,28 @@ const teacherSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  qualificationDetails: {
+    degree: {
+      type: String,
+      default: "",
+    },
+    institution: {
+      type: String,
+      default: "",
+    },
+    specialization: {
+      type: String,
+      default: "",
+    },
+    experienceYears: {
+      type: Number,
+      default: 0,
+    },
+    bio: {
+      type: String,
+      default: "",
+    },
+  },
   courses: [
     {
       type: mongoose.Schema.Types.ObjectId,
