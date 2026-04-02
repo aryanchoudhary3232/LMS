@@ -23,7 +23,8 @@ const statusStyles = {
 const statusMessageMap = {
   Verified: "Verification completed. You can access all teacher tools.",
   Pending: "Verification is not done yet. Your details are under review.",
-  Rejected: "Verification was rejected. Please update and resubmit your details.",
+  Rejected:
+    "Verification was rejected. Please update and resubmit your details.",
   NotSubmitted: "Verification is not done yet. Please submit your details.",
 };
 
@@ -44,7 +45,7 @@ const TeacherVerificationStatus = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const data = await response.json();

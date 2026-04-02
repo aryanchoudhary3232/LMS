@@ -50,7 +50,12 @@ async function register(req, res) {
     } else if (role === "Admin") {
       newUser = new Admin({ name, email, password: hashedPassword, role });
     } else if (role === "SuperAdmin") {
-      newUser = new Admin({ name, email, password: hashedPassword, role: "SuperAdmin" });
+      newUser = new Admin({
+        name,
+        email,
+        password: hashedPassword,
+        role: "SuperAdmin",
+      });
     } else {
       return res.json({
         message: "Invalid role provided",
@@ -131,7 +136,7 @@ async function login(req, res) {
         role: user.role,
         email: user.email,
       },
-      "aryan123"
+      "aryan123",
     );
 
     // Inside login function, before sending response...
@@ -141,7 +146,11 @@ async function login(req, res) {
     let lastLoginDate = user.lastLogin ? new Date(user.lastLogin) : null;
 
     if (lastLoginDate) {
-      lastLoginDate = new Date(lastLoginDate.getFullYear(), lastLoginDate.getMonth(), lastLoginDate.getDate());
+      lastLoginDate = new Date(
+        lastLoginDate.getFullYear(),
+        lastLoginDate.getMonth(),
+        lastLoginDate.getDate(),
+      );
 
       const diffTime = Math.abs(today - lastLoginDate);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -314,7 +323,7 @@ async function updateProfile(req, res) {
     const updatedUser = await Model.findByIdAndUpdate(
       _id,
       { name: name.trim() },
-      { new: true }
+      { new: true },
     ).select("-password");
 
     if (!updatedUser) {
@@ -359,7 +368,8 @@ async function changePassword(req, res) {
     // ✅ Validate all required fields
     if (!currentPassword || !newPassword || !confirmPassword) {
       return res.status(400).json({
-        message: "Current password, new password, and confirm password are required",
+        message:
+          "Current password, new password, and confirm password are required",
         success: false,
         error: true,
       });
@@ -402,7 +412,10 @@ async function changePassword(req, res) {
     }
 
     // ✅ Verify current password is correct
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
     if (!isCurrentPasswordValid) {
       return res.status(400).json({
         message: "Current password is incorrect",
@@ -540,7 +553,7 @@ async function verifyOtp(req, res) {
     const resetToken = jwt.sign(
       { email, purpose: "password-reset" },
       JWT_SECRET,
-      { expiresIn: "5m" }
+      { expiresIn: "5m" },
     );
 
     // Clean up the used OTP

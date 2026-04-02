@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
               `${backendUrl}/teacher/verification/status`,
               {
                 headers: { Authorization: `Bearer ${data.token}` },
-              }
+              },
             );
             const statusData = await statusResponse.json();
             const status = statusData?.data?.verificationStatus;
@@ -68,7 +68,10 @@ export const AuthProvider = ({ children }) => {
             navigate("/teacher/home");
             return result;
           } catch (statusError) {
-            console.error("Error fetching teacher verification status:", statusError);
+            console.error(
+              "Error fetching teacher verification status:",
+              statusError,
+            );
             navigate("/teacher/home");
             return result;
           }

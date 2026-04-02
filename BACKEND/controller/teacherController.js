@@ -136,7 +136,7 @@ async function updateCourse(req, res) {
             // Check if there's a new video file for this topic
             const fileKey = `chapters[${chapterIdx}][topics][${topicIdx}][video]`;
             const topicVideoFile = req.files?.find(
-              (f) => f.fieldname === fileKey
+              (f) => f.fieldname === fileKey,
             );
 
             return {
@@ -257,13 +257,13 @@ async function getTeacherMetrics(req, res) {
       (o) =>
         o?.status === "completed" &&
         o?.courseId &&
-        courseIds.some((id) => id.toString() === o.courseId._id.toString())
+        courseIds.some((id) => id.toString() === o.courseId._id.toString()),
     );
 
     const totalRevenue = completed.reduce((sum, o) => sum + (o.amount || 0), 0);
 
     const totalCustomers = new Set(
-      completed.filter((o) => o.userId).map((o) => o.userId._id.toString())
+      completed.filter((o) => o.userId).map((o) => o.userId._id.toString()),
     ).size;
 
     const now = new Date();
@@ -273,34 +273,34 @@ async function getTeacherMetrics(req, res) {
     prevPeriodStart.setDate(prevPeriodStart.getDate() - periodDays);
 
     const inPeriod = completed.filter(
-      (o) => o.createdAt && o.createdAt >= periodStart && o.createdAt <= now
+      (o) => o.createdAt && o.createdAt >= periodStart && o.createdAt <= now,
     );
     const prevPeriod = completed.filter(
       (o) =>
         o.createdAt &&
         o.createdAt >= prevPeriodStart &&
-        o.createdAt < periodStart
+        o.createdAt < periodStart,
     );
 
     const revenueCurrent = inPeriod.reduce(
       (sum, o) => sum + (o.amount || 0),
-      0
+      0,
     );
     const revenuePrevious = prevPeriod.reduce(
       (sum, o) => sum + (o.amount || 0),
-      0
+      0,
     );
     const revenueGrowthRate = percentChange(revenueCurrent, revenuePrevious);
 
     const customersCurrent = new Set(
-      inPeriod.filter((o) => o.userId).map((o) => o.userId._id.toString())
+      inPeriod.filter((o) => o.userId).map((o) => o.userId._id.toString()),
     ).size;
     const customersPrevious = new Set(
-      prevPeriod.filter((o) => o.userId).map((o) => o.userId._id.toString())
+      prevPeriod.filter((o) => o.userId).map((o) => o.userId._id.toString()),
     ).size;
     const customerGrowthRate = percentChange(
       customersCurrent,
-      customersPrevious
+      customersPrevious,
     );
 
     const byUser = new Map();
@@ -320,14 +320,14 @@ async function getTeacherMetrics(req, res) {
     // Get course stats for table
     const courseStats = teachersCourses.map((course) => {
       const courseOrders = completed.filter(
-        (o) => o.courseId._id.toString() === course._id.toString()
+        (o) => o.courseId._id.toString() === course._id.toString(),
       );
       const courseRevenue = courseOrders.reduce(
         (sum, o) => sum + (o.amount || 0),
-        0
+        0,
       );
       const enrollments = new Set(
-        courseOrders.map((o) => o.userId._id.toString())
+        courseOrders.map((o) => o.userId._id.toString()),
       ).size;
 
       return {
@@ -414,13 +414,8 @@ async function uploadQualification(req, res) {
       });
     }
 
-    const {
-      degree,
-      institution,
-      specialization,
-      experienceYears,
-      bio,
-    } = req.body;
+    const { degree, institution, specialization, experienceYears, bio } =
+      req.body;
 
     const parsedExperience = Number(experienceYears);
     const qualificationDetails = {
@@ -442,8 +437,8 @@ async function uploadQualification(req, res) {
     const resourceType = mimetype.startsWith("video")
       ? "video"
       : mimetype.startsWith("image")
-      ? "image"
-      : "raw";
+        ? "image"
+        : "raw";
     const format = (path.extname(originalname || "") || "").replace(".", "");
 
     const update = {
@@ -501,7 +496,7 @@ async function getQualificationStatus(req, res) {
     }
 
     const teacher = await Teacher.findById(_id).select(
-      "verificationStatus verificationNotes qualificationDoc qualificationDetails name email"
+      "verificationStatus verificationNotes qualificationDoc qualificationDetails name email",
     );
 
     if (!teacher) {

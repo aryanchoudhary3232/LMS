@@ -149,7 +149,7 @@ const Login = () => {
         alert(
           formData.role === "Teacher"
             ? "Registration successful! Please login to complete your profile."
-            : "Registration successful! Please login with your credentials."
+            : "Registration successful! Please login with your credentials.",
         );
         setFormData({
           name: "",
@@ -180,7 +180,13 @@ const Login = () => {
 
   const resetForgotState = () => {
     setForgotStep(null);
-    setForgotData({ email: "", otp: "", newPassword: "", confirmPassword: "", resetToken: "" });
+    setForgotData({
+      email: "",
+      otp: "",
+      newPassword: "",
+      confirmPassword: "",
+      resetToken: "",
+    });
     setForgotError("");
     setForgotLoading(false);
   };
@@ -307,15 +313,15 @@ const Login = () => {
         {steps.map((step, i) => (
           <React.Fragment key={step.key}>
             <div
-              className={`forgot-step-dot ${i <= currentIdx ? "active" : ""
-                } ${i < currentIdx ? "completed" : ""}`}
+              className={`forgot-step-dot ${
+                i <= currentIdx ? "active" : ""
+              } ${i < currentIdx ? "completed" : ""}`}
             >
               {i < currentIdx ? "✓" : i + 1}
             </div>
             {i < steps.length - 1 && (
               <div
-                className={`forgot-step-line ${i < currentIdx ? "active" : ""
-                  }`}
+                className={`forgot-step-line ${i < currentIdx ? "active" : ""}`}
               />
             )}
           </React.Fragment>
@@ -333,9 +339,14 @@ const Login = () => {
       return (
         <div className="auth-form forgot-form">
           <div className="forgot-success-icon">✓</div>
-          <h2 className="form-title">Password<br />Reset!</h2>
+          <h2 className="form-title">
+            Password
+            <br />
+            Reset!
+          </h2>
           <p className="form-subtitle">
-            Your password has been reset successfully. You can now login with your new password.
+            Your password has been reset successfully. You can now login with
+            your new password.
           </p>
           <button
             type="button"
@@ -351,24 +362,39 @@ const Login = () => {
     return (
       <div className="auth-form forgot-form">
         <h2 className="form-title">
-          {forgotStep === "email" && <>Forgot<br />Password?</>}
-          {forgotStep === "otp" && <>Verify<br />Code</>}
-          {forgotStep === "reset" && <>New<br />Password</>}
+          {forgotStep === "email" && (
+            <>
+              Forgot
+              <br />
+              Password?
+            </>
+          )}
+          {forgotStep === "otp" && (
+            <>
+              Verify
+              <br />
+              Code
+            </>
+          )}
+          {forgotStep === "reset" && (
+            <>
+              New
+              <br />
+              Password
+            </>
+          )}
         </h2>
         <p className="form-subtitle">
           {forgotStep === "email" &&
             "Enter your email and we'll send you a verification code"}
           {forgotStep === "otp" &&
             `Enter the 6-digit code sent to ${forgotData.email}`}
-          {forgotStep === "reset" &&
-            "Create a new password for your account"}
+          {forgotStep === "reset" && "Create a new password for your account"}
         </p>
 
         <ForgotStepIndicator />
 
-        {forgotError && (
-          <div className="forgot-error">{forgotError}</div>
-        )}
+        {forgotError && <div className="forgot-error">{forgotError}</div>}
 
         {/* Step 1: Email */}
         {forgotStep === "email" && (
@@ -390,11 +416,7 @@ const Login = () => {
               className="submit-btn"
               disabled={forgotLoading}
             >
-              {forgotLoading ? (
-                <span className="forgot-spinner" />
-              ) : (
-                "Send OTP"
-              )}
+              {forgotLoading ? <span className="forgot-spinner" /> : "Send OTP"}
             </button>
           </form>
         )}
@@ -556,8 +578,14 @@ const Login = () => {
               {/* Sign In Form */}
               {!forgotStep && !isSignup && (
                 <form onSubmit={handleSubmitLogin} className="auth-form">
-                  <h2 className="form-title">Holla,<br />Welcome Back</h2>
-                  <p className="form-subtitle">Hey, welcome back to your special place</p>
+                  <h2 className="form-title">
+                    Holla,
+                    <br />
+                    Welcome Back
+                  </h2>
+                  <p className="form-subtitle">
+                    Hey, welcome back to your special place
+                  </p>
 
                   <div className="form-group">
                     <input
@@ -628,8 +656,14 @@ const Login = () => {
               {/* Sign Up Form */}
               {!forgotStep && isSignup && (
                 <form onSubmit={handleSubmitSignUp} className="auth-form">
-                  <h2 className="form-title">Create<br />Account</h2>
-                  <p className="form-subtitle">Join us and start your learning journey</p>
+                  <h2 className="form-title">
+                    Create
+                    <br />
+                    Account
+                  </h2>
+                  <p className="form-subtitle">
+                    Join us and start your learning journey
+                  </p>
 
                   <div className="form-group">
                     <input
@@ -640,8 +674,9 @@ const Login = () => {
                       onBlur={handleBlur}
                       placeholder="Full Name"
                       required
-                      className={`form-input ${errors.name && touched.name ? "error" : ""
-                        }`}
+                      className={`form-input ${
+                        errors.name && touched.name ? "error" : ""
+                      }`}
                     />
                     {errors.name && touched.name && (
                       <span className="error-message">{errors.name}</span>
@@ -657,8 +692,9 @@ const Login = () => {
                       onBlur={handleBlur}
                       placeholder="email@example.com"
                       required
-                      className={`form-input ${errors.email && touched.email ? "error" : ""
-                        }`}
+                      className={`form-input ${
+                        errors.email && touched.email ? "error" : ""
+                      }`}
                     />
                     {errors.email && touched.email && (
                       <span className="error-message">{errors.email}</span>
@@ -674,8 +710,9 @@ const Login = () => {
                       onBlur={handleBlur}
                       placeholder="Create Password"
                       required
-                      className={`form-input ${errors.password && touched.password ? "error" : ""
-                        }`}
+                      className={`form-input ${
+                        errors.password && touched.password ? "error" : ""
+                      }`}
                     />
                     {errors.password && touched.password && (
                       <span className="error-message">{errors.password}</span>
@@ -689,8 +726,9 @@ const Login = () => {
                       onChange={handleOnChange}
                       onBlur={handleBlur}
                       required
-                      className={`form-select ${errors.role && touched.role ? "error" : ""
-                        }`}
+                      className={`form-select ${
+                        errors.role && touched.role ? "error" : ""
+                      }`}
                     >
                       <option value="">Choose your role...</option>
                       <option value="Student">Student</option>
@@ -750,9 +788,7 @@ const Login = () => {
 
               {/* Illustration Placeholder */}
               <div className="illustration-placeholder">
-                <span className="icon">
-                  {forgotStep ? "🔐" : "🎓"}
-                </span>
+                <span className="icon">{forgotStep ? "🔐" : "🎓"}</span>
                 <span className="text">
                   {forgotStep ? "Secure Reset" : "Learn & Grow"}
                 </span>

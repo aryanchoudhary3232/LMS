@@ -144,11 +144,7 @@ const Navbar = () => {
 
           <div className="nav-right">
             {!token && (
-              <Link
-                to="/login"
-                className="nav-item action"
-                onClick={closeMenu}
-              >
+              <Link to="/login" className="nav-item action" onClick={closeMenu}>
                 Login / Register
               </Link>
             )}
