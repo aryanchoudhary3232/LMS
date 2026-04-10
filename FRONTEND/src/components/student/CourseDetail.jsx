@@ -26,6 +26,15 @@ const CourseDetail = () => {
   const [reviewText, setReviewText] = useState("");
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
   const [ratingMsg, setRatingMsg] = useState(null);
+  const [discussionList, setDiscussionList] = useState([]);
+  const [discussionLoading, setDiscussionLoading] = useState(false);
+  const [discussionError, setDiscussionError] = useState("");
+  const [discussionTitle, setDiscussionTitle] = useState("");
+  const [discussionContent, setDiscussionContent] = useState("");
+  const [replyDrafts, setReplyDrafts] = useState({});
+  const [postingDiscussion, setPostingDiscussion] = useState(false);
+  const [postingReplyId, setPostingReplyId] = useState(null);
+  const [updatingDiscussionId, setUpdatingDiscussionId] = useState(null);
 
   // Helper functions
   const toggleChapter = (chIdx) => {
@@ -273,6 +282,55 @@ const CourseDetail = () => {
     }
   }, [activeTab, courseId, fetchCourseAssignments]);
 
+  const fetchTopicDiscussions = useCallback(async () => {
+    if (!selectedTopic.topicId) {
+      setDiscussionList([]);
+      return;
+    }
+
+    try {
+      setDiscussionLoading(true);
+      setDiscussionError("");
+
+      const token = localStorage.getItem("token");
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+      const response = await fetch(
+        `${backendUrl}/courses/${courseId}/topics/${selectedTopic.topicId}/discussions?limit=20`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setDiscussionList(Array.isArray(data.data) ? data.data : []);
+      } else {
+        setDiscussionError(data.message || "Could not load discussions");
+      }
+    } catch (error) {
+      console.error("Error fetching discussions:", error);
+      setDiscussionError("Could not load discussions");
+    } finally {
+      setDiscussionLoading(false);
+    }
+  }, [courseId, selectedTopic.topicId]);
+
+  useEffect(() => {
+    if (activeTab !== "komentar") return;
+
+    if (!selectedTopic.topicId) {
+      setDiscussionList([]);
+      setDiscussionError("");
+      return;
+    }
+
+    fetchTopicDiscussions();
+  }, [activeTab, selectedTopic.topicId, fetchTopicDiscussions]);
+
   const getStatusBadge = (assignment) => {
     if (assignment.submissionStatus.submitted) {
       if (assignment.submissionStatus.grade?.marks !== null) {
@@ -315,11 +373,14 @@ const CourseDetail = () => {
   const handleTopicClick = (tpVideo, chapterId, topicId) => {
     if (tpVideo) {
       setSelectedVideo(tpVideo);
-      setSelectedTopic({ chapterId, topicId });
     } else if (course.video) {
       setSelectedVideo(course.video); // fallback to intro
-      setSelectedTopic({ chapterId: null, topicId: null });
     }
+
+    setSelectedTopic({
+      chapterId: chapterId || null,
+      topicId: topicId || null,
+    });
   };
 
   const markTopicAsComplete = async () => {
@@ -370,6 +431,136 @@ const CourseDetail = () => {
       alert("Error marking topic as complete");
     } finally {
       setMarkingComplete(false);
+    }
+  };
+
+  const handleCreateDiscussion = async () => {
+    if (!selectedTopic.topicId) {
+      setDiscussionError("Please select a lesson topic first");
+      return;
+    }
+
+    if (!discussionTitle.trim() || !discussionContent.trim()) {
+      setDiscussionError("Question title and details are required");
+      return;
+    }
+
+    try {
+      setPostingDiscussion(true);
+      setDiscussionError("");
+
+      const token = localStorage.getItem("token");
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+      const response = await fetch(
+        `${backendUrl}/courses/${courseId}/topics/${selectedTopic.topicId}/discussions`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: discussionTitle.trim(),
+            content: discussionContent.trim(),
+          }),
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setDiscussionTitle("");
+        setDiscussionContent("");
+        fetchTopicDiscussions();
+      } else {
+        setDiscussionError(data.message || "Could not post question");
+      }
+    } catch (error) {
+      console.error("Error creating discussion:", error);
+      setDiscussionError("Could not post question");
+    } finally {
+      setPostingDiscussion(false);
+    }
+  };
+
+  const handleReplySubmit = async (discussionId) => {
+    const replyText = (replyDrafts[discussionId] || "").trim();
+    if (!replyText) {
+      setDiscussionError("Reply cannot be empty");
+      return;
+    }
+
+    try {
+      setPostingReplyId(discussionId);
+      setDiscussionError("");
+
+      const token = localStorage.getItem("token");
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+      const response = await fetch(
+        `${backendUrl}/courses/${courseId}/topics/${selectedTopic.topicId}/discussions/${discussionId}/replies`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ content: replyText }),
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setReplyDrafts((prev) => ({ ...prev, [discussionId]: "" }));
+        fetchTopicDiscussions();
+      } else {
+        setDiscussionError(data.message || "Could not post reply");
+      }
+    } catch (error) {
+      console.error("Error creating reply:", error);
+      setDiscussionError("Could not post reply");
+    } finally {
+      setPostingReplyId(null);
+    }
+  };
+
+  const handleDiscussionStatus = async (discussionId, nextStatus) => {
+    try {
+      setUpdatingDiscussionId(discussionId);
+      setDiscussionError("");
+
+      const token = localStorage.getItem("token");
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+      const response = await fetch(
+        `${backendUrl}/courses/${courseId}/topics/${selectedTopic.topicId}/discussions/${discussionId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ isResolved: nextStatus }),
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setDiscussionList((prev) =>
+          prev.map((discussion) =>
+            discussion._id === discussionId
+              ? { ...discussion, isResolved: data.data.isResolved }
+              : discussion
+          )
+        );
+      } else {
+        setDiscussionError(data.message || "Could not update discussion status");
+      }
+    } catch (error) {
+      console.error("Error updating discussion status:", error);
+      setDiscussionError("Could not update discussion status");
+    } finally {
+      setUpdatingDiscussionId(null);
     }
   };
 
@@ -506,7 +697,301 @@ const CourseDetail = () => {
 
         {activeTab === "komentar" && (
           <div style={{ padding: "16px" }}>
-            <p>Comments feature coming soon.</p>
+            {!selectedTopic.topicId ? (
+              <div
+                style={{
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "10px",
+                  padding: "14px",
+                  color: "#475569",
+                  fontSize: "0.9rem",
+                }}
+              >
+                Select a lesson topic from Material to open its discussion thread.
+              </div>
+            ) : (
+              <>
+                <div
+                  style={{
+                    background: "#fff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "10px",
+                    padding: "12px",
+                    marginBottom: "14px",
+                  }}
+                >
+                  <input
+                    value={discussionTitle}
+                    onChange={(e) => setDiscussionTitle(e.target.value)}
+                    placeholder="Question title"
+                    maxLength={180}
+                    style={{
+                      width: "100%",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "8px",
+                      padding: "10px",
+                      marginBottom: "8px",
+                      fontSize: "0.9rem",
+                    }}
+                  />
+                  <textarea
+                    value={discussionContent}
+                    onChange={(e) => setDiscussionContent(e.target.value)}
+                    placeholder="Describe your doubt in detail"
+                    maxLength={3000}
+                    rows={4}
+                    style={{
+                      width: "100%",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "8px",
+                      padding: "10px",
+                      fontSize: "0.9rem",
+                      resize: "vertical",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginTop: "8px",
+                    }}
+                  >
+                    <span style={{ color: "#64748b", fontSize: "0.8rem" }}>
+                      {discussionContent.length}/3000
+                    </span>
+                    <button
+                      onClick={handleCreateDiscussion}
+                      disabled={postingDiscussion}
+                      style={{
+                        backgroundColor: "#2337AD",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "8px",
+                        padding: "8px 14px",
+                        fontSize: "0.85rem",
+                        fontWeight: "600",
+                        cursor: postingDiscussion ? "not-allowed" : "pointer",
+                        opacity: postingDiscussion ? 0.7 : 1,
+                      }}
+                    >
+                      {postingDiscussion ? "Posting..." : "Post Question"}
+                    </button>
+                  </div>
+                </div>
+
+                {discussionError && (
+                  <div
+                    style={{
+                      marginBottom: "12px",
+                      background: "#fef2f2",
+                      border: "1px solid #fecaca",
+                      color: "#b91c1c",
+                      borderRadius: "8px",
+                      padding: "10px",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    {discussionError}
+                  </div>
+                )}
+
+                {discussionLoading ? (
+                  <div style={{ color: "#64748b", fontSize: "0.9rem" }}>
+                    Loading discussions...
+                  </div>
+                ) : discussionList.length === 0 ? (
+                  <div
+                    style={{
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "10px",
+                      padding: "14px",
+                      color: "#64748b",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    No questions yet for this lesson. Be the first to ask.
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {discussionList.map((discussion) => (
+                      <div
+                        key={discussion._id}
+                        style={{
+                          background: "#fff",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "10px",
+                          padding: "12px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: "10px",
+                          }}
+                        >
+                          <h4
+                            style={{
+                              margin: 0,
+                              color: "#1f2937",
+                              fontSize: "0.95rem",
+                              fontWeight: "700",
+                            }}
+                          >
+                            {discussion.title}
+                          </h4>
+                          <span
+                            style={{
+                              fontSize: "0.75rem",
+                              fontWeight: "700",
+                              borderRadius: "999px",
+                              padding: "4px 8px",
+                              backgroundColor: discussion.isResolved ? "#dcfce7" : "#fef3c7",
+                              color: discussion.isResolved ? "#166534" : "#92400e",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {discussion.isResolved ? "Resolved" : "Open"}
+                          </span>
+                        </div>
+
+                        <p
+                          style={{
+                            margin: "8px 0",
+                            color: "#475569",
+                            fontSize: "0.88rem",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          {discussion.content}
+                        </p>
+
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: "10px",
+                            color: "#64748b",
+                            fontSize: "0.78rem",
+                          }}
+                        >
+                          <span>
+                            By {discussion.author?.name || "Unknown"} ({discussion.authorModel})
+                          </span>
+                          <button
+                            onClick={() =>
+                              handleDiscussionStatus(discussion._id, !discussion.isResolved)
+                            }
+                            disabled={updatingDiscussionId === discussion._id}
+                            style={{
+                              border: "1px solid #cbd5e1",
+                              background: "#fff",
+                              color: "#334155",
+                              borderRadius: "6px",
+                              padding: "4px 8px",
+                              fontSize: "0.75rem",
+                              cursor:
+                                updatingDiscussionId === discussion._id
+                                  ? "not-allowed"
+                                  : "pointer",
+                              opacity: updatingDiscussionId === discussion._id ? 0.7 : 1,
+                            }}
+                          >
+                            {updatingDiscussionId === discussion._id
+                              ? "Updating..."
+                              : discussion.isResolved
+                                ? "Reopen"
+                                : "Mark Resolved"}
+                          </button>
+                        </div>
+
+                        {Array.isArray(discussion.replies) && discussion.replies.length > 0 && (
+                          <div style={{ marginBottom: "10px", display: "grid", gap: "8px" }}>
+                            {discussion.replies.map((reply) => (
+                              <div
+                                key={reply._id}
+                                style={{
+                                  background: "#f8fafc",
+                                  border: "1px solid #e2e8f0",
+                                  borderRadius: "8px",
+                                  padding: "8px 10px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    color: "#64748b",
+                                    fontSize: "0.75rem",
+                                    marginBottom: "4px",
+                                  }}
+                                >
+                                  {reply.author?.name || "Unknown"} ({reply.authorModel})
+                                </div>
+                                <div
+                                  style={{
+                                    color: "#334155",
+                                    fontSize: "0.84rem",
+                                    lineHeight: "1.5",
+                                  }}
+                                >
+                                  {reply.content}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <input
+                            value={replyDrafts[discussion._id] || ""}
+                            onChange={(e) =>
+                              setReplyDrafts((prev) => ({
+                                ...prev,
+                                [discussion._id]: e.target.value,
+                              }))
+                            }
+                            maxLength={3000}
+                            placeholder="Write a reply"
+                            style={{
+                              flex: 1,
+                              border: "1px solid #d1d5db",
+                              borderRadius: "8px",
+                              padding: "8px 10px",
+                              fontSize: "0.85rem",
+                            }}
+                          />
+                          <button
+                            onClick={() => handleReplySubmit(discussion._id)}
+                            disabled={postingReplyId === discussion._id}
+                            style={{
+                              border: "none",
+                              borderRadius: "8px",
+                              padding: "8px 12px",
+                              background: "#1d4ed8",
+                              color: "#fff",
+                              fontSize: "0.8rem",
+                              fontWeight: "600",
+                              cursor:
+                                postingReplyId === discussion._id
+                                  ? "not-allowed"
+                                  : "pointer",
+                              opacity: postingReplyId === discussion._id ? 0.7 : 1,
+                            }}
+                          >
+                            {postingReplyId === discussion._id ? "Posting..." : "Reply"}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
 
@@ -1203,7 +1688,9 @@ const CourseDetail = () => {
                   {chapter.topics.map((topic, tpIdx) => (
                     <div key={tpIdx} style={{ marginBottom: "10px" }}>
                       <div
-                        onClick={() => handleTopicClick(topic.video)}
+                        onClick={() =>
+                          handleTopicClick(topic.video, chapter._id, topic._id)
+                        }
                         style={{
                           padding: "10px 12px",
                           cursor: "pointer",
