@@ -2,6 +2,7 @@ const Cart = require("../models/Cart");
 const Course = require("../models/Course");
 const Student = require("../models/Student");
 const Order = require("../models/Order");
+const { sendCoursePurchaseConfirmationEmail } = require("../utils/sendEmail");
 
 // Get cart contents
 async function getCart(req, res) {
@@ -224,7 +225,7 @@ async function updateEnrollCourses(req, res) {
       });
     }
 
-    const coursesToEnroll = await Course.find({ _id: { $in: newCourseIds } }).select("_id price");
+    const coursesToEnroll = await Course.find({ _id: { $in: newCourseIds } }).select("_id title price");
     const validCourseIdSet = new Set(coursesToEnroll.map((course) => course._id.toString()));
     const validCourseIds = newCourseIds.filter((id) => validCourseIdSet.has(id));
 
@@ -273,6 +274,18 @@ async function updateEnrollCourses(req, res) {
         status: "completed",
       }));
 
+    const purchasedCourses = coursesToEnroll
+      .filter((course) => validCourseIdSet.has(course._id.toString()))
+      .map((course) => ({
+        title: course.title,
+        price: Number(course.price) || 0,
+      }));
+
+    const totalPurchasedAmount = purchasedCourses.reduce(
+      (sum, course) => sum + course.price,
+      0
+    );
+
     if (orderDocuments.length > 0) {
       await Order.insertMany(orderDocuments);
     }
@@ -296,6 +309,19 @@ async function updateEnrollCourses(req, res) {
 
     if (!clearedCart) {
       clearedCart = { items: [] };
+    }
+
+    if (updatedStudent?.email && purchasedCourses.length > 0) {
+      try {
+        await sendCoursePurchaseConfirmationEmail(updatedStudent.email, {
+          studentName: updatedStudent.name,
+          courses: purchasedCourses,
+          totalAmount: totalPurchasedAmount,
+          purchasedAt: new Date(),
+        });
+      } catch (emailError) {
+        console.error("Purchase confirmation email failed:", emailError?.message || emailError);
+      }
     }
 
     res.json({
