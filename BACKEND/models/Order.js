@@ -20,6 +20,27 @@ const orderSchema = new mongoose.Schema({
     enum: ["pending", "completed", "failed"],
     default: "pending",
   },
+  paymentGateway: {
+    type: String,
+    enum: ["manual", "razorpay"],
+    default: "manual",
+  },
+  razorpayOrderId: {
+    type: String,
+    default: null,
+  },
+  razorpayPaymentId: {
+    type: String,
+    default: null,
+  },
+  razorpaySignature: {
+    type: String,
+    default: null,
+  },
+  paymentVerifiedAt: {
+    type: Date,
+    default: null,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

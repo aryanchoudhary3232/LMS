@@ -1,16 +1,35 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./checkout.css";
 
-const validateCardNumber = (num) => /^\d{12}$/.test(num);
-const validateCvv = (cvv) => /^\d{3}$/.test(cvv);
-const validateName = (name) => {
-  const trimmed = name.trim();
-  if (trimmed.length < 2) return false;
-  if (trimmed.length > 100) return false;
-  if (!/^[A-Za-z ]+$/.test(trimmed)) return false;
-  return true;
-};
+const RAZORPAY_SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
+
+const loadRazorpayScript = () =>
+  new Promise((resolve, reject) => {
+    if (globalThis.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const existingScript = document.querySelector(
+      `script[src="${RAZORPAY_SCRIPT_URL}"]`
+    );
+
+    if (existingScript) {
+      existingScript.addEventListener("load", () => resolve(true));
+      existingScript.addEventListener("error", () =>
+        reject(new Error("Failed to load Razorpay SDK"))
+      );
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = RAZORPAY_SCRIPT_URL;
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => reject(new Error("Failed to load Razorpay SDK"));
+    document.body.appendChild(script);
+  });
 
 const Checkout = () => {
   const location = useLocation();
@@ -19,38 +38,83 @@ const Checkout = () => {
   const total = (location.state && location.state.total) || 0;
   const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-  const [cardNumber, setCardNumber] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [name, setName] = useState("");
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({ form: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [razorpayReady, setRazorpayReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    loadRazorpayScript()
+      .then(() => {
+        if (mounted) {
+          setRazorpayReady(true);
+        }
+      })
+      .catch((error) => {
+        console.error("Razorpay script load error:", error);
+        if (mounted) {
+          setErrors({ form: "Unable to load Razorpay checkout. Please refresh." });
+          setRazorpayReady(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const handleSuccessfulEnrollment = (responseJson, courseIds) => {
+    let redirectCourseId = null;
+
+    if (responseJson?.data?.enrolledCourses) {
+      const enrolledIds = responseJson.data.enrolledCourses
+        .map((course) => course?._id || course?.id || course)
+        .filter((id) => typeof id === "string" && id.trim().length > 0);
+
+      localStorage.setItem("enrolledCourseIds", JSON.stringify(enrolledIds));
+      window.dispatchEvent(new Event("enrolledCourseIdsUpdated"));
+      window.dispatchEvent(new Event("cartUpdated"));
+
+      const cartCourseIds = courseIds.map(String);
+      redirectCourseId = cartCourseIds.find((id) => enrolledIds.includes(id));
+    }
+
+    if (redirectCourseId) {
+      navigate(`/student/courses/${redirectCourseId}`);
+    } else if (courseIds.length > 0) {
+      navigate(`/student/courses/${courseIds[0]}`);
+    } else {
+      navigate("/student");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newErrors = {};
-    if (!validateCardNumber(cardNumber)) newErrors.cardNumber = "Card number must be exactly 12 digits";
-    if (!validateCvv(cvv)) newErrors.cvv = "CVV must be exactly 3 digits";
-    if (!validateName(name)) {
-      if (name.trim().length < 2) {
-        newErrors.name = "Name must be at least 2 characters";
-      } else if (name.trim().length > 100) {
-        newErrors.name = "Name must be less than 100 characters";
-      } else {
-        newErrors.name = "Name can only contain letters and spaces";
-      }
+    setErrors({ form: "" });
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setErrors({ form: "Please login to continue" });
+      return;
     }
 
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+    const courseIds = cartItems.map((i) => String(i.id)).filter(Boolean);
+    if (courseIds.length === 0) {
+      setErrors({ form: "No items found in checkout" });
+      return;
+    }
 
-    // Proceed with checkout (call backend to enroll)
+    if (!razorpayReady || !globalThis.Razorpay) {
+      setErrors({ form: "Razorpay is still loading. Please try again." });
+      return;
+    }
+
     try {
       setSubmitting(true);
-      const token = localStorage.getItem("token");
-      const courseIds = cartItems.map((i) => i.id);
 
-      const response = await fetch(`${backendUrl}/cart/update-enroll-courses`, {
-        method: "PUT",
+      const orderResponse = await fetch(`${backendUrl}/cart/create-payment-order`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -58,39 +122,80 @@ const Checkout = () => {
         body: JSON.stringify({ courseIds }),
       });
 
-      const json = await response.json();
-      if (response.ok && json.success) {
-          let redirectCourseId = null;
-          if (json.data?.enrolledCourses) {
-            const enrolledIds = json.data.enrolledCourses
-              .map((course) => course?._id || course?.id || course)
-              .filter(id => typeof id === 'string' && id.trim().length > 0);
-            localStorage.setItem(
-              "enrolledCourseIds",
-              JSON.stringify(enrolledIds)
-            );
-            window.dispatchEvent(new Event("enrolledCourseIdsUpdated"));
+      const orderJson = await orderResponse.json();
 
-            // Find the first courseId from the cart that is present in enrolledIds
-            const cartCourseIds = courseIds.map(String);
-            redirectCourseId = cartCourseIds.find(id => enrolledIds.includes(id));
-          }
-
-          if (redirectCourseId) {
-            navigate(`/student/courses/${redirectCourseId}`);
-          } else if (courseIds.length > 0) {
-            // Optimistically redirect to the first course in the cart
-            navigate(`/student/courses/${courseIds[0]}`);
-          } else {
-            navigate("/student");
-          }
-      } else {
-        setErrors({ form: json.message || "Checkout failed" });
+      if (!orderResponse.ok || !orderJson.success) {
+        setErrors({ form: orderJson.message || "Unable to initiate payment" });
+        setSubmitting(false);
+        return;
       }
+
+      if (!orderJson?.data?.orderId) {
+        setErrors({ form: orderJson.message || "Payment order was not created" });
+        setSubmitting(false);
+        return;
+      }
+
+      const options = {
+        key: orderJson.data.keyId,
+        amount: orderJson.data.amount,
+        currency: orderJson.data.currency || "INR",
+        name: "SeekhoBharat",
+        description: `Checkout for ${courseIds.length} course(s)`,
+        order_id: orderJson.data.orderId,
+        theme: {
+          color: "#2839a8",
+        },
+        handler: async (paymentResponse) => {
+          try {
+            const verifyResponse = await fetch(`${backendUrl}/cart/verify-payment`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                courseIds,
+                razorpayOrderId: paymentResponse.razorpay_order_id,
+                razorpayPaymentId: paymentResponse.razorpay_payment_id,
+                razorpaySignature: paymentResponse.razorpay_signature,
+              }),
+            });
+
+            const verifyJson = await verifyResponse.json();
+
+            if (!verifyResponse.ok || !verifyJson.success) {
+              setErrors({ form: verifyJson.message || "Payment verification failed" });
+              setSubmitting(false);
+              return;
+            }
+
+            handleSuccessfulEnrollment(verifyJson, courseIds);
+          } catch (verifyError) {
+            console.error("Payment verification error:", verifyError);
+            setErrors({ form: "Unable to verify payment. Contact support if amount is deducted." });
+            setSubmitting(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setSubmitting(false);
+          },
+        },
+      };
+
+      const razorpayInstance = new globalThis.Razorpay(options);
+      razorpayInstance.on("payment.failed", (paymentError) => {
+        const reason =
+          paymentError?.error?.description || paymentError?.error?.reason || "Payment failed";
+        setErrors({ form: reason });
+        setSubmitting(false);
+      });
+
+      razorpayInstance.open();
     } catch (err) {
       setErrors({ form: "Network error during checkout" });
       console.error("Checkout error:", err);
-    } finally {
       setSubmitting(false);
     }
   };
@@ -102,49 +207,16 @@ const Checkout = () => {
         <div className="checkout-form">
           <form onSubmit={handleSubmit} noValidate>
             <div className="form-group">
-              <label>Card Number</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={12}
-                value={cardNumber}
-                onChange={(e) => setCardNumber(e.target.value.replace(/[^0-9]/g, ""))}
-                placeholder="123412341234"
-              />
-              {errors.cardNumber && <div className="error">{errors.cardNumber}</div>}
-            </div>
-
-            <div className="form-row">
-              <div className="form-group small">
-                <label>CVV</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={3}
-                  value={cvv}
-                  onChange={(e) => setCvv(e.target.value.replace(/[^0-9]/g, ""))}
-                  placeholder="123"
-                />
-                {errors.cvv && <div className="error">{errors.cvv}</div>}
-              </div>
-
-              <div className="form-group flex">
-                <label>Name on Card</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value.replace(/[^A-Za-z ]/g, ""))}
-                  placeholder="John Doe"
-                  maxLength={100}
-                />
-                {errors.name && <div className="error">{errors.name}</div>}
-              </div>
+              <label>Secure Payment</label>
+              <p style={{ margin: "10px 0 0", color: "#5b6170" }}>
+                Click the button below to continue with Razorpay Checkout.
+              </p>
             </div>
 
             {errors.form && <div className="error form-error">{errors.form}</div>}
 
             <button className="btn-primary" type="submit" disabled={submitting}>
-              {submitting ? "Processing..." : `Pay ₹${total}`}
+              {submitting ? "Opening Razorpay..." : `Pay ₹${total} with Razorpay`}
             </button>
           </form>
         </div>
