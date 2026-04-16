@@ -17,6 +17,7 @@ docker compose up --build -d
 
 - Frontend: Vite app built into an Nginx container
 - Backend: Express API running in a production Node container
+- Redis: Cache/session/OTP/rate-limit backend for the API
 
 ## GitHub Actions
 

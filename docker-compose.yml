@@ -1,14 +1,33 @@
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: lms-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   backend:
     image: ${DOCKERHUB_USERNAME}/lms-backend:${IMAGE_TAG:-latest}
     pull_policy: always
     container_name: lms-backend
     restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
     env_file:
       - ./BACKEND/.env
     environment:
       NODE_ENV: production
       PORT: ${BACKEND_PORT:-3000}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      REDIS_ENABLED: ${REDIS_ENABLED:-true}
     ports:
       - "${BACKEND_PORT:-3000}:3000"
     volumes:
@@ -39,3 +58,4 @@ services:
 
 volumes:
   backend_logs:
+  redis_data:

@@ -4,15 +4,28 @@ const crypto = require("crypto");
 const Student = require("../models/Student");
 const Teacher = require("../models/Teacher");
 const Admin = require("../models/Admin");
-const Otp = require("../models/Otp");
 const { sendOtpEmail } = require("../utils/sendEmail");
+const { blacklistToken } = require("../middleware/authBlacklist");
+const {
+  normalizeEmail,
+  setPasswordResetOtp,
+  consumePasswordResetOtp,
+} = require("../services/otpStore");
+
+const JWT_SECRET = process.env.JWT_SECRET || "aryan123";
+const ACCESS_TOKEN_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN || "15m";
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 // 🔹 Register User (Student / Teacher / Admin)
 async function register(req, res) {
   try {
     const { name, email, password, role } = req.body;
+    const normalizedEmail = normalizeEmail(email);
 
-    if (!name || !email || !password || !role) {
+    if (!name || !normalizedEmail || !password || !role) {
       return res.json({
         message: "Name, email, password, and role are required",
         success: false,
@@ -22,9 +35,9 @@ async function register(req, res) {
 
     // ✅ Check if user already exists
     let existingUser =
-      (await Student.findOne({ email })) ||
-      (await Teacher.findOne({ email })) ||
-      (await Admin.findOne({ email }));
+      (await Student.findOne({ email: normalizedEmail })) ||
+      (await Teacher.findOne({ email: normalizedEmail })) ||
+      (await Admin.findOne({ email: normalizedEmail }));
 
     if (existingUser) {
       return res.json({
@@ -39,20 +52,30 @@ async function register(req, res) {
 
     let newUser;
     if (role === "Student") {
-      newUser = new Student({ name, email, password: hashedPassword, role });
+      newUser = new Student({
+        name,
+        email: normalizedEmail,
+        password: hashedPassword,
+        role,
+      });
     } else if (role === "Teacher") {
       newUser = new Teacher({
         name,
-        email,
+        email: normalizedEmail,
         password: hashedPassword,
         role,
       });
     } else if (role === "Admin") {
-      newUser = new Admin({ name, email, password: hashedPassword, role });
+      newUser = new Admin({
+        name,
+        email: normalizedEmail,
+        password: hashedPassword,
+        role,
+      });
     } else if (role === "SuperAdmin") {
       newUser = new Admin({
         name,
-        email,
+        email: normalizedEmail,
         password: hashedPassword,
         role: "SuperAdmin",
       });
@@ -74,21 +97,11 @@ async function register(req, res) {
     });
   } catch (error) {
     console.error("Registration error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Server error during registration",
+      success: false,
+      error: true,
     });
-
-    const admin = await Admin.findOne({ email });
-    const student = await Student.findOne({ email });
-    const teacher = await Teacher.findOne({ email });
-
-    if (!admin && !student && !teacher) {
-      res.json({
-        message: "User does not exist.",
-        success: false,
-        error: true,
-      });
-    }
   }
 }
 
@@ -96,8 +109,9 @@ async function register(req, res) {
 async function login(req, res) {
   try {
     const { email, password } = req.body;
+    const normalizedEmail = normalizeEmail(email);
 
-    if (!email || !password) {
+    if (!normalizedEmail || !password) {
       return res.json({
         message: "Email and password are required",
         success: false,
@@ -106,10 +120,11 @@ async function login(req, res) {
     }
 
     // ✅ Try finding user in all roles
+    const emailMatcher = new RegExp(`^${escapeRegex(normalizedEmail)}$`, "i");
     let user =
-      (await Admin.findOne({ email })) ||
-      (await Teacher.findOne({ email })) ||
-      (await Student.findOne({ email }));
+      (await Admin.findOne({ email: emailMatcher })) ||
+      (await Teacher.findOne({ email: emailMatcher })) ||
+      (await Student.findOne({ email: emailMatcher }));
 
     if (!user) {
       return res.json({
@@ -136,7 +151,11 @@ async function login(req, res) {
         role: user.role,
         email: user.email,
       },
-      "aryan123",
+      JWT_SECRET,
+      {
+        expiresIn: ACCESS_TOKEN_EXPIRES_IN,
+        jwtid: crypto.randomUUID(),
+      },
     );
 
     // Inside login function, before sending response...
@@ -204,6 +223,7 @@ async function login(req, res) {
 async function logout(req, res) {
   try {
     const { _id, role } = req.user || {};
+    const token = req.token || null;
 
     // Best-effort audit of logout time without blocking response
     let Model = null;
@@ -214,6 +234,12 @@ async function logout(req, res) {
     if (_id && Model) {
       Model.findByIdAndUpdate(_id, { lastLogout: new Date() }).catch(() => {
         // Do not fail logout if auditing fails
+      });
+    }
+
+    if (token) {
+      blacklistToken(token, req.user).catch(() => {
+        // Do not fail logout if blacklist write fails.
       });
     }
 
@@ -458,13 +484,14 @@ async function changePassword(req, res) {
 // 🔹 FORGOT PASSWORD FUNCTIONS
 // ============================================
 
-const JWT_SECRET = process.env.JWT_SECRET || "aryan123";
-
 async function findUserByEmail(email) {
+  const normalized = normalizeEmail(email);
+  const matcher = new RegExp(`^${escapeRegex(normalized)}$`, "i");
+
   return (
-    (await Student.findOne({ email })) ||
-    (await Teacher.findOne({ email })) ||
-    (await Admin.findOne({ email }))
+    (await Student.findOne({ email: matcher })) ||
+    (await Teacher.findOne({ email: matcher })) ||
+    (await Admin.findOne({ email: matcher }))
   );
 }
 
@@ -478,8 +505,9 @@ function getModelForRole(role) {
 async function forgotPassword(req, res) {
   try {
     const { email } = req.body;
+    const normalizedEmail = normalizeEmail(email);
 
-    if (!email) {
+    if (!normalizedEmail) {
       return res.status(400).json({
         message: "Email is required",
         success: false,
@@ -487,7 +515,7 @@ async function forgotPassword(req, res) {
       });
     }
 
-    const user = await findUserByEmail(email);
+    const user = await findUserByEmail(normalizedEmail);
     if (!user) {
       return res.status(404).json({
         message: "No account found with this email address",
@@ -496,13 +524,10 @@ async function forgotPassword(req, res) {
       });
     }
 
-    // Delete any existing OTPs for this email
-    await Otp.deleteMany({ email });
-
     const otp = crypto.randomInt(100000, 999999).toString();
-    await Otp.create({ email, otp });
+    await setPasswordResetOtp(normalizedEmail, otp);
 
-    await sendOtpEmail(email, otp);
+    await sendOtpEmail(normalizedEmail, otp);
 
     res.json({
       message: "OTP sent to your email",
@@ -522,8 +547,9 @@ async function forgotPassword(req, res) {
 async function verifyOtp(req, res) {
   try {
     const { email, otp } = req.body;
+    const normalizedEmail = normalizeEmail(email);
 
-    if (!email || !otp) {
+    if (!normalizedEmail || !otp) {
       return res.status(400).json({
         message: "Email and OTP are required",
         success: false,
@@ -531,7 +557,7 @@ async function verifyOtp(req, res) {
       });
     }
 
-    const user = await findUserByEmail(email);
+    const user = await findUserByEmail(normalizedEmail);
     if (!user) {
       return res.status(404).json({
         message: "No account found with this email address",
@@ -540,10 +566,15 @@ async function verifyOtp(req, res) {
       });
     }
 
-    const otpRecord = await Otp.findOne({ email, otp });
-    if (!otpRecord) {
+    const otpResult = await consumePasswordResetOtp(normalizedEmail, otp);
+    if (!otpResult.ok) {
+      const message =
+        otpResult.reason === "too_many_attempts"
+          ? "Too many invalid OTP attempts. Please request a new OTP."
+          : "Invalid or expired OTP";
+
       return res.status(400).json({
-        message: "Invalid or expired OTP",
+        message,
         success: false,
         error: true,
       });
@@ -551,13 +582,10 @@ async function verifyOtp(req, res) {
 
     // Generate a short-lived reset token (5 minutes)
     const resetToken = jwt.sign(
-      { email, purpose: "password-reset" },
+      { email: normalizedEmail, purpose: "password-reset" },
       JWT_SECRET,
       { expiresIn: "5m" },
     );
-
-    // Clean up the used OTP
-    await Otp.deleteMany({ email });
 
     res.json({
       message: "OTP verified successfully",
@@ -578,8 +606,9 @@ async function verifyOtp(req, res) {
 async function resetPassword(req, res) {
   try {
     const { email, newPassword, resetToken } = req.body;
+    const normalizedEmail = normalizeEmail(email);
 
-    if (!email || !newPassword || !resetToken) {
+    if (!normalizedEmail || !newPassword || !resetToken) {
       return res.status(400).json({
         message: "Email, new password, and reset token are required",
         success: false,
@@ -607,7 +636,7 @@ async function resetPassword(req, res) {
       });
     }
 
-    if (decoded.email !== email || decoded.purpose !== "password-reset") {
+    if (decoded.email !== normalizedEmail || decoded.purpose !== "password-reset") {
       return res.status(400).json({
         message: "Invalid reset token",
         success: false,
@@ -615,7 +644,7 @@ async function resetPassword(req, res) {
       });
     }
 
-    const user = await findUserByEmail(email);
+    const user = await findUserByEmail(normalizedEmail);
     if (!user) {
       return res.status(404).json({
         message: "No account found with this email address",

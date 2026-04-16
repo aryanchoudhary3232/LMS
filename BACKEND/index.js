@@ -9,6 +9,7 @@ const morgan = require("morgan");
 const swaggerUi = require("swagger-ui-express");
 const { createHandler } = require("graphql-http/lib/use/express");
 const { errorHandler, notFound, performanceMonitor } = require("./middleware");
+const { connectRedis, closeRedis, isRedisReady } = require("./config/redis");
 const openApiSpec = require("./docs/openapi");
 const {
   schema: graphQLSchema,
@@ -85,6 +86,10 @@ if (!MONGO_URL) {
   process.exit(1);
 }
 
+connectRedis().catch((error) => {
+  console.warn("redis initialization failed:", error?.message || error);
+});
+
 mongoose
   .connect(MONGO_URL)
   .then(() => {
@@ -130,7 +135,10 @@ app.get("/", (req, res) => {
 });
 
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
+  res.status(200).json({
+    status: "ok",
+    redis: isRedisReady() ? "up" : "degraded",
+  });
 });
 
 app.get("/openapi.json", (req, res) => {
@@ -158,6 +166,24 @@ app.get("/api-docs/", (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`backend server is running on port ${PORT}....`);
+});
+
+async function shutdown(signal) {
+  console.log(`${signal} received, shutting down backend...`);
+
+  server.close(async () => {
+    await closeRedis();
+    await mongoose.connection.close();
+    process.exit(0);
+  });
+}
+
+process.on("SIGINT", () => {
+  shutdown("SIGINT").catch(() => process.exit(1));
+});
+
+process.on("SIGTERM", () => {
+  shutdown("SIGTERM").catch(() => process.exit(1));
 });

@@ -1,6 +1,7 @@
 const Student = require("../models/Student");
 const QuizSubmission = require("../models/QuizSubmission");
 const Course = require("../models/Course");
+const { acquireLock, releaseLock } = require("../utils/redisLock");
 
 async function getStudents(req, res) {
   try {
@@ -210,9 +211,20 @@ async function getCourseById(req, res) {
 
 // Enroll student in a course
 async function enrollInCourse(req, res) {
+  let lock = null;
+
   try {
     const { courseId } = req.params;
     const studentId = req.user._id; // from JWT token
+
+    lock = await acquireLock(`enroll:${studentId}:${courseId}`, 6000);
+    if (!lock.acquired) {
+      return res.status(409).json({
+        message: "Enrollment is already in progress. Please retry in a moment.",
+        success: false,
+        error: true,
+      });
+    }
 
     const course = await Course.findById(courseId);
     if (!course) {
@@ -248,6 +260,8 @@ async function enrollInCourse(req, res) {
       success: false,
       error: true,
     });
+  } finally {
+    releaseLock(lock).catch(() => {});
   }
 }
 
@@ -323,9 +337,24 @@ async function getStudentMyCourses(req, res) {
 }
 
 async function quizSubmission(req, res) {
+  let lock = null;
+
   try {
     const { courseId, chapterId, topicId, answerQuiz } = req.body;
     const studentId = req.user._id;
+
+    lock = await acquireLock(
+      `quiz-submit:${studentId}:${courseId}:${chapterId}:${topicId}`,
+      5000,
+    );
+
+    if (!lock.acquired) {
+      return res.status(409).json({
+        message: "Quiz submission is already being processed",
+        success: false,
+        error: true,
+      });
+    }
 
     const course = await Course.findById(courseId);
     const originalQuiz = course.chapters.id(chapterId).topics.id(topicId).quiz;
@@ -407,6 +436,8 @@ async function quizSubmission(req, res) {
       success: false,
       error: true,
     });
+  } finally {
+    releaseLock(lock).catch(() => {});
   }
 }
 
@@ -813,9 +844,24 @@ async function getStudentDashboard(req, res) {
 }
 
 async function markTopicComplete(req, res) {
+  let lock = null;
+
   try {
     const { courseId, chapterId, topicId } = req.body;
     const studentId = req.user._id;
+
+    lock = await acquireLock(
+      `topic-complete:${studentId}:${courseId}:${chapterId}:${topicId}`,
+      5000,
+    );
+
+    if (!lock.acquired) {
+      return res.status(409).json({
+        message: "Topic completion is already being processed",
+        success: false,
+        error: true,
+      });
+    }
 
     // Validate required fields
     if (!courseId || !chapterId || !topicId) {
@@ -887,6 +933,8 @@ async function markTopicComplete(req, res) {
       success: false,
       error: true,
     });
+  } finally {
+    releaseLock(lock).catch(() => {});
   }
 }
 

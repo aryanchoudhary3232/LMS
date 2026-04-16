@@ -9,6 +9,9 @@ const {
   paramSanitizer,
   validate,
   schemas,
+  cacheResponse,
+  cacheTags,
+  invalidateTagsOnSuccess,
 } = require("../middleware");
 
 // Test route
@@ -21,17 +24,42 @@ router.get("/test", (req, res) => {
 
 // Student profile (uses validateResourceOwnership to ensure students access their own data)
 router.get("/", studentController.getStudents);
-router.get("/profile", verify, verifyStudent, studentController.studentProfile);
+router.get(
+  "/profile",
+  verify,
+  verifyStudent,
+  cacheResponse({
+    ttlSeconds: 120,
+    namespace: "student-profile",
+    varyByUser: true,
+    tags: (req) => [cacheTags.student(req.user?._id)],
+  }),
+  studentController.studentProfile,
+);
+
 router.get(
   "/dashboard",
   verify,
   verifyStudent,
+  cacheResponse({
+    ttlSeconds: 90,
+    namespace: "student-dashboard",
+    varyByUser: true,
+    tags: (req) => [cacheTags.student(req.user?._id)],
+  }),
   studentController.getStudentDashboard,
 );
+
 router.get(
   "/my-courses",
   verify,
   verifyStudent,
+  cacheResponse({
+    ttlSeconds: 180,
+    namespace: "student-my-courses",
+    varyByUser: true,
+    tags: (req) => [cacheTags.student(req.user?._id)],
+  }),
   studentController.getStudentMyCourses,
 );
 
@@ -41,6 +69,13 @@ router.put(
   verify,
   verifyStudent,
   validate(schemas.updateEnrollCourses),
+  invalidateTagsOnSuccess((req) => [
+    cacheTags.student(req.user?._id),
+    cacheTags.coursesPublic,
+    cacheTags.statsPublic,
+    cacheTags.adminCourses,
+    cacheTags.superadminAnalytics,
+  ]),
   studentController.updateEnrollCourses,
 );
 
@@ -51,6 +86,7 @@ router.post(
   verifyStudent,
   validate(schemas.quizSubmit),
   validateEnrollment,
+  invalidateTagsOnSuccess((req) => [cacheTags.student(req.user?._id)]),
   studentController.quizSubmission,
 );
 
@@ -58,6 +94,12 @@ router.get(
   "/courses",
   verify,
   verifyStudent,
+  cacheResponse({
+    ttlSeconds: 180,
+    namespace: "student-courses",
+    varyByUser: true,
+    tags: (req) => [cacheTags.student(req.user?._id)],
+  }),
   studentController.getCoursesByStudentId,
 );
 
@@ -66,17 +108,51 @@ router.get(
   "/quiz-submissions",
   verify,
   verifyStudent,
+  cacheResponse({
+    ttlSeconds: 120,
+    namespace: "student-quiz-submissions",
+    varyByUser: true,
+    tags: (req) => [cacheTags.student(req.user?._id)],
+  }),
   studentController.getQuizSubmissions,
 );
 
 // Streak / activity analytics
-router.get("/streak", verify, verifyStudent, studentController.getStreakStats);
+router.get(
+  "/streak",
+  verify,
+  verifyStudent,
+  cacheResponse({
+    ttlSeconds: 60,
+    namespace: "student-streak",
+    varyByUser: true,
+    tags: (req) => [cacheTags.student(req.user?._id)],
+  }),
+  studentController.getStreakStats,
+);
 
 // Course-related routes for students (public browsing — with param sanitization)
-router.get("/all-courses", studentController.getAllCourses);
+router.get(
+  "/all-courses",
+  cacheResponse({
+    ttlSeconds: 300,
+    namespace: "student-all-courses",
+    tags: [cacheTags.coursesPublic],
+  }),
+  studentController.getAllCourses,
+);
+
 router.get(
   "/courses/:courseId",
   paramSanitizer,
+  cacheResponse({
+    ttlSeconds: 180,
+    namespace: "student-course-detail",
+    tags: (req) => [
+      cacheTags.coursesPublic,
+      cacheTags.course(req.params.courseId),
+    ],
+  }),
   studentController.getCourseById,
 );
 
@@ -86,12 +162,26 @@ router.post(
   verify,
   verifyStudent,
   paramSanitizer,
+  invalidateTagsOnSuccess((req) => [
+    cacheTags.student(req.user?._id),
+    cacheTags.coursesPublic,
+    cacheTags.course(req.params.courseId),
+    cacheTags.statsPublic,
+    cacheTags.superadminAnalytics,
+  ]),
   studentController.enrollInCourse,
 );
+
 router.get(
   "/enrolled-courses",
   verify,
   verifyStudent,
+  cacheResponse({
+    ttlSeconds: 180,
+    namespace: "student-enrolled-courses",
+    varyByUser: true,
+    tags: (req) => [cacheTags.student(req.user?._id)],
+  }),
   studentController.getEnrolledCourses,
 );
 
@@ -102,12 +192,20 @@ router.post(
   verifyStudent,
   validate(schemas.studentProgress),
   validateResourceOwnership,
+  invalidateTagsOnSuccess((req) => [cacheTags.student(req.user?._id)]),
   studentController.studentProgress,
 );
+
 router.get(
   "/get-progress",
   verify,
   verifyStudent,
+  cacheResponse({
+    ttlSeconds: 120,
+    namespace: "student-progress",
+    varyByUser: true,
+    tags: (req) => [cacheTags.student(req.user?._id)],
+  }),
   studentController.getStudentProgress,
 );
 
@@ -118,12 +216,20 @@ router.post(
   verifyStudent,
   validate(schemas.markTopicComplete),
   validateEnrollment,
+  invalidateTagsOnSuccess((req) => [cacheTags.student(req.user?._id)]),
   studentController.markTopicComplete,
 );
+
 router.get(
   "/topic-completion",
   verify,
   verifyStudent,
+  cacheResponse({
+    ttlSeconds: 90,
+    namespace: "student-topic-completion",
+    varyByUser: true,
+    tags: (req) => [cacheTags.student(req.user?._id)],
+  }),
   studentController.getTopicCompletionStatus,
 );
 
