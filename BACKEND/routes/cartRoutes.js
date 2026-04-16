@@ -12,6 +12,8 @@ router.get("/", cartController.getCart);
 router.post("/add/:courseId", cartController.addToCart);
 router.delete("/remove/:courseId", cartController.removeFromCart);
 router.delete("/clear", cartController.clearCart);
-router.put('/update-enroll-courses', cartController.updateEnrollCourses)
+router.post("/create-payment-order", cartController.createRazorpayOrder);
+router.post("/verify-payment", cartController.verifyRazorpayPayment);
+router.put("/update-enroll-courses", cartController.updateEnrollCourses);
 
 module.exports = router;

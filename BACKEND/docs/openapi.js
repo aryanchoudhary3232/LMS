@@ -132,6 +132,68 @@ const openApiSpec = {
           },
         },
       },
+      RazorpayCreateOrderResponse: {
+        type: "object",
+        properties: {
+          success: { type: "boolean", example: true },
+          error: { type: "boolean", example: false },
+          message: { type: "string", example: "Razorpay order created successfully" },
+          data: {
+            type: "object",
+            properties: {
+              orderId: { type: "string", example: "order_QX8M7abcd12345" },
+              keyId: { type: "string", example: "rzp_test_xxxxx" },
+              amount: { type: "number", example: 99900, description: "Amount in paise" },
+              amountInRupees: { type: "number", example: 999 },
+              currency: { type: "string", example: "INR" },
+              courseIds: {
+                type: "array",
+                items: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      VerifyRazorpayPaymentRequest: {
+        type: "object",
+        required: ["courseIds", "razorpayOrderId", "razorpayPaymentId", "razorpaySignature"],
+        properties: {
+          courseIds: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+          razorpayOrderId: { type: "string", example: "order_QX8M7abcd12345" },
+          razorpayPaymentId: { type: "string", example: "pay_QX8N3abcd12345" },
+          razorpaySignature: { type: "string", example: "2f6be6a5..." },
+        },
+      },
+      VerifyRazorpayPaymentResponse: {
+        type: "object",
+        properties: {
+          success: { type: "boolean", example: true },
+          error: { type: "boolean", example: false },
+          message: { type: "string", example: "Enrollment completed successfully" },
+          data: {
+            type: "object",
+            properties: {
+              cart: { $ref: "#/components/schemas/Cart" },
+              enrolledCourses: {
+                type: "array",
+                items: { $ref: "#/components/schemas/EnrolledCourse" },
+              },
+              payment: {
+                type: "object",
+                properties: {
+                  orderId: { type: "string" },
+                  paymentId: { type: "string" },
+                  status: { type: "string", example: "captured" },
+                },
+              },
+            },
+          },
+        },
+      },
       QuizSubmitRequest: {
         type: "object",
         required: ["courseId", "chapterId", "topicId", "answerQuiz"],
@@ -1820,6 +1882,74 @@ const openApiSpec = {
           },
           401: { description: "Unauthorized" },
           404: { description: "Cart not found" },
+        },
+      },
+    },
+    "/cart/create-payment-order": {
+      post: {
+        tags: ["Cart"],
+        summary: "Create Razorpay order",
+        description:
+          "Create a Razorpay order for selected courses before opening Razorpay checkout on frontend",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/UpdateEnrollCoursesRequest",
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Razorpay order created successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/RazorpayCreateOrderResponse",
+                },
+              },
+            },
+          },
+          400: { description: "Invalid request payload" },
+          401: { description: "Unauthorized" },
+          500: { description: "Razorpay/server error" },
+        },
+      },
+    },
+    "/cart/verify-payment": {
+      post: {
+        tags: ["Cart"],
+        summary: "Verify Razorpay payment and enroll",
+        description:
+          "Verify Razorpay signature and payment details, then enroll the student into purchased courses",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/VerifyRazorpayPaymentRequest",
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Payment verified and enrollment completed",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/VerifyRazorpayPaymentResponse",
+                },
+              },
+            },
+          },
+          400: { description: "Invalid payment details/signature" },
+          401: { description: "Unauthorized" },
+          500: { description: "Server error" },
         },
       },
     },
