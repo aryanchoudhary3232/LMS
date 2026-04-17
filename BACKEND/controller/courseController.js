@@ -2,6 +2,7 @@ const Course = require("../models/Course");
 const Student = require("../models/Student");
 const { Types } = require("mongoose");
 const { searchCoursesInElastic } = require("../utils/courseSearchIndex");
+const { normalizePublicAssetUrl } = require("../utils/assetUrl");
 
 const computeAvg = (ratings = []) => {
   if (!ratings || ratings.length === 0) return { avg: 0, count: 0 };
@@ -12,6 +13,16 @@ const computeAvg = (ratings = []) => {
   };
 };
 
+const mapCourseForResponse = (course, req) => {
+  const { avg, count } = computeAvg(course.ratings);
+
+  return {
+    ...course,
+    image: normalizePublicAssetUrl(course.image, req),
+    rating: { average: avg, count },
+  };
+};
+
 const getAllCourses = async (req, res) => {
   try {
     const courses = await Course.find({ isDeleted: { $ne: true } })
@@ -19,10 +30,7 @@ const getAllCourses = async (req, res) => {
       .lean();
 
     // attach rating summary
-    const data = courses.map((c) => {
-      const { avg, count } = computeAvg(c.ratings);
-      return { ...c, rating: { average: avg, count } };
-    });
+    const data = courses.map((course) => mapCourseForResponse(course, req));
 
     res.status(200).json({
       success: true,
@@ -74,10 +82,7 @@ const searchCourses = async (req, res) => {
         data = ids
           .map((id) => courseMap.get(id.toString()))
           .filter(Boolean)
-          .map((course) => {
-            const { avg, count } = computeAvg(course.ratings);
-            return { ...course, rating: { average: avg, count } };
-          });
+          .map((course) => mapCourseForResponse(course, req));
       }
 
       return res.status(200).json({
@@ -125,10 +130,7 @@ const searchCourses = async (req, res) => {
       Course.countDocuments(searchQuery),
     ]);
 
-    const data = courses.map((c) => {
-      const { avg, count } = computeAvg(c.ratings);
-      return { ...c, rating: { average: avg, count } };
-    });
+    const data = courses.map((course) => mapCourseForResponse(course, req));
 
     res.status(200).json({
       success: true,
