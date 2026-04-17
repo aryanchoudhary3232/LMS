@@ -48,9 +48,19 @@ const accessLogStream = fs.createWriteStream(path.join(logsDir, "access.log"), {
   flags: "a",
 });
 
+const requestLogToStdout = process.env.REQUEST_LOG_STDOUT === "true";
+const requestLogStream = {
+  write: (message) => {
+    accessLogStream.write(message);
+    if (requestLogToStdout) {
+      process.stdout.write(message);
+    }
+  },
+};
+
 app.use(
   morgan(process.env.NODE_ENV === "production" ? "combined" : "dev", {
-    stream: accessLogStream,
+    stream: requestLogStream,
   }),
 );
 

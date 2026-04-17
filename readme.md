@@ -48,3 +48,30 @@ docker compose up --build -d
 - CI workflow is available at `.github/workflows/ci.yml`
 - It runs frontend lint/build, backend syntax validation, backend unit tests with coverage reports, and Docker image build checks on every push and pull request.
 - CI test reports are uploaded as workflow artifacts under `backend-test-reports`.
+
+## Track Deployed Metrics Locally (Render + Vercel)
+
+Use the local Docker observability stack to monitor deployed traffic.
+
+1. Ensure deployed URLs are active:
+  - Backend: `https://lms-bx7u.onrender.com`
+  - Frontend: `https://lms-wine-nine.vercel.app`
+2. Ensure Vercel frontend uses Render backend (`VITE_BACKEND_URL=https://lms-bx7u.onrender.com`).
+3. Start monitoring stack:
+
+```bash
+docker compose up -d prometheus grafana
+```
+
+4. Open Grafana (`http://localhost:3001`) and use dashboard:
+  - `LMS Deployed Observability (Render + Vercel)`
+
+This dashboard includes deployed route metrics (top routes, p95 latency, error rate by status class) sourced from `/metrics` on Render.
+
+Prometheus scrape targets in this setup are deployed URLs only (Render backend + Vercel/Render blackbox probes), not localhost application URLs.
+
+### Raw URL Tracking
+
+- Prometheus metrics use normalized route labels by design.
+- To inspect full raw URLs, use backend request logs.
+- Set `REQUEST_LOG_STDOUT=true` in backend production env so full request URLs are visible in Render logs.

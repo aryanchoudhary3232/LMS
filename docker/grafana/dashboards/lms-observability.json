@@ -1,11 +1,11 @@
 {
   "id": null,
   "uid": "lms-observability",
-  "title": "LMS Latency & Site Performance",
+  "title": "LMS Deployed Observability (Render + Vercel)",
   "tags": ["lms", "performance", "latency"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "15s",
   "time": {
     "from": "now-6h",
@@ -19,7 +19,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "sum(rate(lms_http_requests_total[1m]))",
+          "expr": "sum(rate(lms_http_requests_total{env=\"prod\",source=\"render\"}[1m]))",
           "refId": "A"
         }
       ]
@@ -31,7 +31,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "sum(rate(lms_http_requests_total{status_class=~\"4xx|5xx\"}[5m])) / clamp_min(sum(rate(lms_http_requests_total[5m])), 1)",
+          "expr": "sum(rate(lms_http_requests_total{env=\"prod\",source=\"render\",status_class=~\"4xx|5xx\"}[5m])) / clamp_min(sum(rate(lms_http_requests_total{env=\"prod\",source=\"render\"}[5m])), 1)",
           "refId": "A"
         }
       ],
@@ -49,7 +49,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "lms_http_inflight_requests",
+          "expr": "sum(lms_http_inflight_requests{env=\"prod\",source=\"render\"})",
           "refId": "A"
         }
       ]
@@ -61,7 +61,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "sum(rate(lms_slow_requests_total[1m]))",
+          "expr": "sum(rate(lms_slow_requests_total{env=\"prod\",source=\"render\"}[1m]))",
           "refId": "A"
         }
       ]
@@ -73,7 +73,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "sum(rate(lms_frontend_js_errors_total[1m]))",
+          "expr": "sum(rate(lms_frontend_js_errors_total{env=\"prod\",source=\"render\"}[1m]))",
           "refId": "A"
         }
       ]
@@ -85,7 +85,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "sum(probe_success)",
+          "expr": "sum(probe_success{job=\"blackbox_http\",instance=~\"https://lms-wine-nine.vercel.app|https://lms-bx7u.onrender.com/health|https://lms-bx7u.onrender.com/metrics\"})",
           "refId": "A"
         }
       ]
@@ -97,17 +97,17 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(lms_http_request_duration_seconds_bucket[5m])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(lms_http_request_duration_seconds_bucket{env=\"prod\",source=\"render\"}[5m])))",
           "legendFormat": "p50",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(lms_http_request_duration_seconds_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(lms_http_request_duration_seconds_bucket{env=\"prod\",source=\"render\"}[5m])))",
           "legendFormat": "p95",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(lms_http_request_duration_seconds_bucket[5m])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(lms_http_request_duration_seconds_bucket{env=\"prod\",source=\"render\"}[5m])))",
           "legendFormat": "p99",
           "refId": "C"
         }
@@ -120,12 +120,12 @@
     },
     {
       "type": "timeseries",
-      "title": "Top Endpoints by Latency (p95)",
+      "title": "All Endpoints by Latency (p95)",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "topk(10, histogram_quantile(0.95, sum by (route, le) (rate(lms_http_request_duration_seconds_bucket[5m]))))",
+          "expr": "histogram_quantile(0.95, sum by (route, le) (rate(lms_http_request_duration_seconds_bucket{env=\"prod\",source=\"render\"}[5m])))",
           "legendFormat": "{{route}}",
           "refId": "A"
         }
@@ -143,7 +143,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "sum(rate(lms_cache_events_total{operation=\"lookup\",result=\"hit\"}[5m])) / clamp_min(sum(rate(lms_cache_events_total{operation=\"lookup\",result=~\"hit|miss\"}[5m])), 1)",
+          "expr": "sum(rate(lms_cache_events_total{env=\"prod\",source=\"render\",operation=\"lookup\",result=\"hit\"}[5m])) / clamp_min(sum(rate(lms_cache_events_total{env=\"prod\",source=\"render\",operation=\"lookup\",result=~\"hit|miss\"}[5m])), 1)",
           "legendFormat": "hit ratio",
           "refId": "A"
         }
@@ -162,7 +162,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "sum by (outcome, backend) (rate(lms_rate_limiter_events_total[5m]))",
+          "expr": "sum by (outcome, backend) (rate(lms_rate_limiter_events_total{env=\"prod\",source=\"render\"}[5m]))",
           "legendFormat": "{{backend}} - {{outcome}}",
           "refId": "A"
         }
@@ -175,7 +175,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(lms_frontend_api_latency_seconds_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(lms_frontend_api_latency_seconds_bucket{env=\"prod\",source=\"render\"}[5m])))",
           "legendFormat": "browser p95",
           "refId": "A"
         }
@@ -193,7 +193,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "histogram_quantile(0.75, sum by (metric_name, le) (rate(lms_frontend_web_vital_ms_bucket[5m])))",
+          "expr": "histogram_quantile(0.75, sum by (metric_name, le) (rate(lms_frontend_web_vital_ms_bucket{env=\"prod\",source=\"render\"}[5m])))",
           "legendFormat": "{{metric_name}} p75",
           "refId": "A"
         }
@@ -211,7 +211,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "topk(10, histogram_quantile(0.95, sum by (route, le) (rate(lms_frontend_route_transition_seconds_bucket[5m]))))",
+          "expr": "topk(10, histogram_quantile(0.95, sum by (route, le) (rate(lms_frontend_route_transition_seconds_bucket{env=\"prod\",source=\"render\"}[5m]))))",
           "legendFormat": "{{route}}",
           "refId": "A"
         }
@@ -224,49 +224,89 @@
     },
     {
       "type": "timeseries",
-      "title": "Host CPU Load",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 28 },
+      "title": "Top API Routes by RPS",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "node_load1",
-          "legendFormat": "load1",
+          "expr": "topk(15, sum by (route) (rate(lms_http_requests_total{env=\"prod\",source=\"render\"}[5m])))",
+          "legendFormat": "{{route}}",
           "refId": "A"
-        },
-        {
-          "expr": "node_load5",
-          "legendFormat": "load5",
-          "refId": "B"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "Host Memory Usage %",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 28 },
+      "title": "Route Error Rate by Status Class",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))",
-          "legendFormat": "memory used",
+          "expr": "sum by (route, status_class) (rate(lms_http_requests_total{env=\"prod\",source=\"render\",status_class=~\"4xx|5xx\"}[5m])) / clamp_min(sum by (route) (rate(lms_http_requests_total{env=\"prod\",source=\"render\"}[5m])), 1)",
+          "legendFormat": "{{route}} {{status_class}}",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent"
+          "unit": "percentunit",
+          "decimals": 2
         }
       }
     },
     {
       "type": "timeseries",
-      "title": "Container CPU (backend/frontend)",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 28 },
+      "title": "Probe Success by Deployed URL",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 36 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_service=~\"backend|frontend\"}[5m]))",
-          "legendFormat": "{{container_label_com_docker_compose_service}}",
+          "expr": "probe_success{job=\"blackbox_http\",instance=~\"https://lms-wine-nine.vercel.app|https://lms-bx7u.onrender.com/health|https://lms-bx7u.onrender.com/metrics\"}",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Probe Duration by Deployed URL",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 36 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "probe_duration_seconds{job=\"blackbox_http\",instance=~\"https://lms-wine-nine.vercel.app|https://lms-bx7u.onrender.com/health|https://lms-bx7u.onrender.com/metrics\"}",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Probe HTTP Status by Deployed URL",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 36 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "probe_http_status_code{job=\"blackbox_http\",instance=~\"https://lms-wine-nine.vercel.app|https://lms-bx7u.onrender.com/health|https://lms-bx7u.onrender.com/metrics\"}",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Frontend Routes Seen (24h)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 44 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "topk(50, sum by (route) (increase(lms_frontend_route_transition_seconds_count{env=\"prod\",source=\"render\"}[24h])))",
+          "legendFormat": "{{route}}",
           "refId": "A"
         }
       ]
