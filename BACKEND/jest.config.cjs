@@ -2,6 +2,10 @@ module.exports = {
   testEnvironment: "node",
   testMatch: ["**/tests/**/*.test.js"],
   collectCoverageFrom: [
+    "controller/adminController.js",
+    "controller/teacherController.js",
+    "controller/studentController.js",
+    "controller/superadminController.js",
     "middleware/fileUploadValidator.js",
     "middleware/inputValidator.js",
     "middleware/paramSanitizer.js",

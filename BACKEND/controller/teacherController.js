@@ -172,7 +172,7 @@ async function updateCourse(req, res) {
   }
 }
 
-async function getTeacherCourses(req, res) {
+async function getTeacherCoursesPopulated(req, res) {
   try {
     const teacherCourses = await Teacher.findById(req.user._id)
       .populate({
