@@ -4,35 +4,35 @@ const Admin = require("../models/Admin");
 const Course = require("../models/Course");
 const Order = require("../models/Order");
 
-const buildRecentUserCountPipeline = (daysAgo) => ([
+const buildRecentUserCountPipeline = (daysAgo) => [
   {
     $addFields: {
       registeredAt: {
-        $ifNull: ["$createdAt", { $toDate: "$_id" }]
-      }
-    }
+        $ifNull: ["$createdAt", { $toDate: "$_id" }],
+      },
+    },
   },
   { $match: { registeredAt: { $gte: daysAgo }, isDeleted: { $ne: true } } },
-  { $count: "count" }
-]);
+  { $count: "count" },
+];
 
-const buildUserGrowthPipeline = (daysAgo) => ([
+const buildUserGrowthPipeline = (daysAgo) => [
   {
     $addFields: {
       registeredAt: {
-        $ifNull: ["$createdAt", { $toDate: "$_id" }]
-      }
-    }
+        $ifNull: ["$createdAt", { $toDate: "$_id" }],
+      },
+    },
   },
   { $match: { registeredAt: { $gte: daysAgo }, isDeleted: { $ne: true } } },
   {
     $group: {
       _id: { $dateToString: { format: "%Y-%m-%d", date: "$registeredAt" } },
-      count: { $sum: 1 }
-    }
+      count: { $sum: 1 },
+    },
   },
-  { $sort: { _id: 1 } }
-]);
+  { $sort: { _id: 1 } },
+];
 
 // ============================================
 // 💰 REVENUE ANALYTICS
@@ -47,12 +47,12 @@ const getRevenueAnalytics = async (req, res) => {
     // Total revenue from completed orders (100%)
     const totalRevenue = await Order.aggregate([
       { $match: { status: "completed" } },
-      { $group: { _id: null, total: { $sum: "$amount" } } }
+      { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
 
     const totalAmount = totalRevenue[0]?.total || 0;
-    const platformRevenue = totalAmount * 0.30; // 30% for platform
-    const teacherRevenue = totalAmount * 0.70; // 70% for teachers
+    const platformRevenue = totalAmount * 0.3; // 30% for platform
+    const teacherRevenue = totalAmount * 0.7; // 70% for teachers
 
     // Revenue by course category (platform's 30%)
     const revenueByCategory = await Order.aggregate([
@@ -62,20 +62,20 @@ const getRevenueAnalytics = async (req, res) => {
           from: "courses",
           localField: "courseId",
           foreignField: "_id",
-          as: "course"
-        }
+          as: "course",
+        },
       },
       { $unwind: "$course" },
       {
         $group: {
           _id: "$course.category",
           totalRevenue: { $sum: "$amount" },
-          platformRevenue: { $sum: { $multiply: ["$amount", 0.30] } },
-          teacherRevenue: { $sum: { $multiply: ["$amount", 0.70] } },
-          orderCount: { $sum: 1 }
-        }
+          platformRevenue: { $sum: { $multiply: ["$amount", 0.3] } },
+          teacherRevenue: { $sum: { $multiply: ["$amount", 0.7] } },
+          orderCount: { $sum: 1 },
+        },
       },
-      { $sort: { totalRevenue: -1 } }
+      { $sort: { totalRevenue: -1 } },
     ]);
 
     // Revenue over time (last 30 days)
@@ -88,10 +88,10 @@ const getRevenueAnalytics = async (req, res) => {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
           revenue: { $sum: "$amount" },
-          orders: { $sum: 1 }
-        }
+          orders: { $sum: 1 },
+        },
       },
-      { $sort: { _id: 1 } }
+      { $sort: { _id: 1 } },
     ]);
 
     // Order status breakdown
@@ -100,9 +100,9 @@ const getRevenueAnalytics = async (req, res) => {
         $group: {
           _id: "$status",
           count: { $sum: 1 },
-          totalAmount: { $sum: "$amount" }
-        }
-      }
+          totalAmount: { $sum: "$amount" },
+        },
+      },
     ]);
 
     // Top selling courses
@@ -112,8 +112,8 @@ const getRevenueAnalytics = async (req, res) => {
         $group: {
           _id: "$courseId",
           totalRevenue: { $sum: "$amount" },
-          salesCount: { $sum: 1 }
-        }
+          salesCount: { $sum: 1 },
+        },
       },
       { $sort: { totalRevenue: -1 } },
       { $limit: 10 },
@@ -122,10 +122,10 @@ const getRevenueAnalytics = async (req, res) => {
           from: "courses",
           localField: "_id",
           foreignField: "_id",
-          as: "course"
-        }
+          as: "course",
+        },
       },
-      { $unwind: "$course" }
+      { $unwind: "$course" },
     ]);
 
     res.status(200).json({
@@ -138,15 +138,15 @@ const getRevenueAnalytics = async (req, res) => {
         revenueByCategory,
         revenueOverTime,
         ordersByStatus,
-        topSellingCourses
-      }
+        topSellingCourses,
+      },
     });
   } catch (error) {
     console.error("Revenue Analytics Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error while fetching revenue analytics",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -162,9 +162,10 @@ const getRevenueAnalytics = async (req, res) => {
 const getCoursesByCategory = async (req, res) => {
   try {
     const { includeDeleted } = req.query;
-    
-    const filter = includeDeleted === 'true' ? {} : { isDeleted: { $ne: true } };
-    
+
+    const filter =
+      includeDeleted === "true" ? {} : { isDeleted: { $ne: true } };
+
     const coursesByCategory = await Course.aggregate([
       { $match: filter },
       // Lookup teacher info BEFORE grouping
@@ -173,14 +174,14 @@ const getCoursesByCategory = async (req, res) => {
           from: "teachers",
           localField: "teacher",
           foreignField: "_id",
-          as: "teacherInfo"
-        }
+          as: "teacherInfo",
+        },
       },
       {
         $unwind: {
           path: "$teacherInfo",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       // Now group with populated teacher data
       {
@@ -195,31 +196,31 @@ const getCoursesByCategory = async (req, res) => {
               teacher: {
                 _id: "$teacherInfo._id",
                 name: "$teacherInfo.name",
-                email: "$teacherInfo.email"
+                email: "$teacherInfo.email",
               },
               studentCount: { $size: "$students" },
               isDeleted: "$isDeleted",
-              deletedAt: "$deletedAt"
-            }
+              deletedAt: "$deletedAt",
+            },
           },
           totalCourses: { $sum: 1 },
-          totalStudents: { $sum: { $size: "$students" } }
-        }
+          totalStudents: { $sum: { $size: "$students" } },
+        },
       },
-      { $sort: { _id: 1 } }
+      { $sort: { _id: 1 } },
     ]);
 
     res.status(200).json({
       success: true,
       message: "Courses by category fetched successfully",
-      data: coursesByCategory
+      data: coursesByCategory,
     });
   } catch (error) {
     console.error("Courses by Category Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error while fetching courses by category",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -239,15 +240,15 @@ const getDeletedCourses = async (req, res) => {
       message: "Deleted courses fetched successfully",
       data: {
         count: deletedCourses.length,
-        courses: deletedCourses
-      }
+        courses: deletedCourses,
+      },
     });
   } catch (error) {
     console.error("Deleted Courses Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error while fetching deleted courses",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -262,27 +263,27 @@ const restoreCourse = async (req, res) => {
     const course = await Course.findByIdAndUpdate(
       courseId,
       { isDeleted: false, deletedAt: null },
-      { new: true }
+      { new: true },
     );
 
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: "Course not found"
+        message: "Course not found",
       });
     }
 
     res.status(200).json({
       success: true,
       message: "Course restored successfully",
-      data: course
+      data: course,
     });
   } catch (error) {
     console.error("Restore Course Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error while restoring course",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -298,8 +299,9 @@ const restoreCourse = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     const { includeDeleted } = req.query;
-    
-    const filter = includeDeleted === 'true' ? {} : { isDeleted: { $ne: true } };
+
+    const filter =
+      includeDeleted === "true" ? {} : { isDeleted: { $ne: true } };
 
     const students = await Student.find(filter).select("-password");
     const teachers = await Teacher.find(filter).select("-password");
@@ -312,7 +314,7 @@ const getAllUsers = async (req, res) => {
       admins: admins.length,
       deletedStudents: await Student.countDocuments({ isDeleted: true }),
       deletedTeachers: await Teacher.countDocuments({ isDeleted: true }),
-      deletedAdmins: await Admin.countDocuments({ isDeleted: true })
+      deletedAdmins: await Admin.countDocuments({ isDeleted: true }),
     };
 
     res.status(200).json({
@@ -322,15 +324,15 @@ const getAllUsers = async (req, res) => {
         stats,
         students,
         teachers,
-        admins
-      }
+        admins,
+      },
     });
   } catch (error) {
     console.error("Get All Users Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error while fetching users",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -344,11 +346,11 @@ const getDeletedUsers = async (req, res) => {
     const deletedStudents = await Student.find({ isDeleted: true })
       .select("-password")
       .sort({ deletedAt: -1 });
-    
+
     const deletedTeachers = await Teacher.find({ isDeleted: true })
       .select("-password")
       .sort({ deletedAt: -1 });
-    
+
     const deletedAdmins = await Admin.find({ isDeleted: true })
       .select("-password")
       .sort({ deletedAt: -1 });
@@ -360,15 +362,18 @@ const getDeletedUsers = async (req, res) => {
         students: deletedStudents,
         teachers: deletedTeachers,
         admins: deletedAdmins,
-        totalDeleted: deletedStudents.length + deletedTeachers.length + deletedAdmins.length
-      }
+        totalDeleted:
+          deletedStudents.length +
+          deletedTeachers.length +
+          deletedAdmins.length,
+      },
     });
   } catch (error) {
     console.error("Deleted Users Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error while fetching deleted users",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -397,17 +402,17 @@ const restoreUser = async (req, res) => {
       default:
         return res.status(400).json({
           success: false,
-          message: "Invalid user type. Must be Student, Teacher, or Admin"
+          message: "Invalid user type. Must be Student, Teacher, or Admin",
         });
     }
 
     // Find the user first to check if they exist
     const existingUser = await Model.findById(userId);
-    
+
     if (!existingUser) {
       return res.status(404).json({
         success: false,
-        message: `${userType} not found`
+        message: `${userType} not found`,
       });
     }
 
@@ -415,20 +420,20 @@ const restoreUser = async (req, res) => {
     user = await Model.findByIdAndUpdate(
       userId,
       { isDeleted: false, deletedAt: null },
-      { new: true }
+      { new: true },
     ).select("-password");
 
     res.status(200).json({
       success: true,
       message: `${userType} restored successfully`,
-      data: user
+      data: user,
     });
   } catch (error) {
     console.error("Restore User Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error while restoring user",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -443,50 +448,59 @@ const restoreUser = async (req, res) => {
  */
 const getPlatformOverview = async (req, res) => {
   try {
-    // User counts
-    const totalStudents = await Student.countDocuments({ isDeleted: { $ne: true } });
-    const totalTeachers = await Teacher.countDocuments({ isDeleted: { $ne: true } });
-    const totalAdmins = await Admin.countDocuments({ isDeleted: { $ne: true } });
-    const deletedUsers = await Student.countDocuments({ isDeleted: true }) +
-                         await Teacher.countDocuments({ isDeleted: true }) +
-                         await Admin.countDocuments({ isDeleted: true });
-
-    // Course counts
-    const totalCourses = await Course.countDocuments({ isDeleted: { $ne: true } });
-    const deletedCourses = await Course.countDocuments({ isDeleted: true });
-
-    // Revenue stats
-    const totalRevenue = await Order.aggregate([
-      { $match: { status: "completed" } },
-      { $group: { _id: null, total: { $sum: "$amount" } } }
-    ]);
-
-    const totalAmount = totalRevenue[0]?.total || 0;
-    const platformRevenue = totalAmount * 0.30; // 30% for platform
-    const teacherRevenue = totalAmount * 0.70; // 70% for teachers
-
-    const totalOrders = await Order.countDocuments();
-    const completedOrders = await Order.countDocuments({ status: "completed" });
-    const pendingOrders = await Order.countDocuments({ status: "pending" });
-    const failedOrders = await Order.countDocuments({ status: "failed" });
-
     // Recent activity (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const recentStudentAggregation = await Student.aggregate(
-      buildRecentUserCountPipeline(sevenDaysAgo)
-    );
+    const [
+      totalStudents,
+      totalTeachers,
+      totalAdmins,
+      deletedStudents,
+      deletedTeachers,
+      deletedAdmins,
+      totalCourses,
+      deletedCourses,
+      totalRevenue,
+      totalOrders,
+      completedOrders,
+      pendingOrders,
+      failedOrders,
+      recentStudentAggregation,
+      recentCourses,
+      recentOrders,
+    ] = await Promise.all([
+      Student.countDocuments({ isDeleted: { $ne: true } }),
+      Teacher.countDocuments({ isDeleted: { $ne: true } }),
+      Admin.countDocuments({ isDeleted: { $ne: true } }),
+      Student.countDocuments({ isDeleted: true }),
+      Teacher.countDocuments({ isDeleted: true }),
+      Admin.countDocuments({ isDeleted: true }),
+      Course.countDocuments({ isDeleted: { $ne: true } }),
+      Course.countDocuments({ isDeleted: true }),
+      Order.aggregate([
+        { $match: { status: "completed" } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ]),
+      Order.countDocuments(),
+      Order.countDocuments({ status: "completed" }),
+      Order.countDocuments({ status: "pending" }),
+      Order.countDocuments({ status: "failed" }),
+      Student.aggregate(buildRecentUserCountPipeline(sevenDaysAgo)),
+      Course.countDocuments({
+        createdAt: { $gte: sevenDaysAgo },
+        isDeleted: { $ne: true },
+      }),
+      Order.countDocuments({
+        createdAt: { $gte: sevenDaysAgo },
+      }),
+    ]);
+
+    const deletedUsers = deletedStudents + deletedTeachers + deletedAdmins;
+    const totalAmount = totalRevenue[0]?.total || 0;
+    const platformRevenue = totalAmount * 0.3; // 30% for platform
+    const teacherRevenue = totalAmount * 0.7; // 70% for teachers
     const recentStudents = recentStudentAggregation[0]?.count || 0;
-
-    const recentCourses = await Course.countDocuments({ 
-      createdAt: { $gte: sevenDaysAgo },
-      isDeleted: { $ne: true }
-    });
-
-    const recentOrders = await Order.countDocuments({ 
-      createdAt: { $gte: sevenDaysAgo } 
-    });
 
     res.status(200).json({
       success: true,
@@ -497,11 +511,11 @@ const getPlatformOverview = async (req, res) => {
           students: totalStudents,
           teachers: totalTeachers,
           admins: totalAdmins,
-          deleted: deletedUsers
+          deleted: deletedUsers,
         },
         courses: {
           total: totalCourses,
-          deleted: deletedCourses
+          deleted: deletedCourses,
         },
         revenue: {
           total: totalAmount,
@@ -510,21 +524,21 @@ const getPlatformOverview = async (req, res) => {
           totalOrders,
           completedOrders,
           pendingOrders,
-          failedOrders
+          failedOrders,
         },
         recentActivity: {
           newStudents: recentStudents,
           newCourses: recentCourses,
-          newOrders: recentOrders
-        }
-      }
+          newOrders: recentOrders,
+        },
+      },
     });
   } catch (error) {
     console.error("Platform Overview Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error while fetching platform overview",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -539,17 +553,25 @@ const getPlatformOverview = async (req, res) => {
  */
 const getUserGrowthAnalytics = async (req, res) => {
   try {
-    const { period = '30' } = req.query; // days
+    const { period = "30" } = req.query; // days
     const daysAgo = new Date();
     daysAgo.setDate(daysAgo.getDate() - parseInt(period));
 
-    const studentGrowth = await Student.aggregate(buildUserGrowthPipeline(daysAgo));
+    const studentGrowth = await Student.aggregate(
+      buildUserGrowthPipeline(daysAgo),
+    );
 
-    const teacherGrowth = await Teacher.aggregate(buildUserGrowthPipeline(daysAgo));
+    const teacherGrowth = await Teacher.aggregate(
+      buildUserGrowthPipeline(daysAgo),
+    );
 
     // Total users by type
-    const totalStudents = await Student.countDocuments({ isDeleted: { $ne: true } });
-    const totalTeachers = await Teacher.countDocuments({ isDeleted: { $ne: true } });
+    const totalStudents = await Student.countDocuments({
+      isDeleted: { $ne: true },
+    });
+    const totalTeachers = await Teacher.countDocuments({
+      isDeleted: { $ne: true },
+    });
 
     res.status(200).json({
       success: true,
@@ -559,16 +581,16 @@ const getUserGrowthAnalytics = async (req, res) => {
         teacherGrowth,
         totals: {
           students: totalStudents,
-          teachers: totalTeachers
-        }
-      }
+          teachers: totalTeachers,
+        },
+      },
     });
   } catch (error) {
     console.error("User Growth Analytics Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error while fetching user growth analytics",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -579,49 +601,89 @@ const getUserGrowthAnalytics = async (req, res) => {
  */
 const getTeacherPerformance = async (req, res) => {
   try {
-    const teachers = await Teacher.find({ isDeleted: { $ne: true } })
-      .select("name email verificationStatus")
-      .lean();
-
-    const performanceData = await Promise.all(
-      teachers.map(async (teacher) => {
-        const courses = await Course.find({ 
-          teacher: teacher._id, 
-          isDeleted: { $ne: true }
-        });
-
-        const totalStudents = courses.reduce(
-          (sum, course) => sum + (course.students?.length || 0), 
-          0
-        );
-
-        const revenue = await Order.aggregate([
-          { 
-            $match: { 
-              courseId: { $in: courses.map(c => c._id) },
-              status: "completed" 
-            } 
+    const [teachers, courseStats, revenueStats] = await Promise.all([
+      Teacher.find({ isDeleted: { $ne: true } })
+        .select("name email verificationStatus")
+        .lean(),
+      Course.aggregate([
+        {
+          $match: {
+            isDeleted: { $ne: true },
+            teacher: { $ne: null },
           },
-          { $group: { _id: null, total: { $sum: "$amount" } } }
-        ]);
+        },
+        {
+          $project: {
+            teacher: 1,
+            studentsCount: { $size: { $ifNull: ["$students", []] } },
+          },
+        },
+        {
+          $group: {
+            _id: "$teacher",
+            totalCourses: { $sum: 1 },
+            totalStudents: { $sum: "$studentsCount" },
+          },
+        },
+      ]),
+      Order.aggregate([
+        { $match: { status: "completed" } },
+        {
+          $lookup: {
+            from: "courses",
+            localField: "courseId",
+            foreignField: "_id",
+            as: "course",
+          },
+        },
+        { $unwind: "$course" },
+        { $match: { "course.isDeleted": { $ne: true } } },
+        {
+          $group: {
+            _id: "$course.teacher",
+            totalRevenue: { $sum: "$amount" },
+          },
+        },
+      ]),
+    ]);
 
-        const totalRevenue = revenue[0]?.total || 0;
-        const teacherRevenue = totalRevenue * 0.70; // 70% for teacher
-
-        return {
-          teacherId: teacher._id,
-          name: teacher.name,
-          email: teacher.email,
-          verificationStatus: teacher.verificationStatus,
-          totalCourses: courses.length,
-          totalStudents,
-          totalRevenue: teacherRevenue,
-          averageRevenuePerCourse: courses.length > 0 
-            ? teacherRevenue / courses.length 
-            : 0
-        };
-      })
+    const courseStatsMap = new Map(
+      courseStats.map((item) => [
+        item._id?.toString(),
+        {
+          totalCourses: item.totalCourses || 0,
+          totalStudents: item.totalStudents || 0,
+        },
+      ]),
     );
+
+    const revenueMap = new Map(
+      revenueStats.map((item) => [
+        item._id?.toString(),
+        item.totalRevenue || 0,
+      ]),
+    );
+
+    const performanceData = teachers.map((teacher) => {
+      const stats = courseStatsMap.get(teacher._id.toString()) || {
+        totalCourses: 0,
+        totalStudents: 0,
+      };
+      const grossRevenue = revenueMap.get(teacher._id.toString()) || 0;
+      const teacherRevenue = grossRevenue * 0.7; // 70% for teacher
+
+      return {
+        teacherId: teacher._id,
+        name: teacher.name,
+        email: teacher.email,
+        verificationStatus: teacher.verificationStatus,
+        totalCourses: stats.totalCourses,
+        totalStudents: stats.totalStudents,
+        totalRevenue: teacherRevenue,
+        averageRevenuePerCourse:
+          stats.totalCourses > 0 ? teacherRevenue / stats.totalCourses : 0,
+      };
+    });
 
     // Sort by revenue
     performanceData.sort((a, b) => b.totalRevenue - a.totalRevenue);
@@ -629,14 +691,14 @@ const getTeacherPerformance = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Teacher performance analytics fetched successfully",
-      data: performanceData
+      data: performanceData,
     });
   } catch (error) {
     console.error("Teacher Performance Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error while fetching teacher performance",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -647,51 +709,100 @@ const getTeacherPerformance = async (req, res) => {
  */
 const getCoursePerformance = async (req, res) => {
   try {
-    const courses = await Course.find({ isDeleted: { $ne: true } })
-      .populate("teacher", "name email")
-      .lean();
-
-    const performanceData = await Promise.all(
-      courses.map(async (course) => {
-        const orders = await Order.find({ 
-          courseId: course._id,
-          status: "completed"
-        });
-
-        const totalRevenue = orders.reduce((sum, order) => sum + order.amount, 0);
-
-        return {
-          courseId: course._id,
-          title: course.title,
-          category: course.category,
-          level: course.level,
-          price: course.price,
-          teacher: course.teacher,
-          enrolledStudents: course.students?.length || 0,
-          totalSales: orders.length,
-          totalRevenue,
-          rating: course.ratings?.length > 0
-            ? course.ratings.reduce((sum, r) => sum + r.rating, 0) / course.ratings.length
-            : 0,
-          reviewCount: course.ratings?.length || 0
-        };
-      })
-    );
-
-    // Sort by revenue
-    performanceData.sort((a, b) => b.totalRevenue - a.totalRevenue);
+    const performanceData = await Course.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      {
+        $lookup: {
+          from: "teachers",
+          localField: "teacher",
+          foreignField: "_id",
+          as: "teacher",
+        },
+      },
+      {
+        $unwind: {
+          path: "$teacher",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "orders",
+          let: { courseId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$courseId", "$$courseId"] },
+                    { $eq: ["$status", "completed"] },
+                  ],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: null,
+                totalSales: { $sum: 1 },
+                totalRevenue: { $sum: "$amount" },
+              },
+            },
+          ],
+          as: "orderStats",
+        },
+      },
+      {
+        $addFields: {
+          orderStats: {
+            $ifNull: [
+              { $arrayElemAt: ["$orderStats", 0] },
+              { totalSales: 0, totalRevenue: 0 },
+            ],
+          },
+          enrolledStudents: { $size: { $ifNull: ["$students", []] } },
+          rating: {
+            $cond: [
+              { $gt: [{ $size: { $ifNull: ["$ratings", []] } }, 0] },
+              { $avg: "$ratings.rating" },
+              0,
+            ],
+          },
+          reviewCount: { $size: { $ifNull: ["$ratings", []] } },
+        },
+      },
+      {
+        $project: {
+          courseId: "$_id",
+          title: 1,
+          category: 1,
+          level: 1,
+          price: 1,
+          teacher: {
+            _id: "$teacher._id",
+            name: "$teacher.name",
+            email: "$teacher.email",
+          },
+          enrolledStudents: 1,
+          totalSales: "$orderStats.totalSales",
+          totalRevenue: "$orderStats.totalRevenue",
+          rating: 1,
+          reviewCount: 1,
+        },
+      },
+      { $sort: { totalRevenue: -1 } },
+    ]);
 
     res.status(200).json({
       success: true,
       message: "Course performance analytics fetched successfully",
-      data: performanceData
+      data: performanceData,
     });
   } catch (error) {
     console.error("Course Performance Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error while fetching course performance",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -702,25 +813,25 @@ const getCoursePerformance = async (req, res) => {
  */
 const getEnrollmentTrends = async (req, res) => {
   try {
-    const { period = '30' } = req.query;
+    const { period = "30" } = req.query;
     const daysAgo = new Date();
     daysAgo.setDate(daysAgo.getDate() - parseInt(period));
 
     const enrollmentTrends = await Order.aggregate([
-      { 
-        $match: { 
+      {
+        $match: {
           status: "completed",
-          createdAt: { $gte: daysAgo }
-        } 
+          createdAt: { $gte: daysAgo },
+        },
       },
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
           enrollments: { $sum: 1 },
-          revenue: { $sum: "$amount" }
-        }
+          revenue: { $sum: "$amount" },
+        },
       },
-      { $sort: { _id: 1 } }
+      { $sort: { _id: 1 } },
     ]);
 
     // Category-wise enrollments
@@ -731,17 +842,17 @@ const getEnrollmentTrends = async (req, res) => {
           from: "courses",
           localField: "courseId",
           foreignField: "_id",
-          as: "course"
-        }
+          as: "course",
+        },
       },
       { $unwind: "$course" },
       {
         $group: {
           _id: "$course.category",
-          enrollments: { $sum: 1 }
-        }
+          enrollments: { $sum: 1 },
+        },
       },
-      { $sort: { enrollments: -1 } }
+      { $sort: { enrollments: -1 } },
     ]);
 
     res.status(200).json({
@@ -749,15 +860,15 @@ const getEnrollmentTrends = async (req, res) => {
       message: "Enrollment trends fetched successfully",
       data: {
         dailyTrends: enrollmentTrends,
-        categoryEnrollments
-      }
+        categoryEnrollments,
+      },
     });
   } catch (error) {
     console.error("Enrollment Trends Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error while fetching enrollment trends",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -774,5 +885,5 @@ module.exports = {
   getUserGrowthAnalytics,
   getTeacherPerformance,
   getCoursePerformance,
-  getEnrollmentTrends
+  getEnrollmentTrends,
 };

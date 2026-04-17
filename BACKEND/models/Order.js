@@ -47,8 +47,15 @@ const orderSchema = new mongoose.Schema({
   },
 });
 
+orderSchema.index({ status: 1, createdAt: -1 });
+orderSchema.index({ courseId: 1, status: 1, createdAt: -1 });
+orderSchema.index({ userId: 1, createdAt: -1 });
+orderSchema.index({ createdAt: -1 });
+orderSchema.index({ razorpayOrderId: 1 }, { sparse: true });
+orderSchema.index({ razorpayPaymentId: 1 }, { sparse: true });
+
 orderSchema.statics.getAllOrders = async function () {
-  return await this.find().populate('courseId userId');
+  return await this.find().populate("courseId userId");
 };
 
 const Order = mongoose.model("Order", orderSchema);

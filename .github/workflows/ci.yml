@@ -66,6 +66,19 @@ jobs:
       - name: Validate backend entrypoint syntax
         run: node --check index.js
 
+      - name: Run backend unit tests with coverage
+        run: npm run test:ci
+
+      - name: Upload backend test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            BACKEND/coverage
+            BACKEND/test-reports/junit.xml
+          if-no-files-found: warn
+
   docker:
     name: Docker Build Checks
     runs-on: ubuntu-latest

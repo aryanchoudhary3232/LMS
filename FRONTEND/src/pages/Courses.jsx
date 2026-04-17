@@ -165,7 +165,7 @@ const Courses = () => {
         ? `${backendUrl}/courses/search?${queryString}`
         : `${backendUrl}/courses`;
 
-      const response = await fetch(endpoint);
+      const response = await fetch(endpoint, { cache: "no-store" });
       const data = await response.json();
 
       if (Array.isArray(data)) return data;
@@ -177,6 +177,13 @@ const Courses = () => {
 
   const fetchCoursesData = useCallback(
     async (params) => {
+      const hasFilters = !!(params.query || params.category || params.level);
+
+      // Filtered searches use REST so queries hit the Elasticsearch-backed endpoint.
+      if (hasFilters) {
+        return fetchCoursesViaRest(params);
+      }
+
       if (isGraphQLAvailable) {
         try {
           const graphData = await requestGraphQL(COURSES_QUERY, {

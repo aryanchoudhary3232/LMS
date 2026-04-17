@@ -19,6 +19,10 @@ const openApiSpec = {
     { name: "SuperAdmin", description: "SuperAdmin operations" },
     { name: "Cart", description: "Shopping cart operations" },
     { name: "Auth", description: "Authentication and user management" },
+    { name: "Course", description: "Course catalog and search operations" },
+    { name: "Discussion", description: "Course discussion thread operations" },
+    { name: "Stats", description: "Public platform metrics" },
+    { name: "System", description: "Health and service metadata endpoints" },
   ],
   security: [{ bearerAuth: [] }],
   components: {
@@ -137,13 +141,20 @@ const openApiSpec = {
         properties: {
           success: { type: "boolean", example: true },
           error: { type: "boolean", example: false },
-          message: { type: "string", example: "Razorpay order created successfully" },
+          message: {
+            type: "string",
+            example: "Razorpay order created successfully",
+          },
           data: {
             type: "object",
             properties: {
               orderId: { type: "string", example: "order_QX8M7abcd12345" },
               keyId: { type: "string", example: "rzp_test_xxxxx" },
-              amount: { type: "number", example: 99900, description: "Amount in paise" },
+              amount: {
+                type: "number",
+                example: 99900,
+                description: "Amount in paise",
+              },
               amountInRupees: { type: "number", example: 999 },
               currency: { type: "string", example: "INR" },
               courseIds: {
@@ -156,7 +167,12 @@ const openApiSpec = {
       },
       VerifyRazorpayPaymentRequest: {
         type: "object",
-        required: ["courseIds", "razorpayOrderId", "razorpayPaymentId", "razorpaySignature"],
+        required: [
+          "courseIds",
+          "razorpayOrderId",
+          "razorpayPaymentId",
+          "razorpaySignature",
+        ],
         properties: {
           courseIds: {
             type: "array",
@@ -173,7 +189,10 @@ const openApiSpec = {
         properties: {
           success: { type: "boolean", example: true },
           error: { type: "boolean", example: false },
-          message: { type: "string", example: "Enrollment completed successfully" },
+          message: {
+            type: "string",
+            example: "Enrollment completed successfully",
+          },
           data: {
             type: "object",
             properties: {
@@ -1222,7 +1241,8 @@ const openApiSpec = {
       get: {
         tags: ["Admin"],
         summary: "List students and teachers",
-        description: "Get all active students and teachers (passwords excluded)",
+        description:
+          "Get all active students and teachers (passwords excluded)",
         security: [{ bearerAuth: [] }],
         responses: {
           200: { description: "Users retrieved successfully" },
@@ -1235,7 +1255,8 @@ const openApiSpec = {
       get: {
         tags: ["Admin"],
         summary: "Get soft-deleted members",
-        description: "Returns deleted students and teachers with deletion metadata",
+        description:
+          "Returns deleted students and teachers with deletion metadata",
         security: [{ bearerAuth: [] }],
         responses: {
           200: { description: "Deleted members retrieved" },
@@ -1292,7 +1313,8 @@ const openApiSpec = {
       put: {
         tags: ["Admin"],
         summary: "Approve teacher verification",
-        description: "Approve a teacher's verification request with optional notes",
+        description:
+          "Approve a teacher's verification request with optional notes",
         security: [{ bearerAuth: [] }],
         parameters: [
           {
@@ -1307,7 +1329,9 @@ const openApiSpec = {
           required: false,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/ApproveRejectTeacherRequest" },
+              schema: {
+                $ref: "#/components/schemas/ApproveRejectTeacherRequest",
+              },
             },
           },
         },
@@ -1338,7 +1362,9 @@ const openApiSpec = {
           required: false,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/ApproveRejectTeacherRequest" },
+              schema: {
+                $ref: "#/components/schemas/ApproveRejectTeacherRequest",
+              },
             },
           },
         },
@@ -1535,7 +1561,8 @@ const openApiSpec = {
       post: {
         tags: ["Auth"],
         summary: "Logout current user",
-        description: "Invalidate the current session on the client; JWT remains stateless on the server",
+        description:
+          "Invalidate the current session on the client; JWT remains stateless on the server",
         security: [{ bearerAuth: [] }],
         responses: {
           200: {
@@ -2374,6 +2401,393 @@ const openApiSpec = {
           401: { description: "Unauthorized" },
           403: { description: "Forbidden" },
           500: { description: "Internal server error" },
+        },
+      },
+    },
+    "/courses": {
+      get: {
+        tags: ["Course"],
+        summary: "Get all active courses",
+        description:
+          "Returns all non-deleted courses with teacher details and rating summary.",
+        security: [],
+        responses: {
+          200: {
+            description: "Courses retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    { $ref: "#/components/schemas/SuccessResponse" },
+                    {
+                      type: "object",
+                      properties: {
+                        data: {
+                          type: "array",
+                          items: { $ref: "#/components/schemas/Course" },
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/courses/search": {
+      get: {
+        tags: ["Course"],
+        summary: "Search courses",
+        description:
+          "Searches courses using Elasticsearch when available and falls back to MongoDB if search service is unavailable.",
+        security: [],
+        parameters: [
+          {
+            in: "query",
+            name: "query",
+            required: false,
+            schema: { type: "string" },
+            description: "Free text search query",
+          },
+          {
+            in: "query",
+            name: "category",
+            required: false,
+            schema: { type: "string" },
+          },
+          {
+            in: "query",
+            name: "level",
+            required: false,
+            schema: { type: "string" },
+          },
+          {
+            in: "query",
+            name: "page",
+            required: false,
+            schema: { type: "integer", minimum: 1, default: 1 },
+          },
+          {
+            in: "query",
+            name: "limit",
+            required: false,
+            schema: { type: "integer", minimum: 1, maximum: 50, default: 20 },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Search results returned successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean", example: true },
+                    message: {
+                      type: "string",
+                      example: "Courses found successfully",
+                    },
+                    count: { type: "integer", example: 5 },
+                    page: { type: "integer", example: 1 },
+                    limit: { type: "integer", example: 20 },
+                    data: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/Course" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          500: { description: "Server error while searching courses" },
+        },
+      },
+    },
+    "/courses/{courseId}/rate": {
+      post: {
+        tags: ["Course"],
+        summary: "Rate an enrolled course",
+        description:
+          "Allows an authenticated enrolled student to rate and review a course.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "courseId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["rating"],
+                properties: {
+                  rating: { type: "number", minimum: 1, maximum: 5 },
+                  review: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Rating saved" },
+          401: { description: "Unauthorized" },
+          403: { description: "Only enrolled students can rate" },
+          404: { description: "Course not found" },
+          500: { description: "Could not save rating" },
+        },
+      },
+    },
+    "/courses/{courseId}/topics/{topicId}/discussions": {
+      get: {
+        tags: ["Discussion"],
+        summary: "Get topic discussions",
+        description: "Fetches discussion threads for a topic in a course.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "courseId",
+            required: true,
+            schema: { type: "string" },
+          },
+          {
+            in: "path",
+            name: "topicId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Discussions retrieved successfully" },
+          400: { description: "Invalid ID format" },
+          401: { description: "Unauthorized" },
+        },
+      },
+      post: {
+        tags: ["Discussion"],
+        summary: "Create topic discussion",
+        description: "Creates a new discussion thread for a topic in a course.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "courseId",
+            required: true,
+            schema: { type: "string" },
+          },
+          {
+            in: "path",
+            name: "topicId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  content: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Discussion created" },
+          400: { description: "Validation error" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/courses/{courseId}/topics/{topicId}/discussions/{discussionId}/replies": {
+      post: {
+        tags: ["Discussion"],
+        summary: "Create discussion reply",
+        description: "Adds a reply to an existing discussion thread.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "courseId",
+            required: true,
+            schema: { type: "string" },
+          },
+          {
+            in: "path",
+            name: "topicId",
+            required: true,
+            schema: { type: "string" },
+          },
+          {
+            in: "path",
+            name: "discussionId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  content: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Reply created" },
+          400: { description: "Validation error" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/courses/{courseId}/topics/{topicId}/discussions/{discussionId}/status": {
+      patch: {
+        tags: ["Discussion"],
+        summary: "Update discussion status",
+        description: "Marks a discussion as resolved/unresolved.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "courseId",
+            required: true,
+            schema: { type: "string" },
+          },
+          {
+            in: "path",
+            name: "topicId",
+            required: true,
+            schema: { type: "string" },
+          },
+          {
+            in: "path",
+            name: "discussionId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  isResolved: { type: "boolean" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Discussion status updated" },
+          400: { description: "Validation error" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/courses/stats/public": {
+      get: {
+        tags: ["Stats"],
+        summary: "Get public course stats",
+        description:
+          "Returns public statistics for courses used by public pages.",
+        security: [],
+        responses: {
+          200: { description: "Public stats retrieved successfully" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/stats": {
+      get: {
+        tags: ["Stats"],
+        summary: "Get platform aggregate stats",
+        description:
+          "Returns aggregate stats for students, instructors, courses, videos and materials.",
+        security: [],
+        responses: {
+          200: { description: "Platform stats retrieved successfully" },
+          500: { description: "Server error while fetching stats" },
+        },
+      },
+    },
+    "/health": {
+      get: {
+        tags: ["System"],
+        summary: "Health check",
+        description:
+          "Returns service health status for monitoring and container healthchecks.",
+        security: [],
+        responses: {
+          200: {
+            description: "Service is healthy",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: { type: "string", example: "ok" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/openapi.json": {
+      get: {
+        tags: ["System"],
+        summary: "OpenAPI specification",
+        description: "Returns the complete OpenAPI JSON used by Swagger UI.",
+        security: [],
+        responses: {
+          200: {
+            description: "OpenAPI document returned",
+          },
+        },
+      },
+    },
+    "/graphql": {
+      post: {
+        tags: ["System"],
+        summary: "GraphQL endpoint",
+        description: "Unified GraphQL endpoint for queries and mutations.",
+        security: [],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  query: { type: "string" },
+                  variables: { type: "object" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "GraphQL response" },
+          400: { description: "Invalid GraphQL request" },
         },
       },
     },

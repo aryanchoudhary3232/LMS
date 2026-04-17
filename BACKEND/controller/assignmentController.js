@@ -129,29 +129,48 @@ async function getTeacherAssignments(req, res) {
 
     const assignments = await Assignment.find(query)
       .populate("course", "title")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
-    // Get submission counts for each assignment
-    const assignmentsWithStats = await Promise.all(
-      assignments.map(async (assignment) => {
-        const totalSubmissions = await Submission.countDocuments({
-          assignment: assignment._id,
-        });
-        const gradedSubmissions = await Submission.countDocuments({
-          assignment: assignment._id,
-          status: "graded",
-        });
+    const assignmentIds = assignments.map((assignment) => assignment._id);
+    let statsMap = new Map();
 
-        return {
-          ...assignment.toObject(),
-          stats: {
-            totalSubmissions,
-            gradedSubmissions,
-            pendingGrading: totalSubmissions - gradedSubmissions,
+    if (assignmentIds.length > 0) {
+      const submissionStats = await Submission.aggregate([
+        { $match: { assignment: { $in: assignmentIds } } },
+        {
+          $group: {
+            _id: "$assignment",
+            totalSubmissions: { $sum: 1 },
+            gradedSubmissions: {
+              $sum: {
+                $cond: [{ $eq: ["$status", "graded"] }, 1, 0],
+              },
+            },
           },
-        };
-      })
-    );
+        },
+      ]);
+
+      statsMap = new Map(
+        submissionStats.map((item) => [item._id.toString(), item]),
+      );
+    }
+
+    const assignmentsWithStats = assignments.map((assignment) => {
+      const stats = statsMap.get(assignment._id.toString()) || {
+        totalSubmissions: 0,
+        gradedSubmissions: 0,
+      };
+
+      return {
+        ...assignment,
+        stats: {
+          totalSubmissions: stats.totalSubmissions,
+          gradedSubmissions: stats.gradedSubmissions,
+          pendingGrading: stats.totalSubmissions - stats.gradedSubmissions,
+        },
+      };
+    });
 
     return res.json({
       success: true,
@@ -218,9 +237,8 @@ async function gradeSubmission(req, res) {
     const { marks, feedback } = req.body;
     const teacherId = req.user._id;
 
-    const submission = await Submission.findById(submissionId).populate(
-      "assignment"
-    );
+    const submission =
+      await Submission.findById(submissionId).populate("assignment");
 
     if (!submission) {
       return notFound(res, "Submission");
@@ -437,21 +455,19 @@ function buildAssignmentQuery(enrolledCourseIds, filterCourseId) {
  * Helper: Enrich assignment with submission status
  * Checks if the student has submitted the assignment and calculates status.
  * @param {Object} assignment - The assignment document
- * @param {string} studentId - The ID of the student
+ * @param {Object|null} submission - Student's submission for the assignment
  * @returns {Promise<Object>} - Assignment object with submissionStatus
  */
-async function enrichAssignmentWithStatus(assignment, studentId, enrolledAt) {
-  const submission = await Submission.findOne({
-    assignment: assignment._id,
-    student: studentId,
-  });
-
+function enrichAssignmentWithStatus(assignment, submission, enrolledAt) {
+  const assignmentData = assignment?.toObject
+    ? assignment.toObject()
+    : assignment;
   const effectiveDueDate = getEffectiveDueDate(assignment, enrolledAt);
   const now = new Date();
   const isOverdue = now > effectiveDueDate && !submission;
 
   return {
-    ...assignment.toObject(),
+    ...assignmentData,
     originalDueDate: assignment.dueDate,
     dueDate: effectiveDueDate,
     submissionStatus: {
@@ -502,36 +518,55 @@ async function getStudentAssignments(req, res) {
     const assignments = await Assignment.find(query)
       .populate("course", "title")
       .populate("teacher", "name")
-      .sort({ dueDate: 1 });
+      .sort({ dueDate: 1 })
+      .lean();
+
+    const assignmentIds = assignments.map((assignment) => assignment._id);
+    let submissionMap = new Map();
+
+    if (assignmentIds.length > 0) {
+      const submissions = await Submission.find({
+        assignment: { $in: assignmentIds },
+        student: studentId,
+      })
+        .select("assignment grade submittedAt")
+        .lean();
+
+      submissionMap = new Map(
+        submissions.map((submission) => [
+          submission.assignment.toString(),
+          submission,
+        ]),
+      );
+    }
 
     // 3. Enrich with Submission Status
-    const assignmentsWithStatus = await Promise.all(
-      assignments.map((assignment) => {
-        const assignmentCourseId = assignment.course?._id
-          ? assignment.course._id.toString()
-          : assignment.course.toString();
-        const enrolledAt = enrollmentMap.get(assignmentCourseId);
-        return enrichAssignmentWithStatus(assignment, studentId, enrolledAt);
-      })
-    );
+    const assignmentsWithStatus = assignments.map((assignment) => {
+      const assignmentCourseId = assignment.course?._id
+        ? assignment.course._id.toString()
+        : assignment.course.toString();
+      const enrolledAt = enrollmentMap.get(assignmentCourseId);
+      const submission = submissionMap.get(assignment._id.toString()) || null;
+      return enrichAssignmentWithStatus(assignment, submission, enrolledAt);
+    });
 
     assignmentsWithStatus.sort(
-      (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+      (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
     );
 
     // 4. Filter Results based on status query param
     let filteredAssignments = assignmentsWithStatus;
     if (status === "pending") {
       filteredAssignments = assignmentsWithStatus.filter(
-        (a) => !a.submissionStatus.submitted
+        (a) => !a.submissionStatus.submitted,
       );
     } else if (status === "submitted") {
       filteredAssignments = assignmentsWithStatus.filter(
-        (a) => a.submissionStatus.submitted
+        (a) => a.submissionStatus.submitted,
       );
     } else if (status === "graded") {
       filteredAssignments = assignmentsWithStatus.filter(
-        (a) => a.submissionStatus.grade?.marks !== null
+        (a) => a.submissionStatus.grade?.marks !== null,
       );
     }
 
@@ -589,7 +624,7 @@ async function submitAssignment(req, res) {
     }
 
     const enrolledAt = enrollmentData.enrollmentMap.get(
-      assignment.course.toString()
+      assignment.course.toString(),
     );
     const effectiveDueDate = getEffectiveDueDate(assignment, enrolledAt);
 
