@@ -39,12 +39,20 @@ Redis-related variables:
 - `JWT_BLACKLIST_TTL_SECONDS=86400`
 - `OTP_TTL_SECONDS=600`
 - `OTP_MAX_ATTEMPTS=5`
+- `REQUEST_LOG_STDOUT=false` (set to `true` on Render to mirror request logs, including full URLs, to platform logs)
 
 ### Redis Production Notes
 
 - Do not use `redis://localhost:6379` on Render or any cloud host.
 - Use your managed Redis connection string in `REDIS_URL`.
 - Keep `REDIS_ENABLED=true` only when a valid cloud Redis endpoint is configured.
+
+### Metrics and Deployed URL Tracking
+
+- The backend exposes Prometheus metrics at `/metrics`.
+- Route metrics are normalized in Prometheus labels (safe for dashboards).
+- Full raw URLs should be tracked through logs, not Prometheus labels.
+- For Render deployments, set `REQUEST_LOG_STDOUT=true` so request logs are visible in Render logs.
 
 ### Elasticsearch (Course Search)
 

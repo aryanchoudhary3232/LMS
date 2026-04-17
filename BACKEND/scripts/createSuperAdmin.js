@@ -1,47 +1,58 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const path = require("path");
 const Admin = require("../models/Admin");
 
+require("dotenv").config({ path: path.resolve(__dirname, "..", ".env") });
+
 // MongoDB connection string
-const MONGO_URL =
-  process.env.MONGO_URL_ATLAS ||
-  "mongodb+srv://aryan:aryan123@cluster0.qxutmim.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const MONGO_URL = process.env.MONGO_URL_ATLAS || process.env.MONGO_URL;
 
 // SuperAdmin credentials
 const SUPERADMIN_DATA = {
-  name: "superadmin",
-  email: "superadmin@gmail.com",
-  password: "Superadmin123",
-  role: "SuperAdmin"
+  name: process.env.SUPERADMIN_NAME || "superadmin",
+  email: (process.env.SUPERADMIN_EMAIL || "superadmin@gmail.com").toLowerCase(),
+  password: process.env.SUPERADMIN_PASSWORD || "Superadmin123",
+  role: "SuperAdmin",
 };
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 async function createSuperAdmin() {
   try {
+    if (!MONGO_URL) {
+      throw new Error("Missing MONGO_URL_ATLAS/MONGO_URL in environment");
+    }
+
     // Connect to MongoDB
     console.log("Connecting to MongoDB...");
     await mongoose.connect(MONGO_URL);
     console.log("✅ Connected to MongoDB successfully");
 
     // Check if superadmin already exists
-    const existingSuperAdmin = await Admin.findOne({ 
-      email: SUPERADMIN_DATA.email 
-    });
+    const emailMatcher = new RegExp(`^${escapeRegex(SUPERADMIN_DATA.email)}$`, "i");
+    const existingSuperAdmin = await Admin.findOne({ email: emailMatcher });
+
+    const hashedPassword = await bcrypt.hash(SUPERADMIN_DATA.password, 10);
 
     if (existingSuperAdmin) {
       console.log("⚠️  SuperAdmin already exists with this email");
       console.log("Email:", existingSuperAdmin.email);
       console.log("Role:", existingSuperAdmin.role);
-      
-      // Update to SuperAdmin role if not already
-      if (existingSuperAdmin.role !== "SuperAdmin") {
-        existingSuperAdmin.role = "SuperAdmin";
-        await existingSuperAdmin.save();
-        console.log("✅ Updated existing admin to SuperAdmin role");
-      }
+
+      // Ensure credentials/role are correct for immediate login access.
+      existingSuperAdmin.name = SUPERADMIN_DATA.name;
+      existingSuperAdmin.email = SUPERADMIN_DATA.email;
+      existingSuperAdmin.password = hashedPassword;
+      existingSuperAdmin.role = "SuperAdmin";
+      existingSuperAdmin.isDeleted = false;
+      existingSuperAdmin.deletedAt = null;
+      await existingSuperAdmin.save();
+      console.log("✅ Updated existing admin to SuperAdmin with new credentials");
     } else {
-      // Hash the password
       console.log("Creating new SuperAdmin...");
-      const hashedPassword = await bcrypt.hash(SUPERADMIN_DATA.password, 10);
 
       // Create new SuperAdmin
       const superAdmin = new Admin({
