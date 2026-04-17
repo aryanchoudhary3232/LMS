@@ -4,6 +4,7 @@ const { Types } = require("mongoose");
 const Course = require("../models/Course");
 const Student = require("../models/Student");
 const Cart = require("../models/Cart");
+const { normalizePublicAssetUrl } = require("../utils/assetUrl");
 
 const JWT_SECRET = process.env.JWT_SECRET || "aryan123";
 
@@ -82,7 +83,7 @@ function computeRatingSummary(ratings = []) {
   return { average, count: ratings.length };
 }
 
-function mapCourse(courseDoc) {
+function mapCourse(courseDoc, req) {
   const plain =
     typeof courseDoc.toObject === "function" ? courseDoc.toObject() : courseDoc;
   const summary = computeRatingSummary(plain.ratings);
@@ -91,7 +92,7 @@ function mapCourse(courseDoc) {
     _id: plain._id.toString(),
     title: plain.title || "",
     description: plain.description || "",
-    image: plain.image || "",
+    image: normalizePublicAssetUrl(plain.image || "", req),
     category: plain.category || "",
     level: plain.level || "",
     price: Number(plain.price) || 0,
@@ -131,7 +132,7 @@ async function requireStudent(context) {
 }
 
 const root = {
-  courses: async ({ query, category, level }) => {
+  courses: async ({ query, category, level }, context) => {
     const searchQuery = {};
 
     if (query) {
@@ -150,7 +151,7 @@ const root = {
     }
 
     const courses = await Course.find(searchQuery);
-    return courses.map(mapCourse);
+    return courses.map((course) => mapCourse(course, context?.req));
   },
 
   enrolledCourses: async (_args, context) => {
