@@ -88,7 +88,7 @@ export async function flushTelemetryQueue() {
 
   try {
     await postBatch(batch);
-  } catch (error) {
+  } catch {
     // If delivery fails, requeue the batch to avoid data loss.
     queue.unshift(...batch);
   }
