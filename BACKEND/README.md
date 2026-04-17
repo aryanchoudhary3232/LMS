@@ -28,12 +28,24 @@ If required, create a `.env` file in this folder and add the necessary values.
 Redis-related variables:
 
 - `REDIS_ENABLED=true`
-- `REDIS_URL=redis://localhost:6379`
+- `REDIS_URL=redis://localhost:6379` (local) or `rediss://<user>:<password>@<host>:<port>` (production)
+- `REDIS_TLS_ENABLED=false` for local Redis, `true` for managed Redis providers that require TLS
+- `REDIS_TLS_REJECT_UNAUTHORIZED=true` (set to `false` only if your provider explicitly requires it)
+- `REDIS_CONNECT_TIMEOUT_MS=10000`
+- `REDIS_MAX_RETRIES=5` to cap reconnect attempts before falling back to in-memory behavior
+- `REDIS_ERROR_LOG_THROTTLE_MS=30000` to avoid noisy repeated Redis error logs
 - `CACHE_DEFAULT_TTL=120`
 - `ACCESS_TOKEN_EXPIRES_IN=15m`
 - `JWT_BLACKLIST_TTL_SECONDS=86400`
 - `OTP_TTL_SECONDS=600`
 - `OTP_MAX_ATTEMPTS=5`
+
+### Redis Production Notes
+
+- Do not use `redis://localhost:6379` on Render or any cloud host.
+- Use your managed Redis connection string in `REDIS_URL`.
+- Keep `REDIS_ENABLED=true` only when a valid cloud Redis endpoint is configured.
+
 ### Elasticsearch (Course Search)
 
 Optional variables for Elasticsearch-based search:
