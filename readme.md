@@ -20,6 +20,18 @@ docker compose up --build -d
 - Redis: Cache/session/OTP/rate-limit backend for the API
 - Elasticsearch: Full-text search engine used by course search
 
+## Redis Deployment Notes
+
+- Local Docker uses `REDIS_URL=redis://redis:6379` automatically.
+- Production must use a managed Redis endpoint (for example `rediss://...`), not localhost.
+- Recommended production variables:
+  - `REDIS_ENABLED=true`
+  - `REDIS_URL=<managed redis url>`
+  - `REDIS_TLS_ENABLED=true` (for `rediss://` providers)
+  - `REDIS_TLS_REJECT_UNAUTHORIZED=true`
+  - `REDIS_CONNECT_TIMEOUT_MS=10000`
+  - `REDIS_MAX_RETRIES=5`
+
 ## Elasticsearch Search
 
 - Backend uses Elasticsearch for course search when enabled.

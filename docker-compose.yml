@@ -26,6 +26,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     env_file:
       - ./BACKEND/.env
     environment:
@@ -33,15 +35,17 @@ services:
       PORT: ${BACKEND_PORT:-3000}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       REDIS_ENABLED: ${REDIS_ENABLED:-true}
+      REDIS_TLS_ENABLED: ${REDIS_TLS_ENABLED:-false}
+      REDIS_TLS_REJECT_UNAUTHORIZED: ${REDIS_TLS_REJECT_UNAUTHORIZED:-true}
+      REDIS_CONNECT_TIMEOUT_MS: ${REDIS_CONNECT_TIMEOUT_MS:-10000}
+      REDIS_MAX_RETRIES: ${REDIS_MAX_RETRIES:-10}
+      REDIS_ERROR_LOG_THROTTLE_MS: ${REDIS_ERROR_LOG_THROTTLE_MS:-30000}
       ELASTICSEARCH_ENABLED: ${ELASTICSEARCH_ENABLED:-true}
       ELASTICSEARCH_NODE: ${ELASTICSEARCH_NODE:-http://elasticsearch:9200}
       ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME:-}
       ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD:-}
       ELASTICSEARCH_API_KEY: ${ELASTICSEARCH_API_KEY:-}
       ELASTICSEARCH_INDEX_COURSES: ${ELASTICSEARCH_INDEX_COURSES:-lms_courses}
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
     ports:
       - "${BACKEND_PORT:-3000}:3000"
     volumes:
