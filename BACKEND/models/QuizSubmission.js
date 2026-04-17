@@ -40,6 +40,10 @@ const quizSubmissionSchema = new mongoose.Schema({
   },
 });
 
+quizSubmissionSchema.index({ studentId: 1, submittedAt: -1 });
+quizSubmissionSchema.index({ studentId: 1, courseId: 1, submittedAt: -1 });
+quizSubmissionSchema.index({ courseId: 1, chapterId: 1, topicId: 1 });
+
 const QuizSubmission = mongoose.model("QuizSubmission", quizSubmissionSchema);
 
 module.exports = QuizSubmission;

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="21" failures="0" errors="0" time="4.04">
+  <testsuite name="fileUploadValidator middleware" errors="0" failures="0" skipped="0" timestamp="2026-04-17T03:21:23" time="1.306" tests="6">
+    <testcase classname="fileUploadValidator middleware multerFileFilter accepts allowed mime types" name="fileUploadValidator middleware multerFileFilter accepts allowed mime types" time="0.008">
+    </testcase>
+    <testcase classname="fileUploadValidator middleware multerFileFilter rejects unsupported mime types" name="fileUploadValidator middleware multerFileFilter rejects unsupported mime types" time="0.003">
+    </testcase>
+    <testcase classname="fileUploadValidator middleware fails when required fields are missing" name="fileUploadValidator middleware fails when required fields are missing" time="0.005">
+    </testcase>
+    <testcase classname="fileUploadValidator middleware fails when field-specific mime type does not match" name="fileUploadValidator middleware fails when field-specific mime type does not match" time="0.003">
+    </testcase>
+    <testcase classname="fileUploadValidator middleware fails when file exceeds per-type size limit" name="fileUploadValidator middleware fails when file exceeds per-type size limit" time="0.002">
+    </testcase>
+    <testcase classname="fileUploadValidator middleware calls next for valid files" name="fileUploadValidator middleware calls next for valid files" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="inputValidator middleware" errors="0" failures="0" skipped="0" timestamp="2026-04-17T03:21:25" time="0.352" tests="4">
+    <testcase classname="inputValidator middleware rejects missing required field" name="inputValidator middleware rejects missing required field" time="0.005">
+    </testcase>
+    <testcase classname="inputValidator middleware rejects unknown fields when allowUnknown is false" name="inputValidator middleware rejects unknown fields when allowUnknown is false" time="0.002">
+    </testcase>
+    <testcase classname="inputValidator middleware validates source=query when configured" name="inputValidator middleware validates source=query when configured" time="0.012">
+    </testcase>
+    <testcase classname="inputValidator middleware rejects invalid json string" name="inputValidator middleware rejects invalid json string" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="errorHandler middleware" errors="0" failures="0" skipped="0" timestamp="2026-04-17T03:21:25" time="0.233" tests="5">
+    <testcase classname="errorHandler middleware handles mongoose validation errors" name="errorHandler middleware handles mongoose validation errors" time="0.012">
+    </testcase>
+    <testcase classname="errorHandler middleware handles duplicate key errors" name="errorHandler middleware handles duplicate key errors" time="0.003">
+    </testcase>
+    <testcase classname="errorHandler middleware handles file type errors" name="errorHandler middleware handles file type errors" time="0.002">
+    </testcase>
+    <testcase classname="errorHandler middleware handles default errors" name="errorHandler middleware handles default errors" time="0.003">
+    </testcase>
+    <testcase classname="notFound middleware creates 404 error and forwards to next" name="notFound middleware creates 404 error and forwards to next" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="paramSanitizer middleware" errors="0" failures="0" skipped="0" timestamp="2026-04-17T03:21:25" time="1.484" tests="3">
+    <testcase classname="paramSanitizer middleware rejects invalid known object id params" name="paramSanitizer middleware rejects invalid known object id params" time="0.003">
+    </testcase>
+    <testcase classname="paramSanitizer middleware passes through unrelated params" name="paramSanitizer middleware passes through unrelated params" time="0.001">
+    </testcase>
+    <testcase classname="paramSanitizer middleware validateParams factory checks only selected params" name="paramSanitizer middleware validateParams factory checks only selected params" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="respond utility" errors="0" failures="0" skipped="0" timestamp="2026-04-17T03:21:27" time="0.314" tests="3">
+    <testcase classname="respond utility builds success payload with data and meta" name="respond utility builds success payload with data and meta" time="0.003">
+    </testcase>
+    <testcase classname="respond utility omits optional keys when not provided" name="respond utility omits optional keys when not provided" time="0.002">
+    </testcase>
+    <testcase classname="respond utility returns standard not-found response" name="respond utility returns standard not-found response" time="0.002">
+    </testcase>
+  </testsuite>
+</testsuites>

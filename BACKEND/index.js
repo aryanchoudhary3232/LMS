@@ -30,6 +30,10 @@ const cartRoutes = require("./routes/cartRoutes");
 const flashcardRoutes = require("./routes/flashcardRoutes");
 const statsRoutes = require("./routes/statsRoutes");
 const telemetryRoutes = require("./routes/telemetryRoutes");
+const {
+  initializeElasticsearch,
+  isElasticsearchConfigured,
+} = require("./utils/courseSearchIndex");
 
 const PORT = Number(process.env.PORT) || 3000;
 const MONGO_URL = process.env.MONGO_URL_ATLAS;
@@ -95,8 +99,24 @@ connectRedis().catch((error) => {
 
 mongoose
   .connect(MONGO_URL)
-  .then(() => {
+  .then(async () => {
     console.log("mongodb connected successfully");
+
+    if (!isElasticsearchConfigured()) {
+      console.log(
+        "Elasticsearch disabled or not configured. Using MongoDB search fallback.",
+      );
+      return;
+    }
+
+    const elasticReady = await initializeElasticsearch();
+    if (elasticReady) {
+      console.log("Elasticsearch connected successfully");
+    } else {
+      console.log(
+        "Elasticsearch is unavailable. Using MongoDB search fallback.",
+      );
+    }
   })
   .catch((err) => {
     console.log("err in mongodb connection:", err);

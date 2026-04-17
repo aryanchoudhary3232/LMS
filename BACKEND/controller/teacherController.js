@@ -243,27 +243,32 @@ function percentChange(current, previous) {
 
 async function getTeacherMetrics(req, res) {
   try {
-    const userId = req.user.userId; // From JWT verify middleware
+    const userId = req.user._id || req.user.userId;
     const periodDays = Number.parseInt(req.query.days, 10) || 30;
 
     // Get teacher's courses
-    const teachersCourses = await Course.find({ teacher: userId });
+    const teachersCourses = await Course.find({
+      teacher: userId,
+      isDeleted: { $ne: true },
+    })
+      .select("_id title category price")
+      .lean();
     const courseIds = teachersCourses.map((c) => c._id);
 
-    // Get all orders
-    const allOrders = await Order.getAllOrders();
-
-    const completed = allOrders.filter(
-      (o) =>
-        o?.status === "completed" &&
-        o?.courseId &&
-        courseIds.some((id) => id.toString() === o.courseId._id.toString()),
-    );
+    const completed = courseIds.length
+      ? await Order.find({
+          courseId: { $in: courseIds },
+          status: "completed",
+        })
+          .select("userId courseId amount createdAt")
+          .sort({ createdAt: 1 })
+          .lean()
+      : [];
 
     const totalRevenue = completed.reduce((sum, o) => sum + (o.amount || 0), 0);
 
     const totalCustomers = new Set(
-      completed.filter((o) => o.userId).map((o) => o.userId._id.toString()),
+      completed.filter((o) => o.userId).map((o) => o.userId.toString()),
     ).size;
 
     const now = new Date();
@@ -293,10 +298,10 @@ async function getTeacherMetrics(req, res) {
     const revenueGrowthRate = percentChange(revenueCurrent, revenuePrevious);
 
     const customersCurrent = new Set(
-      inPeriod.filter((o) => o.userId).map((o) => o.userId._id.toString()),
+      inPeriod.filter((o) => o.userId).map((o) => o.userId.toString()),
     ).size;
     const customersPrevious = new Set(
-      prevPeriod.filter((o) => o.userId).map((o) => o.userId._id.toString()),
+      prevPeriod.filter((o) => o.userId).map((o) => o.userId.toString()),
     ).size;
     const customerGrowthRate = percentChange(
       customersCurrent,
@@ -306,9 +311,8 @@ async function getTeacherMetrics(req, res) {
     const byUser = new Map();
     completed
       .filter((o) => o.userId && o.createdAt)
-      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
       .forEach((o) => {
-        const uid = o.userId._id.toString();
+        const uid = o.userId.toString();
         if (!byUser.has(uid)) byUser.set(uid, new Date(o.createdAt));
       });
 
@@ -318,17 +322,29 @@ async function getTeacherMetrics(req, res) {
     }
 
     // Get course stats for table
+    const courseOrderStats = new Map();
+
+    completed.forEach((order) => {
+      const courseId = order.courseId?.toString();
+      const userId = order.userId?.toString();
+      if (!courseId) return;
+
+      if (!courseOrderStats.has(courseId)) {
+        courseOrderStats.set(courseId, {
+          revenue: 0,
+          users: new Set(),
+        });
+      }
+
+      const stats = courseOrderStats.get(courseId);
+      stats.revenue += order.amount || 0;
+      if (userId) stats.users.add(userId);
+    });
+
     const courseStats = teachersCourses.map((course) => {
-      const courseOrders = completed.filter(
-        (o) => o.courseId._id.toString() === course._id.toString(),
-      );
-      const courseRevenue = courseOrders.reduce(
-        (sum, o) => sum + (o.amount || 0),
-        0,
-      );
-      const enrollments = new Set(
-        courseOrders.map((o) => o.userId._id.toString()),
-      ).size;
+      const stats = courseOrderStats.get(course._id.toString());
+      const courseRevenue = stats?.revenue || 0;
+      const enrollments = stats?.users?.size || 0;
 
       return {
         id: course._id,

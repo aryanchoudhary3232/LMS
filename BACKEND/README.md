@@ -34,3 +34,20 @@ Redis-related variables:
 - `JWT_BLACKLIST_TTL_SECONDS=86400`
 - `OTP_TTL_SECONDS=600`
 - `OTP_MAX_ATTEMPTS=5`
+### Elasticsearch (Course Search)
+
+Optional variables for Elasticsearch-based search:
+
+- `ELASTICSEARCH_ENABLED` (`true` or `false`)
+- `ELASTICSEARCH_NODE` (for example: `http://localhost:9200`)
+- `ELASTICSEARCH_USERNAME`, `ELASTICSEARCH_PASSWORD` (optional)
+- `ELASTICSEARCH_API_KEY` (optional alternative to username/password)
+- `ELASTICSEARCH_INDEX_COURSES` (default: `lms_courses`)
+
+If Elasticsearch is disabled or unreachable, search endpoints automatically fall back to MongoDB.
+
+### Reindex Existing Courses
+
+```bash
+npm run reindex:course-search
+```

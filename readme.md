@@ -18,12 +18,21 @@ docker compose up --build -d
 - Frontend: Vite app built into an Nginx container
 - Backend: Express API running in a production Node container
 - Redis: Cache/session/OTP/rate-limit backend for the API
+- Elasticsearch: Full-text search engine used by course search
+
+## Elasticsearch Search
+
+- Backend uses Elasticsearch for course search when enabled.
+- If Elasticsearch is unavailable, backend automatically falls back to MongoDB search.
+- Configure these variables in `BACKEND/.env` when needed:
+  - `ELASTICSEARCH_ENABLED`
+  - `ELASTICSEARCH_NODE`
+  - `ELASTICSEARCH_USERNAME` / `ELASTICSEARCH_PASSWORD` (optional)
+  - `ELASTICSEARCH_API_KEY` (optional)
+  - `ELASTICSEARCH_INDEX_COURSES`
 
 ## GitHub Actions
 
 - CI workflow is available at `.github/workflows/ci.yml`
-- It runs frontend lint/build, backend syntax validation, and Docker image build checks on every push and pull request
-- CD workflow is available at `.github/workflows/cd.yml`
-- CD deploys to your EC2 server after a successful `main` branch CI run, or manually through `workflow_dispatch`
-- Required GitHub secrets: `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`, `EC2_PORT`, `DEPLOY_PATH`
-- The EC2 machine must already have this repo cloned at `DEPLOY_PATH`, Docker installed, and working `BACKEND/.env` plus `FRONTEND/.env` files
+- It runs frontend lint/build, backend syntax validation, backend unit tests with coverage reports, and Docker image build checks on every push and pull request.
+- CI test reports are uploaded as workflow artifacts under `backend-test-reports`.
