@@ -30,32 +30,42 @@ async function studentProfile(req, res) {
     });
 
     // Calculate quiz statistics for each enrolled course
-    const enrolledCoursesWithStats = student.enrolledCourses.map(enrollment => {
-      const quizScores = enrollment.quizScores || [];
-      const avgQuizScore = quizScores.length > 0 
-        ? Math.round(quizScores.reduce((sum, score) => sum + (score.score || 0), 0) / quizScores.length)
-        : 0;
-      
-      return {
-        course: enrollment.course,
-        enrolledAt: enrollment.enrolledAt,
-        avgQuizScore: avgQuizScore,
-        completedQuizzes: quizScores.length,
-        highestScore: quizScores.length > 0 
-          ? Math.max(...quizScores.map(score => score.score || 0))
-          : 0
-      };
-    });
+    const enrolledCoursesWithStats = student.enrolledCourses.map(
+      (enrollment) => {
+        const quizScores = enrollment.quizScores || [];
+        const avgQuizScore =
+          quizScores.length > 0
+            ? Math.round(
+                quizScores.reduce((sum, score) => sum + (score.score || 0), 0) /
+                  quizScores.length,
+              )
+            : 0;
+
+        return {
+          course: enrollment.course,
+          enrolledAt: enrollment.enrolledAt,
+          avgQuizScore: avgQuizScore,
+          completedQuizzes: quizScores.length,
+          highestScore:
+            quizScores.length > 0
+              ? Math.max(...quizScores.map((score) => score.score || 0))
+              : 0,
+        };
+      },
+    );
 
     // Calculate weekly learning minutes from the last 7 days
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const weeklyProgress = student.studentProgress.filter(progress => 
-      new Date(progress.date) >= sevenDaysAgo
-    ).sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    const totalWeeklyMinutes = weeklyProgress.reduce((sum, day) => sum + (day.minutes || 0), 0);
+    const weeklyProgress = student.studentProgress
+      .filter((progress) => new Date(progress.date) >= sevenDaysAgo)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const totalWeeklyMinutes = weeklyProgress.reduce(
+      (sum, day) => sum + (day.minutes || 0),
+      0,
+    );
 
     // Prepare response data
     const responseData = {
@@ -65,12 +75,24 @@ async function studentProfile(req, res) {
         totalEnrolledCourses: enrolledCoursesWithStats.length,
         currentStreak: student.streak || 0,
         totalWeeklyMinutes: totalWeeklyMinutes,
-        totalQuizzesTaken: enrolledCoursesWithStats.reduce((sum, course) => sum + course.completedQuizzes, 0),
-        globalQuizAverage: enrolledCoursesWithStats.length > 0
-          ? Math.round(enrolledCoursesWithStats.reduce((sum, course) => sum + course.avgQuizScore, 0) / enrolledCoursesWithStats.length)
-          : 0,
-        highestQuizScore: Math.max(...enrolledCoursesWithStats.map(course => course.highestScore), 0)
-      }
+        totalQuizzesTaken: enrolledCoursesWithStats.reduce(
+          (sum, course) => sum + course.completedQuizzes,
+          0,
+        ),
+        globalQuizAverage:
+          enrolledCoursesWithStats.length > 0
+            ? Math.round(
+                enrolledCoursesWithStats.reduce(
+                  (sum, course) => sum + course.avgQuizScore,
+                  0,
+                ) / enrolledCoursesWithStats.length,
+              )
+            : 0,
+        highestQuizScore: Math.max(
+          ...enrolledCoursesWithStats.map((course) => course.highestScore),
+          0,
+        ),
+      },
     };
 
     res.json({
@@ -103,15 +125,15 @@ async function updateEnrollCourses(req, res) {
     }));
 
     const student = await Student.findById(studentId);
-    
+
     // Get existing course IDs to avoid duplicates
-    const existingCourseIds = student.enrolledCourses.map(
-      (ec) => ec.course.toString()
+    const existingCourseIds = student.enrolledCourses.map((ec) =>
+      ec.course.toString(),
     );
 
     // Filter out already enrolled courses
     const newCourses = enrolledCoursesData.filter(
-      (ec) => !existingCourseIds.includes(ec.course.toString())
+      (ec) => !existingCourseIds.includes(ec.course.toString()),
     );
 
     // Add new courses
@@ -174,7 +196,7 @@ async function getCourseById(req, res) {
     const { courseId } = req.params;
     const course = await Course.findById(courseId).populate(
       "teacher",
-      "name email"
+      "name email",
     );
 
     if (!course) {
@@ -189,12 +211,17 @@ async function getCourseById(req, res) {
     const ratings = course.ratings || [];
     const ratingCount = ratings.length;
     const avg = ratingCount
-      ? Math.round((ratings.reduce((s, r) => s + (r.rating || 0), 0) / ratingCount) * 10) / 10
+      ? Math.round(
+          (ratings.reduce((s, r) => s + (r.rating || 0), 0) / ratingCount) * 10,
+        ) / 10
       : 0;
 
     res.json({
       message: "Course retrieved successfully",
-      data: { ...course.toObject(), rating: { average: avg, count: ratingCount } },
+      data: {
+        ...course.toObject(),
+        rating: { average: avg, count: ratingCount },
+      },
       success: true,
       error: false,
     });
@@ -258,7 +285,7 @@ async function getEnrolledCourses(req, res) {
 
     const courses = await Course.find({ students: studentId }).populate(
       "teacher",
-      "name email"
+      "name email",
     );
 
     res.json({
@@ -299,7 +326,7 @@ async function getStudentMyCourses(req, res) {
     }
 
     // Extract just the course data from enrolledCourses
-    const courses = student.enrolledCourses.map(enrollment => ({
+    const courses = student.enrolledCourses.map((enrollment) => ({
       ...enrollment.course.toObject(),
       enrolledAt: enrollment.enrolledAt,
       quizScores: enrollment.quizScores,
@@ -333,7 +360,7 @@ async function quizSubmission(req, res) {
     let correct = 0;
     const quiz = originalQuiz.map((q) => {
       const ansObj = answerQuiz.find(
-        (ansObj) => ansObj.question === q.question
+        (ansObj) => ansObj.question === q.question,
       );
       console.log("ansObj", ansObj);
       const isCorrect = ansObj && ansObj.tickOption === q.correctOption;
@@ -369,7 +396,7 @@ async function quizSubmission(req, res) {
     const student = await Student.findById(studentId);
     if (student) {
       const enrolledCourse = student.enrolledCourses.find(
-        (item) => item.course && item.course.toString() === courseId
+        (item) => item.course && item.course.toString() === courseId,
       );
 
       if (enrolledCourse) {
@@ -379,14 +406,19 @@ async function quizSubmission(req, res) {
           topicId,
           score: scorePercentage, // Store as number, not string with %
           totalQuestions: originalQuiz.length,
-          submittedAt: new Date()
+          submittedAt: new Date(),
         });
 
         // Recalculate average from all quiz scores in this course
         const quizScores = enrolledCourse.quizScores;
         if (quizScores.length > 0) {
-          const totalScore = quizScores.reduce((acc, curr) => acc + (curr.score || 0), 0);
-          enrolledCourse.avgQuizScore = Math.round(totalScore / quizScores.length);
+          const totalScore = quizScores.reduce(
+            (acc, curr) => acc + (curr.score || 0),
+            0,
+          );
+          enrolledCourse.avgQuizScore = Math.round(
+            totalScore / quizScores.length,
+          );
           enrolledCourse.completedQuizzes = quizScores.length;
         }
 
@@ -427,7 +459,7 @@ async function getQuizSubmissions(req, res) {
 
     const courseIds = Object.keys(grouped).filter((id) => id !== "unknown");
     const courses = await Course.find({ _id: { $in: courseIds } }).select(
-      "_id title"
+      "_id title",
     );
     const courseMap = {};
     courses.forEach((c) => (courseMap[c._id.toString()] = c.title));
@@ -435,13 +467,13 @@ async function getQuizSubmissions(req, res) {
     const perCourse = Object.entries(grouped).map(([courseId, subs]) => {
       // compute average numeric score and latest score
       const scores = subs.map(
-        (s) => parseInt((s.score || "0").toString().replace("%", "")) || 0
+        (s) => parseInt((s.score || "0").toString().replace("%", "")) || 0,
       );
       const avg = scores.length
         ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
         : 0;
       const latest = subs.sort(
-        (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)
+        (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt),
       )[0];
 
       return {
@@ -469,12 +501,12 @@ async function getStreakStats(req, res) {
     const studentId = req.user._id;
 
     const student = await Student.findById(studentId).select(
-      "streak bestStreak lastActiveDateStreak studentProgress"
+      "streak bestStreak lastActiveDateStreak studentProgress",
     );
 
     // Count unique dates when the student submitted quizzes
     const submissions = await QuizSubmission.find({ studentId }).select(
-      "submittedAt"
+      "submittedAt",
     );
 
     const uniqueQuizDates = new Set();
@@ -488,13 +520,13 @@ async function getStreakStats(req, res) {
 
     // Count unique active days from student progress (learning sessions) + quiz days
     const uniqueActiveDates = new Set();
-    
+
     // Add quiz submission dates
     submissions.forEach((s) => {
       const d = new Date(s.submittedAt);
       uniqueActiveDates.add(d.toISOString().slice(0, 10));
     });
-    
+
     // Add student progress dates (learning session dates)
     if (student.studentProgress && student.studentProgress.length > 0) {
       student.studentProgress.forEach((progress) => {
@@ -502,7 +534,7 @@ async function getStreakStats(req, res) {
         uniqueActiveDates.add(d.toISOString().slice(0, 10));
       });
     }
-    
+
     // If student has lastActiveDateStreak, include that as well
     if (student.lastActiveDateStreak) {
       const d = new Date(student.lastActiveDateStreak);
@@ -534,29 +566,34 @@ async function studentProgress(req, res) {
     // Handle both JSON and query params (for navigator.sendBeacon)
     let minutes;
     let studentId;
-    
+
     // Check if minutes is in body or query
     if (req.body && req.body.minutes) {
       minutes = req.body.minutes;
     } else if (req.query && req.query.minutes) {
       minutes = req.query.minutes;
     }
-    
+
     // Convert to number if it's a string
-    if (typeof minutes === 'string') {
+    if (typeof minutes === "string") {
       minutes = parseInt(minutes);
     }
-    
+
     // Validate input
-    if (!minutes || typeof minutes !== 'number' || minutes <= 0 || isNaN(minutes)) {
-      console.error('Invalid minutes value:', req.body, req.query);
+    if (
+      !minutes ||
+      typeof minutes !== "number" ||
+      minutes <= 0 ||
+      isNaN(minutes)
+    ) {
+      console.error("Invalid minutes value:", req.body, req.query);
       return res.status(400).json({
         message: "Invalid minutes value",
         success: false,
         error: true,
       });
     }
-    
+
     // Get student ID from req.user (set by verify middleware)
     if (!req.user || !req.user._id) {
       return res.status(401).json({
@@ -565,10 +602,10 @@ async function studentProgress(req, res) {
         error: true,
       });
     }
-    
+
     studentId = req.user._id;
     const student = await Student.findById(studentId);
-    
+
     if (!student) {
       return res.status(404).json({
         message: "Student not found",
@@ -579,18 +616,22 @@ async function studentProgress(req, res) {
 
     const today = new Date().toISOString().split("T")[0];
     const todayStudentProgress = student.studentProgress.find(
-      (sp) => sp.date.toISOString().split("T")[0] === today
+      (sp) => sp.date.toISOString().split("T")[0] === today,
     );
-    
+
     if (todayStudentProgress) {
       todayStudentProgress.minutes += minutes;
-      console.log(`✅ Updated progress for ${student.name}: +${minutes} min (Total today: ${todayStudentProgress.minutes} min)`);
+      console.log(
+        `✅ Updated progress for ${student.name}: +${minutes} min (Total today: ${todayStudentProgress.minutes} min)`,
+      );
     } else {
-      student.studentProgress.push({ 
-        date: new Date(today), 
-        minutes: minutes 
+      student.studentProgress.push({
+        date: new Date(today),
+        minutes: minutes,
       });
-      console.log(`✅ Created new progress entry for ${student.name}: ${minutes} min`);
+      console.log(
+        `✅ Created new progress entry for ${student.name}: ${minutes} min`,
+      );
     }
 
     await student.save();
@@ -598,9 +639,11 @@ async function studentProgress(req, res) {
     res.json({
       message: "Learning progress saved successfully",
       data: {
-        totalMinutesToday: todayStudentProgress ? todayStudentProgress.minutes : minutes,
+        totalMinutesToday: todayStudentProgress
+          ? todayStudentProgress.minutes
+          : minutes,
         date: today,
-        studentName: student.name
+        studentName: student.name,
       },
       success: true,
       error: false,
@@ -643,23 +686,23 @@ async function updateStudentStreak(studentId) {
     if (!student) return;
 
     const today = new Date();
-    const todayDateString = today.toISOString().split('T')[0];
-    
+    const todayDateString = today.toISOString().split("T")[0];
+
     let currentStreak = student.streak || 0;
     let bestStreak = student.bestStreak || 0;
-    
+
     if (student.lastActiveDateStreak) {
       const lastActiveDate = new Date(student.lastActiveDateStreak);
-      const lastActiveDateString = lastActiveDate.toISOString().split('T')[0];
-      
+      const lastActiveDateString = lastActiveDate.toISOString().split("T")[0];
+
       if (lastActiveDateString === todayDateString) {
         // Already logged in today, no need to update
         return;
       }
-      
+
       const timeDiff = today - lastActiveDate;
       const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-      
+
       if (daysDiff === 1) {
         // Consecutive day, increment streak
         currentStreak++;
@@ -671,20 +714,19 @@ async function updateStudentStreak(studentId) {
       // First time logging in
       currentStreak = 1;
     }
-    
+
     // Update best streak if current is higher
     if (currentStreak > bestStreak) {
       bestStreak = currentStreak;
     }
-    
+
     // Update student
     await Student.findByIdAndUpdate(studentId, {
       streak: currentStreak,
       bestStreak: bestStreak,
       lastActiveDateStreak: today,
-      lastLogin: today
+      lastLogin: today,
     });
-    
   } catch (error) {
     console.error("Error updating student streak:", error);
   }
@@ -693,10 +735,10 @@ async function updateStudentStreak(studentId) {
 async function getStudentDashboard(req, res) {
   try {
     const studentId = req.user._id;
-    
+
     // Update streak when accessing dashboard
     await updateStudentStreak(studentId);
-    
+
     const student = await Student.findById(studentId).populate({
       path: "enrolledCourses.course",
       select: "title image price category level",
@@ -710,62 +752,107 @@ async function getStudentDashboard(req, res) {
       });
     }
 
+    const enrolledCourseIds = (student.enrolledCourses || [])
+      .map((enrollment) => enrollment?.course?._id)
+      .filter(Boolean);
+
+    let topicCountMap = new Map();
+
+    if (enrolledCourseIds.length > 0) {
+      const topicCounts = await Course.aggregate([
+        { $match: { _id: { $in: enrolledCourseIds } } },
+        {
+          $project: {
+            totalTopics: {
+              $sum: {
+                $map: {
+                  input: { $ifNull: ["$chapters", []] },
+                  as: "chapter",
+                  in: { $size: { $ifNull: ["$$chapter.topics", []] } },
+                },
+              },
+            },
+          },
+        },
+      ]);
+
+      topicCountMap = new Map(
+        topicCounts.map((item) => [item._id.toString(), item.totalTopics || 0]),
+      );
+    }
+
     // Calculate quiz statistics for each enrolled course
-    const enrolledCoursesWithStats = await Promise.all(student.enrolledCourses.map(async enrollment => {
-      const quizScores = enrollment.quizScores || [];
-      const avgQuizScore = quizScores.length > 0 
-        ? Math.round(quizScores.reduce((sum, score) => sum + (score.score || 0), 0) / quizScores.length)
-        : 0;
-      
-      // Get total topics for this course
-      const totalTopics = await getTotalTopicsInCourse(enrollment.course._id);
-      const completedTopicsCount = enrollment.completedTopics ? enrollment.completedTopics.length : 0;
-      
-      return {
-        course: enrollment.course,
-        enrolledAt: enrollment.enrolledAt,
-        avgQuizScore: avgQuizScore,
-        completedQuizzes: quizScores.length,
-        highestScore: quizScores.length > 0 
-          ? Math.max(...quizScores.map(score => score.score || 0))
-          : 0,
-        completedTopics: completedTopicsCount,
-        totalTopics: totalTopics,
-        completionPercentage: totalTopics > 0 ? Math.round((completedTopicsCount / totalTopics) * 100) : 0
-      };
-    }));
+    const enrolledCoursesWithStats = student.enrolledCourses.map(
+      (enrollment) => {
+        const quizScores = enrollment.quizScores || [];
+        const avgQuizScore =
+          quizScores.length > 0
+            ? Math.round(
+                quizScores.reduce((sum, score) => sum + (score.score || 0), 0) /
+                  quizScores.length,
+              )
+            : 0;
+
+        const courseId = enrollment?.course?._id?.toString();
+        const totalTopics = courseId ? topicCountMap.get(courseId) || 0 : 0;
+        const completedTopicsCount = enrollment.completedTopics
+          ? enrollment.completedTopics.length
+          : 0;
+
+        return {
+          course: enrollment.course,
+          enrolledAt: enrollment.enrolledAt,
+          avgQuizScore: avgQuizScore,
+          completedQuizzes: quizScores.length,
+          highestScore:
+            quizScores.length > 0
+              ? Math.max(...quizScores.map((score) => score.score || 0))
+              : 0,
+          completedTopics: completedTopicsCount,
+          totalTopics: totalTopics,
+          completionPercentage:
+            totalTopics > 0
+              ? Math.round((completedTopicsCount / totalTopics) * 100)
+              : 0,
+        };
+      },
+    );
 
     // Calculate weekly learning minutes from the last 7 days
     const today = new Date();
     const weeklyProgressData = [];
     let totalWeeklyMinutes = 0;
-    
+
     // Create a complete 7-day array
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
-      const dateString = date.toISOString().split('T')[0];
-      
+      const dateString = date.toISOString().split("T")[0];
+
       // Find existing progress for this date
-      const existingProgress = student.studentProgress.find(progress => {
-        const progressDate = new Date(progress.date).toISOString().split('T')[0];
+      const existingProgress = student.studentProgress.find((progress) => {
+        const progressDate = new Date(progress.date)
+          .toISOString()
+          .split("T")[0];
         return progressDate === dateString;
       });
-      
+
       const minutes = existingProgress ? existingProgress.minutes : 0;
       totalWeeklyMinutes += minutes;
-      
+
       weeklyProgressData.push({
         date: date,
-        minutes: minutes
+        minutes: minutes,
       });
     }
-    
+
     const weeklyProgress = weeklyProgressData;
 
-    // Get recent quiz submissions for additional stats
-    const quizSubmissions = await QuizSubmission.find({ studentId }).sort({ submittedAt: -1 });
-    
+    // Get total quiz submissions for additional stats
+    const totalQuizSubmissions = await QuizSubmission.countDocuments({
+      studentId,
+    });
+
     // Calculate dashboard statistics
     const dashboardData = {
       studentInfo: {
@@ -773,7 +860,7 @@ async function getStudentDashboard(req, res) {
         email: student.email,
         streak: student.streak || 0,
         bestStreak: student.bestStreak || 0,
-        lastActiveDateStreak: student.lastActiveDateStreak
+        lastActiveDateStreak: student.lastActiveDateStreak,
       },
       enrolledCourses: enrolledCoursesWithStats,
       studentProgress: weeklyProgress,
@@ -781,19 +868,43 @@ async function getStudentDashboard(req, res) {
         totalEnrolledCourses: enrolledCoursesWithStats.length,
         currentStreak: student.streak || 0,
         totalWeeklyMinutes: totalWeeklyMinutes,
-        totalQuizzesTaken: enrolledCoursesWithStats.reduce((sum, course) => sum + course.completedQuizzes, 0),
-        globalQuizAverage: enrolledCoursesWithStats.length > 0
-          ? Math.round(enrolledCoursesWithStats.reduce((sum, course) => sum + course.avgQuizScore, 0) / enrolledCoursesWithStats.length)
-          : 0,
-        highestQuizScore: Math.max(...enrolledCoursesWithStats.map(course => course.highestScore), 0),
-        totalQuizSubmissions: quizSubmissions.length,
-        totalCompletedTopics: enrolledCoursesWithStats.reduce((sum, course) => sum + course.completedTopics, 0),
-        totalTopics: enrolledCoursesWithStats.reduce((sum, course) => sum + course.totalTopics, 0),
-        overallCompletionPercentage: enrolledCoursesWithStats.length > 0 
-          ? Math.round(enrolledCoursesWithStats.reduce((sum, course) => sum + course.completionPercentage, 0) / enrolledCoursesWithStats.length)
-          : 0,
-        recentActivity: student.studentProgress.slice(-7) // Last 7 days of activity
-      }
+        totalQuizzesTaken: enrolledCoursesWithStats.reduce(
+          (sum, course) => sum + course.completedQuizzes,
+          0,
+        ),
+        globalQuizAverage:
+          enrolledCoursesWithStats.length > 0
+            ? Math.round(
+                enrolledCoursesWithStats.reduce(
+                  (sum, course) => sum + course.avgQuizScore,
+                  0,
+                ) / enrolledCoursesWithStats.length,
+              )
+            : 0,
+        highestQuizScore: Math.max(
+          ...enrolledCoursesWithStats.map((course) => course.highestScore),
+          0,
+        ),
+        totalQuizSubmissions,
+        totalCompletedTopics: enrolledCoursesWithStats.reduce(
+          (sum, course) => sum + course.completedTopics,
+          0,
+        ),
+        totalTopics: enrolledCoursesWithStats.reduce(
+          (sum, course) => sum + course.totalTopics,
+          0,
+        ),
+        overallCompletionPercentage:
+          enrolledCoursesWithStats.length > 0
+            ? Math.round(
+                enrolledCoursesWithStats.reduce(
+                  (sum, course) => sum + course.completionPercentage,
+                  0,
+                ) / enrolledCoursesWithStats.length,
+              )
+            : 0,
+        recentActivity: student.studentProgress.slice(-7), // Last 7 days of activity
+      },
     };
 
     res.json({
@@ -837,7 +948,7 @@ async function markTopicComplete(req, res) {
 
     // Find the enrolled course
     const enrolledCourse = student.enrolledCourses.find(
-      (ec) => ec.course.toString() === courseId
+      (ec) => ec.course.toString() === courseId,
     );
 
     if (!enrolledCourse) {
@@ -850,7 +961,9 @@ async function markTopicComplete(req, res) {
 
     // Check if topic is already completed
     const isAlreadyCompleted = enrolledCourse.completedTopics.some(
-      (ct) => ct.chapterId.toString() === chapterId && ct.topicId.toString() === topicId
+      (ct) =>
+        ct.chapterId.toString() === chapterId &&
+        ct.topicId.toString() === topicId,
     );
 
     if (isAlreadyCompleted) {
@@ -858,7 +971,7 @@ async function markTopicComplete(req, res) {
         message: "Topic already marked as complete",
         success: true,
         error: false,
-        data: { alreadyCompleted: true }
+        data: { alreadyCompleted: true },
       });
     }
 
@@ -866,7 +979,7 @@ async function markTopicComplete(req, res) {
     enrolledCourse.completedTopics.push({
       chapterId,
       topicId,
-      completedAt: new Date()
+      completedAt: new Date(),
     });
 
     await student.save();
@@ -877,8 +990,8 @@ async function markTopicComplete(req, res) {
       error: false,
       data: {
         completedTopics: enrolledCourse.completedTopics.length,
-        totalTopics: await getTotalTopicsInCourse(courseId)
-      }
+        totalTopics: await getTotalTopicsInCourse(courseId),
+      },
     });
   } catch (error) {
     console.error("Error marking topic as complete:", error);
@@ -913,7 +1026,7 @@ async function getTopicCompletionStatus(req, res) {
     }
 
     const enrolledCourse = student.enrolledCourses.find(
-      (ec) => ec.course.toString() === courseId
+      (ec) => ec.course.toString() === courseId,
     );
 
     if (!enrolledCourse) {
@@ -929,14 +1042,16 @@ async function getTopicCompletionStatus(req, res) {
     if (chapterId && topicId) {
       // Check specific topic
       const isCompleted = enrolledCourse.completedTopics.some(
-        (ct) => ct.chapterId.toString() === chapterId && ct.topicId.toString() === topicId
+        (ct) =>
+          ct.chapterId.toString() === chapterId &&
+          ct.topicId.toString() === topicId,
       );
       completionData = { isCompleted };
     } else {
       // Get all completed topics for the course
       completionData = {
         completedTopics: enrolledCourse.completedTopics,
-        totalCompleted: enrolledCourse.completedTopics.length
+        totalCompleted: enrolledCourse.completedTopics.length,
       };
     }
 
@@ -944,7 +1059,7 @@ async function getTopicCompletionStatus(req, res) {
       message: "Topic completion status retrieved successfully",
       success: true,
       error: false,
-      data: completionData
+      data: completionData,
     });
   } catch (error) {
     console.error("Error getting topic completion status:", error);
@@ -961,7 +1076,7 @@ async function getTotalTopicsInCourse(courseId) {
   try {
     const course = await Course.findById(courseId);
     if (!course) return 0;
-    
+
     return course.chapters.reduce((total, chapter) => {
       return total + (chapter.topics ? chapter.topics.length : 0);
     }, 0);

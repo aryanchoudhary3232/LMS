@@ -6,25 +6,30 @@ const cartSchema = new mongoose.Schema({
     ref: "Student",
     required: true,
   },
-  items: [{
-    course: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Course",
-      required: true,
+  items: [
+    {
+      course: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course",
+        required: true,
+      },
+      addedAt: {
+        type: Date,
+        default: Date.now,
+      },
     },
-    addedAt: {
-      type: Date,
-      default: Date.now,
-    }
-  }],
+  ],
   updatedAt: {
     type: Date,
     default: Date.now,
-  }
+  },
 });
 
+cartSchema.index({ student: 1 });
+cartSchema.index({ "items.course": 1 });
+
 // Update the updatedAt timestamp on save
-cartSchema.pre('save', function(next) {
+cartSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   next();
 });
