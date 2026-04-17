@@ -1,23 +1,126 @@
 const express = require('express');
 const router = express.Router();
-const { verify, verifyTeacher } = require('../middleware');
+const {
+	verify,
+	verifyTeacher,
+	cacheResponse,
+	cacheTags,
+	invalidateTagsOnSuccess,
+} = require('../middleware');
 const flashcard = require('../controller/flashcardController');
 
 // teacher-owned deck APIs
-router.get('/teacher/decks', verify, verifyTeacher, flashcard.getTeacherDecks);
-router.post('/create', verify, verifyTeacher, flashcard.createFlashcardDeck);
-router.get('/:deckId/details', verify, verifyTeacher, flashcard.getDeckDetails);
-router.delete('/:deckId', verify, verifyTeacher, flashcard.deleteDeck);
+router.get(
+	'/teacher/decks',
+	verify,
+	verifyTeacher,
+	cacheResponse({
+		ttlSeconds: 180,
+		namespace: 'flashcard-teacher-decks',
+		varyByUser: true,
+		tags: (req) => [cacheTags.teacher(req.user?._id)],
+	}),
+	flashcard.getTeacherDecks,
+);
 
-router.post('/:deckId/cards', verify, verifyTeacher, flashcard.addCards);
-router.put('/:deckId/cards/:cardId', verify, verifyTeacher, flashcard.editCard);
-router.delete('/:deckId/cards/:cardId', verify, verifyTeacher, flashcard.deleteCard);
+router.post(
+	'/create',
+	verify,
+	verifyTeacher,
+	invalidateTagsOnSuccess((req) => [cacheTags.teacher(req.user?._id)]),
+	flashcard.createFlashcardDeck,
+);
 
-router.post('/:deckId/publish', verify, verifyTeacher, flashcard.publishDeck);
-router.put('/:deckId/publish', verify, verifyTeacher, flashcard.publishDeck);
+router.get(
+	'/:deckId/details',
+	verify,
+	verifyTeacher,
+	cacheResponse({
+		ttlSeconds: 120,
+		namespace: 'flashcard-deck-details',
+		varyByUser: true,
+		tags: (req) => [cacheTags.teacher(req.user?._id)],
+	}),
+	flashcard.getDeckDetails,
+);
+
+router.delete(
+	'/:deckId',
+	verify,
+	verifyTeacher,
+	invalidateTagsOnSuccess((req) => [cacheTags.teacher(req.user?._id)]),
+	flashcard.deleteDeck,
+);
+
+router.post(
+	'/:deckId/cards',
+	verify,
+	verifyTeacher,
+	invalidateTagsOnSuccess((req) => [cacheTags.teacher(req.user?._id)]),
+	flashcard.addCards,
+);
+
+router.put(
+	'/:deckId/cards/:cardId',
+	verify,
+	verifyTeacher,
+	invalidateTagsOnSuccess((req) => [cacheTags.teacher(req.user?._id)]),
+	flashcard.editCard,
+);
+
+router.delete(
+	'/:deckId/cards/:cardId',
+	verify,
+	verifyTeacher,
+	invalidateTagsOnSuccess((req) => [cacheTags.teacher(req.user?._id)]),
+	flashcard.deleteCard,
+);
+
+router.post(
+	'/:deckId/publish',
+	verify,
+	verifyTeacher,
+	invalidateTagsOnSuccess((req, body) => [
+		cacheTags.teacher(req.user?._id),
+		cacheTags.course(body?.data?.courseId || req.body?.courseId),
+	]),
+	flashcard.publishDeck,
+);
+
+router.put(
+	'/:deckId/publish',
+	verify,
+	verifyTeacher,
+	invalidateTagsOnSuccess((req, body) => [
+		cacheTags.teacher(req.user?._id),
+		cacheTags.course(body?.data?.courseId || req.body?.courseId),
+	]),
+	flashcard.publishDeck,
+);
 
 // Student APIs
-router.get('/course/:courseId', verify, flashcard.getCourseDecks);
-router.get('/student/deck/:deckId', verify, flashcard.getStudyDeck);
+router.get(
+	'/course/:courseId',
+	verify,
+	cacheResponse({
+		ttlSeconds: 180,
+		namespace: 'flashcard-course-decks',
+		varyByUser: true,
+		tags: (req) => [cacheTags.course(req.params.courseId)],
+	}),
+	flashcard.getCourseDecks,
+);
+
+router.get(
+	'/student/deck/:deckId',
+	verify,
+	cacheResponse({
+		ttlSeconds: 120,
+		namespace: 'flashcard-study-deck',
+		varyByUser: true,
+		tags: (req) => [cacheTags.student(req.user?._id)],
+	}),
+	flashcard.getStudyDeck,
+);
 
 module.exports = router;

@@ -5,7 +5,7 @@ const Course = require("../models/Course");
 const Student = require("../models/Student");
 const Cart = require("../models/Cart");
 
-const JWT_SECRET = "aryan123";
+const JWT_SECRET = process.env.JWT_SECRET || "aryan123";
 
 const schema = buildSchema(`
   type Course {

@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { useEffect, useRef } from "react";
 //common routes
 import Login from "./pages/Login";
 import Home from "./pages/Home";
@@ -57,6 +58,7 @@ import Settings from "./components/common/Settings";
 import TeacherCourses from "./components/teacher/TeacherCourses";
 import TeacherDashboard from "./components/teacher/TeacherDashboard";
 import StudentsEnrolled from "./components/teacher/StudentsEnrolled";
+import { trackRouteTransition } from "./services/telemetry";
 
 function App() {
   return <Main />;
@@ -65,6 +67,19 @@ function App() {
 function Main() {
   const location = useLocation();
   const hideShell = location.pathname === "/login";
+  const navigationStartRef = useRef(performance.now());
+
+  useEffect(() => {
+    const now = performance.now();
+    const durationMs = Math.max(now - navigationStartRef.current, 0);
+
+    trackRouteTransition({
+      route: location.pathname,
+      durationMs,
+    });
+
+    navigationStartRef.current = now;
+  }, [location.pathname]);
 
   return (
     <>
@@ -83,7 +98,7 @@ function Main() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
 
-        {/* Teacher routes wjdjbh  */}
+        {/* Teacher routes */}
         <Route
           path="/teacher"
           element={

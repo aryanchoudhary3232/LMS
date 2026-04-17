@@ -1,32 +1,49 @@
 const jwt = require("jsonwebtoken");
 const Admin = require("../models/Admin");
+const { isTokenBlacklisted } = require("./authBlacklist");
+
+const JWT_SECRET = process.env.JWT_SECRET || "aryan123";
+
+function getTokenFromRequest(req) {
+  const authHeader = req.headers.authorization;
+  if (authHeader && typeof authHeader === "string") {
+    return authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : authHeader;
+  }
+
+  if (req.query.token) return req.query.token;
+  if (req.body && req.body.token) return req.body.token;
+
+  return null;
+}
+
+async function decodeToken(token) {
+  const payload = jwt.verify(token, JWT_SECRET);
+  const blacklisted = await isTokenBlacklisted(token, payload);
+
+  if (blacklisted) {
+    const error = new Error("Token has been revoked");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  return payload;
+}
 
 //  Middleware to verify any logged-in user (Student / Teacher / Admin)
-function verify(req, res, next) {
+async function verify(req, res, next) {
   try {
-    let token;
-    
-    // Check for token in Authorization header first
-    const authHeader = req.headers.authorization;
-    if (authHeader) {
-      token = authHeader.split(" ")[1];
-    }
-    // If no auth header, check query params 
-    else if (req.query.token) {
-      token = req.query.token;
-    }
-    // Also check if token is in the body
-    else if (req.body && req.body.token) {
-      token = req.body.token;
-    }
-    
+    const token = getTokenFromRequest(req);
+
     if (!token) {
       return res.status(401).json({ message: "Access denied, no token provided" });
     }
 
     // Extract and verify token
-    const payload = jwt.verify(token, "aryan123"); // Secret key
+    const payload = await decodeToken(token);
 
+    req.token = token;
     req.user = payload; // Attach payload to request
     next();
   } catch (error) {
@@ -38,13 +55,12 @@ function verify(req, res, next) {
 //  Middleware to verify Admin only
 async function verifyAdmin(req, res, next) {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
+    const token = getTokenFromRequest(req);
+    if (!token) {
       return res.status(401).json({ message: "Access denied, no token provided" });
     }
 
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, "aryan123");
+    const decoded = await decodeToken(token);
 
     // Optional: Check admin exists in DB
     const admin = await Admin.findById(decoded._id);
@@ -64,24 +80,16 @@ async function verifyAdmin(req, res, next) {
 async function verifySuperAdmin(req, res, next) {
   try {
     let decoded = req.user || null;
+    let token = req.token || null;
 
     if (!decoded) {
-      let token;
-      const authHeader = req.headers.authorization;
-
-      if (authHeader) {
-        token = authHeader.split(" ")[1];
-      } else if (req.query.token) {
-        token = req.query.token;
-      } else if (req.body && req.body.token) {
-        token = req.body.token;
-      }
+      token = getTokenFromRequest(req);
 
       if (!token) {
         return res.status(401).json({ message: "Access denied, no token provided" });
       }
 
-      decoded = jwt.verify(token, "aryan123");
+      decoded = await decodeToken(token);
     }
 
     // Check if user is SuperAdmin

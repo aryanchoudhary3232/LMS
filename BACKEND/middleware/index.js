@@ -17,6 +17,13 @@ const { adminAuditLogger } = require("./adminAuditLogger");
 const { paramSanitizer, validateParams } = require("./paramSanitizer");
 const { validate, schemas } = require("./inputValidator");
 const { validateFiles, fileConfigs } = require("./fileUploadValidator");
+const {
+  cacheResponse,
+  cacheTags,
+  invalidateCacheByTags,
+  invalidateTagsOnSuccess,
+} = require("./responseCache");
+const { createRateLimiter } = require("./rateLimiter");
 
 module.exports = {
   // Authentication middlewares
@@ -58,4 +65,13 @@ module.exports = {
   // File upload validation middlewares
   validateFiles,
   fileConfigs,
+
+  // Redis-backed cache middlewares
+  cacheResponse,
+  cacheTags,
+  invalidateCacheByTags,
+  invalidateTagsOnSuccess,
+
+  // Redis-backed rate limiter
+  createRateLimiter,
 };

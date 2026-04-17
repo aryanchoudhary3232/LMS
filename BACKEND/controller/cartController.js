@@ -5,6 +5,7 @@ const Course = require("../models/Course");
 const Student = require("../models/Student");
 const Order = require("../models/Order");
 const { sendCoursePurchaseConfirmationEmail } = require("../utils/sendEmail");
+const { acquireLock, releaseLock } = require("../utils/redisLock");
 
 const RAZORPAY_CURRENCY = "INR";
 
@@ -264,10 +265,20 @@ async function getCart(req, res) {
 
 // Add course to cart
 async function addToCart(req, res) {
+  let lock = null;
+
   try {
     const studentId = req.user._id;
     const { courseId } = req.params;
     console.log("Adding course to cart:", courseId, "for student:", studentId);
+
+    lock = await acquireLock(`cart-add:${studentId}:${courseId}`, 5000);
+    if (!lock.acquired) {
+      return res.status(409).json({
+        success: false,
+        message: "Another add-to-cart request is in progress",
+      });
+    }
 
     // Verify course exists
     const course = await Course.findById(courseId);
@@ -337,6 +348,8 @@ async function addToCart(req, res) {
       success: false,
       message: "Error adding course to cart",
     });
+  } finally {
+    releaseLock(lock).catch(() => {});
   }
 }
 
@@ -408,7 +421,18 @@ async function clearCart(req, res) {
 async function updateEnrollCourses(req, res) {
   const { courseIds } = req.body || {};
   const studentId = req.user._id;
+  let lock = null;
+
   try {
+    lock = await acquireLock(`enroll:${studentId}`, 10000);
+    if (!lock.acquired) {
+      return res.status(409).json({
+        success: false,
+        error: true,
+        message: "Enrollment is already in progress for this account",
+      });
+    }
+
     const enrollment = await processEnrollment(studentId, courseIds, {
       gateway: "manual",
     });
@@ -430,6 +454,8 @@ async function updateEnrollCourses(req, res) {
       success: false,
       error: true,
     });
+  } finally {
+    releaseLock(lock).catch(() => {});
   }
 }
 
@@ -523,6 +549,7 @@ async function verifyRazorpayPayment(req, res) {
   const orderId = razorpayOrderId || razorpay_order_id;
   const paymentId = razorpayPaymentId || razorpay_payment_id;
   const signature = razorpaySignature || razorpay_signature;
+  let lock = null;
 
   if (!orderId || !paymentId || !signature) {
     return res.status(400).json({
@@ -533,6 +560,15 @@ async function verifyRazorpayPayment(req, res) {
   }
 
   try {
+    lock = await acquireLock(`enroll:${studentId}`, 12000);
+    if (!lock.acquired) {
+      return res.status(409).json({
+        success: false,
+        error: true,
+        message: "Another payment verification is already running",
+      });
+    }
+
     const razorpay = getRazorpayClient();
     if (!razorpay) {
       return res.status(500).json({
@@ -631,6 +667,8 @@ async function verifyRazorpayPayment(req, res) {
       error: true,
       message: error?.message || "Unable to verify payment",
     });
+  } finally {
+    releaseLock(lock).catch(() => {});
   }
 }
 

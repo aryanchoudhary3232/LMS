@@ -3,6 +3,8 @@
  * Logs additional information beyond what morgan provides
  */
 
+const { recordSlowRequest } = require("../config/metrics");
+
 // Log request details with user info
 const requestLogger = (req, res, next) => {
   const start = Date.now();
@@ -73,6 +75,13 @@ const performanceMonitor = (req, res, next) => {
     
     // Warn if request takes longer than 1 second
     if (duration > 1000) {
+      recordSlowRequest({
+        method: req.method,
+        route: req.originalUrl,
+        statusCode: res.statusCode,
+        durationMs: duration,
+      });
+
       console.warn('⚠️ SLOW REQUEST:', {
         method: req.method,
         url: req.originalUrl,
