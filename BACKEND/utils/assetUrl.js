@@ -1,5 +1,7 @@
 function normalizeBaseUrl(baseUrl) {
-  return String(baseUrl || "").trim().replace(/\/+$/, "");
+  return String(baseUrl || "")
+    .trim()
+    .replace(/\/+$/, "");
 }
 
 function deriveBaseUrl(req) {
@@ -11,10 +13,13 @@ function deriveBaseUrl(req) {
   const forwardedProtoRaw = req.headers?.["x-forwarded-proto"];
   const forwardedProto = Array.isArray(forwardedProtoRaw)
     ? forwardedProtoRaw[0]
-    : String(forwardedProtoRaw || "").split(",")[0].trim();
+    : String(forwardedProtoRaw || "")
+        .split(",")[0]
+        .trim();
 
   const protocol = forwardedProto || req.protocol || "https";
-  const host = typeof req.get === "function" ? req.get("host") : req.headers?.host;
+  const host =
+    typeof req.get === "function" ? req.get("host") : req.headers?.host;
 
   if (!host) return "";
   return `${protocol}://${host}`;

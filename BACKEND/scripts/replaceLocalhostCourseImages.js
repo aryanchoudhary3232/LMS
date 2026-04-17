@@ -4,7 +4,9 @@ require("dotenv").config();
 const Course = require("../models/Course");
 
 function normalizeBaseUrl(value) {
-  return String(value || "").trim().replace(/\/+$/, "");
+  return String(value || "")
+    .trim()
+    .replace(/\/+$/, "");
 }
 
 function getTargetBaseUrl() {
@@ -39,7 +41,9 @@ async function run() {
   const targetBaseUrl = getTargetBaseUrl();
 
   if (!mongoUrl) {
-    console.error("Missing Mongo connection string in MONGO_URL_ATLAS or MONGO_URL.");
+    console.error(
+      "Missing Mongo connection string in MONGO_URL_ATLAS or MONGO_URL.",
+    );
     process.exit(1);
   }
 
@@ -84,7 +88,9 @@ async function run() {
     }
 
     if (ops.length === 0) {
-      console.log("Matched courses found, but no image value needed transformation.");
+      console.log(
+        "Matched courses found, but no image value needed transformation.",
+      );
       return;
     }
 
