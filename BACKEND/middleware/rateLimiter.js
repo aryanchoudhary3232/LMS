@@ -1,4 +1,5 @@
 const { getRedisClient, isRedisReady } = require("../config/redis");
+const { recordRateLimitEvent } = require("../config/metrics");
 
 const fallbackBuckets = new Map();
 
@@ -54,12 +55,25 @@ function createRateLimiter(options = {}) {
           res.set("X-RateLimit-Reset", String(Math.max(ttl, 0)));
 
           if (count > max) {
+            recordRateLimitEvent({
+              keyPrefix,
+              backend: "redis",
+              outcome: "rejected",
+              remaining: 0,
+            });
             return res.status(429).json({
               success: false,
               error: true,
               message,
             });
           }
+
+          recordRateLimitEvent({
+            keyPrefix,
+            backend: "redis",
+            outcome: "allowed",
+            remaining: Math.max(max - count, 0),
+          });
 
           return next();
         }
@@ -76,6 +90,12 @@ function createRateLimiter(options = {}) {
       res.set("X-RateLimit-Reset", String(Math.max(ttlSeconds, 0)));
 
       if (fallback.count > max) {
+        recordRateLimitEvent({
+          keyPrefix,
+          backend: "memory",
+          outcome: "rejected",
+          remaining: 0,
+        });
         return res.status(429).json({
           success: false,
           error: true,
@@ -83,8 +103,20 @@ function createRateLimiter(options = {}) {
         });
       }
 
+      recordRateLimitEvent({
+        keyPrefix,
+        backend: "memory",
+        outcome: "allowed",
+        remaining: Math.max(max - fallback.count, 0),
+      });
+
       return next();
     } catch (error) {
+      recordRateLimitEvent({
+        keyPrefix,
+        backend: "unknown",
+        outcome: "error",
+      });
       console.error("rate limiter error:", error.message || error);
       return next();
     }

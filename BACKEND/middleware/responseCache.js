@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const { getRedisClient, isRedisReady } = require("../config/redis");
+const { recordCacheEvent } = require("../config/metrics");
 
 const DEFAULT_CACHE_TTL = Number(process.env.CACHE_DEFAULT_TTL || 120);
 
@@ -56,7 +57,17 @@ async function tagCacheKey({ key, tags, ttlSeconds }) {
 
   try {
     await multi.exec();
+    recordCacheEvent({
+      namespace: "tagged",
+      operation: "tag",
+      result: "success",
+    });
   } catch (error) {
+    recordCacheEvent({
+      namespace: "tagged",
+      operation: "tag",
+      result: "error",
+    });
     console.error("cache tag update failed:", error.message || error);
   }
 }
@@ -72,6 +83,7 @@ async function invalidateCacheByTags(tags = []) {
 
   for (const tag of normalizedTags) {
     const tagKey = `cache:tag:${tag}`;
+    const start = process.hrtime.bigint();
 
     try {
       const keys = await client.sMembers(tagKey);
@@ -79,7 +91,22 @@ async function invalidateCacheByTags(tags = []) {
         deletedCount += await client.del(keys);
       }
       await client.del(tagKey);
+
+      const durationMs = Number(process.hrtime.bigint() - start) / 1_000_000;
+      recordCacheEvent({
+        namespace: "tagged",
+        operation: "invalidate",
+        result: "success",
+        durationMs,
+      });
     } catch (error) {
+      const durationMs = Number(process.hrtime.bigint() - start) / 1_000_000;
+      recordCacheEvent({
+        namespace: "tagged",
+        operation: "invalidate",
+        result: "error",
+        durationMs,
+      });
       console.error(`failed to invalidate tag ${tag}:`, error.message || error);
     }
   }
@@ -111,13 +138,34 @@ function cacheResponse(options = {}) {
     const cacheKey = `cache:${namespace}:${hash(rawKey)}`;
 
     try {
+      const readStart = process.hrtime.bigint();
       const cachedPayload = await client.get(cacheKey);
+      const readDurationMs = Number(process.hrtime.bigint() - readStart) / 1_000_000;
+
       if (cachedPayload) {
         const parsed = JSON.parse(cachedPayload);
         res.set("X-Cache", "HIT");
+        recordCacheEvent({
+          namespace,
+          operation: "lookup",
+          result: "hit",
+          durationMs: readDurationMs,
+        });
         return res.status(parsed.status || 200).json(parsed.body);
       }
+
+      recordCacheEvent({
+        namespace,
+        operation: "lookup",
+        result: "miss",
+        durationMs: readDurationMs,
+      });
     } catch (error) {
+      recordCacheEvent({
+        namespace,
+        operation: "lookup",
+        result: "error",
+      });
       console.error("cache read failed:", error.message || error);
     }
 
@@ -134,6 +182,7 @@ function cacheResponse(options = {}) {
 
         Promise.resolve()
           .then(async () => {
+            const writeStart = process.hrtime.bigint();
             await client.set(
               cacheKey,
               JSON.stringify({ status: statusCode, body }),
@@ -147,8 +196,22 @@ function cacheResponse(options = {}) {
                 ttlSeconds,
               });
             }
+
+            const writeDurationMs =
+              Number(process.hrtime.bigint() - writeStart) / 1_000_000;
+            recordCacheEvent({
+              namespace,
+              operation: "write",
+              result: "success",
+              durationMs: writeDurationMs,
+            });
           })
           .catch((error) => {
+            recordCacheEvent({
+              namespace,
+              operation: "write",
+              result: "error",
+            });
             console.error("cache write failed:", error.message || error);
           });
       }

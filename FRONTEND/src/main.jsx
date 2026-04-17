@@ -7,6 +7,9 @@ import { SuperAdminProvider } from "./contexts/SuperAdminContext.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import store from "./app/store.js";
+import { initWebVitalsTelemetry } from "./services/telemetry.js";
+
+initWebVitalsTelemetry();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

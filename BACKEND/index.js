@@ -10,6 +10,7 @@ const swaggerUi = require("swagger-ui-express");
 const { createHandler } = require("graphql-http/lib/use/express");
 const { errorHandler, notFound, performanceMonitor } = require("./middleware");
 const { connectRedis, closeRedis, isRedisReady } = require("./config/redis");
+const { metricsMiddleware, metricsEndpoint } = require("./config/metrics");
 const openApiSpec = require("./docs/openapi");
 const {
   schema: graphQLSchema,
@@ -28,6 +29,7 @@ const contactRoutes = require("./routes/contactRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const flashcardRoutes = require("./routes/flashcardRoutes");
 const statsRoutes = require("./routes/statsRoutes");
+const telemetryRoutes = require("./routes/telemetryRoutes");
 
 const PORT = Number(process.env.PORT) || 3000;
 const MONGO_URL = process.env.MONGO_URL_ATLAS;
@@ -50,6 +52,7 @@ app.use(
 
 // Performance monitoring
 app.use(performanceMonitor);
+app.use(metricsMiddleware);
 
 // CORS configuration
 app.use(
@@ -130,6 +133,9 @@ app.use("/api/flashcards", flashcardRoutes);
 // stats routes
 app.use("/stats", statsRoutes);
 
+// frontend telemetry ingestion routes
+app.use("/telemetry", telemetryRoutes);
+
 app.get("/", (req, res) => {
   res.send("Welcome to server v1");
 });
@@ -144,6 +150,8 @@ app.get("/health", (req, res) => {
 app.get("/openapi.json", (req, res) => {
   res.status(200).json(openApiSpec);
 });
+
+app.get("/metrics", metricsEndpoint);
 
 app.use("/api-docs", swaggerUi.serve);
 
