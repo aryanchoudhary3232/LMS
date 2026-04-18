@@ -63,7 +63,10 @@ const searchCourses = async (req, res) => {
       limit: safeLimit,
     });
 
-    if (elasticResult) {
+    const elasticReturnedResults =
+      elasticResult && Number(elasticResult.total || 0) > 0;
+
+    if (elasticReturnedResults) {
       const ids = elasticResult.ids || [];
       let data = [];
 
@@ -93,6 +96,12 @@ const searchCourses = async (req, res) => {
         limit: safeLimit,
         data,
       });
+    }
+
+    if (elasticResult && Number(elasticResult.total || 0) === 0) {
+      console.warn(
+        "Elasticsearch returned zero hits for course search. Falling back to MongoDB query.",
+      );
     }
 
     let searchQuery = { isDeleted: { $ne: true } };
