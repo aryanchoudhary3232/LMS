@@ -10,7 +10,11 @@ const swaggerUi = require("swagger-ui-express");
 const { createHandler } = require("graphql-http/lib/use/express");
 const { errorHandler, notFound, performanceMonitor } = require("./middleware");
 const { connectRedis, closeRedis, isRedisReady } = require("./config/redis");
-const { metricsMiddleware, metricsEndpoint } = require("./config/metrics");
+const {
+  metricsMiddleware,
+  metricsEndpoint,
+  registerEndpointCatalog,
+} = require("./config/metrics");
 const openApiSpec = require("./docs/openapi");
 const {
   schema: graphQLSchema,
@@ -37,6 +41,65 @@ const {
 
 const PORT = Number(process.env.PORT) || 3000;
 const MONGO_URL = process.env.MONGO_URL_ATLAS;
+
+function normalizeEndpointPath(pathValue) {
+  const raw = String(pathValue || "/").trim() || "/";
+  const collapsed = raw.replace(/\/+/g, "/");
+
+  if (collapsed === "/") return "/";
+
+  let normalized = collapsed;
+  if (!normalized.startsWith("/")) {
+    normalized = `/${normalized}`;
+  }
+
+  if (normalized.length > 1 && normalized.endsWith("/")) {
+    normalized = normalized.slice(0, -1);
+  }
+
+  return normalized;
+}
+
+function joinEndpointPath(basePath, routePath) {
+  const base = normalizeEndpointPath(basePath || "/");
+  const route = normalizeEndpointPath(routePath || "/");
+
+  if (route === "/") return base;
+  if (base === "/") return route;
+
+  return normalizeEndpointPath(`${base}${route}`);
+}
+
+function collectRouterEndpoints(basePath, router) {
+  if (!router || !Array.isArray(router.stack)) {
+    return [];
+  }
+
+  const endpoints = [];
+
+  for (const layer of router.stack) {
+    if (!layer.route) continue;
+
+    const methods = Object.entries(layer.route.methods || {})
+      .filter(([, enabled]) => Boolean(enabled))
+      .map(([method]) => method.toUpperCase());
+
+    const routePaths = Array.isArray(layer.route.path)
+      ? layer.route.path
+      : [layer.route.path];
+
+    for (const routePath of routePaths) {
+      if (typeof routePath !== "string") continue;
+
+      const route = joinEndpointPath(basePath, routePath);
+      for (const method of methods) {
+        endpoints.push({ method, route });
+      }
+    }
+  }
+
+  return endpoints;
+}
 
 // Logging middleware
 const logsDir = path.join(__dirname, "logs");
@@ -199,6 +262,40 @@ app.get("/api-docs", (req, res, next) => {
 app.get("/api-docs/", (req, res) => {
   return res.redirect("/api-docs");
 });
+
+const mountedRouters = [
+  { basePath: "/auth", router: authRoutes },
+  { basePath: "/courses", router: courseRoutes },
+  { basePath: "/contact", router: contactRoutes },
+  { basePath: "/cart", router: cartRoutes },
+  { basePath: "/teacher", router: teacherRoutes },
+  { basePath: "/student", router: studentRoutes },
+  { basePath: "/admin", router: adminRoutes },
+  { basePath: "/superadmin", router: superadminRoutes },
+  { basePath: "/assignments", router: assignmentRoutes },
+  { basePath: "/api/flashcards", router: flashcardRoutes },
+  { basePath: "/stats", router: statsRoutes },
+  { basePath: "/telemetry", router: telemetryRoutes },
+];
+
+const endpointCatalogSeed = [
+  { method: "GET", route: "/uploads/*" },
+  { method: "GET", route: "/public/*" },
+  { method: "ALL", route: "/graphql" },
+  { method: "GET", route: "/" },
+  { method: "GET", route: "/health" },
+  { method: "GET", route: "/openapi.json" },
+  { method: "GET", route: "/metrics" },
+  { method: "GET", route: "/api-docs" },
+  { method: "GET", route: "/api-docs/" },
+];
+
+for (const { basePath, router } of mountedRouters) {
+  endpointCatalogSeed.push(...collectRouterEndpoints(basePath, router));
+}
+
+const registeredEndpointCount = registerEndpointCatalog(endpointCatalogSeed);
+console.log(`registered ${registeredEndpointCount} endpoint catalog metrics`);
 
 // Error handling middlewares (must be last)
 app.use(notFound);

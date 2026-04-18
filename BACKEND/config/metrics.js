@@ -114,6 +114,46 @@ const frontendJsErrorsTotal = new client.Counter({
   registers: [register],
 });
 
+const backendEndpointCatalog = new client.Gauge({
+  name: "lms_backend_endpoint_catalog",
+  help: "Configured backend endpoints grouped by HTTP method and route (always 1)",
+  labelNames: ["method", "route"],
+  registers: [register],
+});
+
+function normalizeCatalogRoute(routeValue) {
+  const route = String(routeValue || "/").trim() || "/";
+  const normalized = route
+    .replace(/\/+/g, "/")
+    .replace(/\/$/, "")
+    .trim();
+
+  if (!normalized) return "/";
+  return normalized.startsWith("/") ? normalized : `/${normalized}`;
+}
+
+function registerEndpointCatalog(endpoints = []) {
+  if (!Array.isArray(endpoints)) return 0;
+
+  backendEndpointCatalog.reset();
+  const seen = new Set();
+
+  for (const endpoint of endpoints) {
+    if (!endpoint || typeof endpoint !== "object") continue;
+
+    const method = String(endpoint.method || "GET").toUpperCase();
+    const route = normalizeCatalogRoute(endpoint.route || "/");
+    const key = `${method}:${route}`;
+
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    backendEndpointCatalog.set({ method, route }, 1);
+  }
+
+  return seen.size;
+}
+
 function statusClass(statusCode) {
   const status = Number(statusCode) || 0;
 
@@ -356,6 +396,7 @@ module.exports = {
   register,
   metricsMiddleware,
   metricsEndpoint,
+  registerEndpointCatalog,
   recordSlowRequest,
   recordCacheEvent,
   recordRateLimitEvent,
