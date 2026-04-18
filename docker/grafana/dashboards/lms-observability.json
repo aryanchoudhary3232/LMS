@@ -5,7 +5,7 @@
   "tags": ["lms", "performance", "latency"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 2,
+  "version": 3,
   "refresh": "15s",
   "time": {
     "from": "now-6h",
@@ -310,6 +310,23 @@
           "refId": "A"
         }
       ]
+    },
+    {
+      "type": "table",
+      "title": "Configured Backend Endpoints (Catalog)",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 52 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum by (method, route) (lms_backend_endpoint_catalog{env=\"prod\",source=\"render\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showHeader": true
+      }
     }
   ]
 }

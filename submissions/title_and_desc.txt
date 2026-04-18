@@ -1,0 +1,17 @@
+Title: SeekhoBharat - Engagement-Driven E-Learning Platform
+
+Description:
+SeekhoBharat is an innovative e-learning platform designed to bridge the gap between structured academic environments like Google Classroom 
+and open course marketplaces like Udemy. 
+With a strong focus on student engagement and study productivity, 
+SeekhoBharat offers a dynamic and interactive learning ecosystem.
+The platform empowers educators to easily upload courses and foster active participation through built-in quizzes, 
+interactive flashcards, and time-bound assignments with strict submission deadlines. 
+To maintain a premium standard of education, SeekhoBharat implements a rigorous administrative validation process, 
+ensuring that students are taught exclusively by verified and highly qualified teachers.
+For students, the platform acts as both a learning hub and a productivity tool. 
+Learners can monitor their daily study routines using an integrated study timer, 
+visualize their progress on personalized dashboards, and build motivational learning streaks to stay on track. 
+Furthermore, students can leave anonymous course reviews, fostering a transparent, feedback-driven community. 
+By combining robust course management, gamified study tracking, and strict quality control, 
+SeekhoBharat delivers a highly accountable and engaging online education experience.
