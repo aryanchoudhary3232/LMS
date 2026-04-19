@@ -228,9 +228,8 @@ function invalidateTagsOnSuccess(tags = []) {
   return function invalidateTagsOnSuccessMiddleware(req, res, next) {
     const originalJson = res.json.bind(res);
 
-    res.json = (body) => {
+    res.json = async (body) => {
       const statusCode = res.statusCode || 200;
-      const result = originalJson(body);
 
       if (statusCode < 400) {
         const resolvedTags = normalizeTags(
@@ -238,13 +237,14 @@ function invalidateTagsOnSuccess(tags = []) {
         );
 
         if (resolvedTags.length) {
-          Promise.resolve(invalidateCacheByTags(resolvedTags)).catch((error) => {
+          // Await invalidation before sending response to prevent stale cache reads
+          await invalidateCacheByTags(resolvedTags).catch((error) => {
             console.error("cache invalidation failed:", error.message || error);
           });
         }
       }
 
-      return result;
+      return originalJson(body);
     };
 
     next();

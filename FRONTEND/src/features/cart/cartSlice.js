@@ -96,11 +96,23 @@ const cartSlice = createSlice({
       .addCase(addToCart.pending, (state) => {
         state.loading = true;
       })
-      .addCase(addToCart.fulfilled, (state) => {
+      .addCase(addToCart.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        // Optimization: We could update items here if the payload was mapped,
-        // but typically a fetchCart is triggered or navigation occurs.
+        // Update cart items directly from the response to avoid stale cache reads
+        const rawItems = action.payload?.data?.items || [];
+        const items = rawItems
+          .filter((item) => item && item.course)
+          .map((i) => ({
+            id: i.course._id || i._id,
+            title: i.course.title || "Unknown Course",
+            instructor: i.course.description || "",
+            price: i.course.price || 0,
+            thumbnail: i.course.image || "",
+          }));
+        if (items.length > 0) {
+          state.items = items;
+        }
       })
       .addCase(addToCart.rejected, (state, action) => {
         state.loading = false;

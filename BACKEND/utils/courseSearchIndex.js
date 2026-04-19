@@ -273,4 +273,6 @@ module.exports = {
   upsertCourseInSearchIndex,
   removeCourseFromSearchIndex,
   searchCoursesInElastic,
+  normalizeCourseDocument,
+  escapeForPhrasePrefix,
 };

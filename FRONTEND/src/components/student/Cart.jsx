@@ -19,6 +19,14 @@ const Cart = () => {
     if (token) dispatch(fetchCart(calculateTotal));
   }, [dispatch, token]);
 
+  useEffect(() => {
+    const handleCartUpdated = () => {
+      if (token) dispatch(fetchCart(calculateTotal));
+    };
+    window.addEventListener("cartUpdated", handleCartUpdated);
+    return () => window.removeEventListener("cartUpdated", handleCartUpdated);
+  }, [dispatch, token]);
+
   const cartItems = useSelector((state) => state.cart.items);
   const loading = useSelector((state) => state.cart.loading);
   const safeCartItems = useMemo(() => cartItems ?? [], [cartItems]);
