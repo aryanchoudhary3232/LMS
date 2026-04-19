@@ -1,5 +1,8 @@
 const { errorHandler, notFound } = require("../../middleware/errorHandler");
 
+beforeEach(() => jest.spyOn(console, "error").mockImplementation(() => {}));
+afterEach(() => jest.restoreAllMocks());
+
 function createRes() {
   const res = {};
   res.status = jest.fn(() => res);
