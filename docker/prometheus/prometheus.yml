@@ -20,8 +20,12 @@ scrape_configs:
     static_configs:
       - targets:
           - https://lms-wine-nine.vercel.app
+          - https://lms-wine-nine.vercel.app/student/sidebar/dashboard
+          - https://lms-wine-nine.vercel.app/student/sidebar/streak
           - https://lms-bx7u.onrender.com/health
           - https://lms-bx7u.onrender.com/metrics
+          - https://lms-wine-nine.vercel.app/student/sidebar/quizzes
+          - https://lms-wine-nine.vercel.app/student/courses
         labels:
           env: prod
           source: deployed-probe

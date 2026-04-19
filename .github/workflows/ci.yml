@@ -40,6 +40,9 @@ jobs:
       - name: Lint frontend
         run: npm run lint
 
+      - name: Run frontend tests
+        run: npm run test:ci
+
       - name: Build frontend
         run: npm run build
 
@@ -56,8 +59,33 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      elasticsearch:
+        image: elasticsearch:8.17.0
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: "false"
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd "curl -sf http://localhost:9200/_cluster/health"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 10
     env:
       TEST_MONGO_URL: mongodb://127.0.0.1:27017/lms_test_ci
+      REDIS_URL: redis://127.0.0.1:6379
+      ELASTICSEARCH_ENABLED: "true"
+      ELASTICSEARCH_NODE: http://127.0.0.1:9200
     defaults:
       run:
         working-directory: BACKEND

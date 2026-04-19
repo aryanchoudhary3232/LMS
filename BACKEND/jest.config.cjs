@@ -1,6 +1,7 @@
 module.exports = {
   testEnvironment: "node",
   testMatch: ["**/tests/**/*.test.js"],
+  setupFiles: ["dotenv/config"],
   collectCoverageFrom: [
     "controller/adminController.js",
     "controller/teacherController.js",
