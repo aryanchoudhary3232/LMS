@@ -114,7 +114,7 @@ const Navbar = () => {
           className="brand"
           onClick={closeMenu}
         >
-          SeekhoBharat
+          SeekhoBharat is very good
         </Link>
 
         {/* Hamburger Icon (Visible on Mobile) */}
