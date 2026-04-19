@@ -71,3 +71,27 @@ If Elasticsearch is disabled or unreachable, search endpoints automatically fall
 ```bash
 npm run reindex:course-search
 ```
+
+## Mongo Index Benchmark Test
+
+`npm run test:ci` now includes a Mongo benchmark test that compares the same
+query before and after creating the compound course index.
+
+To run it outside GitHub Actions, point `TEST_MONGO_URL` at a Mongo database.
+If the variable is not set, the benchmark test is skipped.
+
+PowerShell:
+
+```powershell
+$env:TEST_MONGO_URL="mongodb://127.0.0.1:27017/lms_test"
+npm.cmd run test:ci
+```
+
+Bash:
+
+```bash
+TEST_MONGO_URL=mongodb://127.0.0.1:27017/lms_test npm run test:ci
+```
+
+The test uses a temporary collection, prints average query time with and
+without the index, and verifies the plan changes from `COLLSCAN` to `IXSCAN`.
