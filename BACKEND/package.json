@@ -8,11 +8,12 @@
     "dev": "nodemon index.js",
     "reindex:course-search": "node scripts/reindexCourseSearch.js",
     "fix:course-images": "node scripts/replaceLocalhostCourseImages.js",
-    "test": "jest --runInBand",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage --runInBand",
-    "test:ci": "jest --ci --coverage --runInBand",
-    "test:report": "npm run test:ci"
+    "test": "jest --runInBand --config jest.config.cjs",
+    "test:watch": "jest --watch --config jest.config.cjs",
+    "test:coverage": "jest --coverage --runInBand --config jest.config.cjs",
+    "test:ci": "jest --ci --coverage --runInBand --config jest.config.cjs",
+    "test:report": "npm run test:ci",
+    "test:manual:middlewares": "jest --runInBand --config jest.config.cjs tests/manual/testMiddlewares.test.js"
   },
   "keywords": [],
   "author": "",
